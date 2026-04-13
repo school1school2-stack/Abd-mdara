@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة أ. عبدالعزيز الفيفي | القدرات اللفظي المتطور</title>
+    <title>منصة أ. عبدالعزيز الفيفي | النظام الذكي الشامل</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -11,86 +11,76 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
-            --gemini-gradient: linear-gradient(135deg, #1e3a8a, #3b82f6, #60a5fa);
-            --primary: #1e3a8a; --bg: #f8fafc; --white: #ffffff; --accent: #3b82f6; 
+            --primary: #1e3a8a; --bg: #f8fafc; --white: #ffffff; --accent: #3b82f6; --success: #10b981; --error: #ef4444;
         }
-        body { font-family: 'Cairo', sans-serif; background: var(--bg); margin: 0; color: #1e293b; overflow-x: hidden; }
+        body { font-family: 'Cairo', sans-serif; background: var(--bg); margin: 0; color: #1e293b; padding-bottom: 100px; }
 
-        /* الهيدر العلوي كما في الصور */
-        .top-nav { background: var(--white); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-bottom: 3px solid var(--primary); }
-        .user-profile { display: flex; align-items: center; gap: 15px; font-weight: 900; color: var(--primary); font-size: 1.2rem; }
+        /* الهيدر العلوي */
+        .top-nav { background: var(--white); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-bottom: 3px solid var(--primary); sticky; top: 0; z-index: 100; }
+        .user-profile { display: flex; align-items: center; gap: 10px; font-weight: 900; color: var(--primary); font-size: 1.1rem; }
         .school-badge { background: #f1f5f9; padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; color: #64748b; border: 1px solid #e2e8f0; }
 
-        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .container { max-width: 900px; margin: 20px auto; padding: 0 20px; }
 
-        /* بطاقات الأسئلة الاحترافية */
-        .q-card { background: var(--white); border-radius: 18px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #edf2f7; position: relative; }
-        .q-num-badge { position: absolute; top: -15px; right: 20px; background: var(--primary); color: white; padding: 5px 20px; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3); }
+        /* البطاقات الاحترافية */
+        .q-card { background: var(--white); border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #edf2f7; position: relative; }
+        .q-num-badge { position: absolute; top: -15px; right: 20px; background: var(--primary); color: white; padding: 4px 15px; border-radius: 50px; font-weight: bold; font-size: 0.8rem; }
 
-        /* القوائم المنسدلة للأقسام */
-        .section-selector { background: #f1f5f9; border: 2px solid #e2e8f0; padding: 10px; border-radius: 12px; font-family: 'Cairo'; font-weight: bold; color: var(--primary); margin-bottom: 15px; width: auto; min-width: 200px; }
+        /* القوائم والمدخلات */
+        select, input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #f1f5f9; border-radius: 12px; font-family: 'Cairo'; background: #fcfcfc; box-sizing: border-box; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--accent); outline: none; background: #fff; }
 
-        input, textarea { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #f1f5f9; border-radius: 12px; font-family: 'Cairo'; background: #fcfcfc; transition: 0.3s; box-sizing: border-box; }
-        input:focus { border-color: var(--accent); outline: none; background: #fff; }
+        .correct-zone { background: #f0fdf4; border: 2px solid var(--success); padding: 15px; border-radius: 15px; margin-top: 10px; }
+        .points-box { background: #eff6ff; padding: 8px 15px; border-radius: 12px; color: var(--primary); font-weight: bold; font-size: 0.9rem; border: 1px solid #dbeafe; }
 
-        /* خيارات المتعدد بشكل منظم */
-        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .opt-input { border-right: 4px solid var(--accent); }
+        /* الشريط العائم */
+        .floating-actions { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 12px 25px; border-radius: 50px; display: flex; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1000; width: max-content; }
+        .action-btn { border: none; padding: 10px 18px; border-radius: 50px; color: white; font-family: 'Cairo'; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 0.85rem; }
+        .btn-blue { background: #0ea5e9; } .btn-green { background: var(--success); } .btn-red { background: var(--error); } .btn-purple { background: #8b5cf6; }
+        .action-btn:hover { transform: translateY(-3px); opacity: 0.9; }
 
-        /* الإجابة الصحيحة (المنطقة الخضراء) */
-        .correct-zone { background: #ecfdf5; border: 2px solid #10b981; padding: 10px 15px; border-radius: 12px; margin-top: 15px; color: #065f46; font-weight: bold; }
-
-        /* الشريط العائم للأوامر (كما في الصورة) */
-        .floating-actions { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 10px 20px; border-radius: 50px; display: flex; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1000; width: max-content; }
-        .action-btn { border: none; padding: 10px 20px; border-radius: 50px; color: white; font-family: 'Cairo'; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 0.85rem; }
-        .btn-blue { background: #0ea5e9; }
-        .btn-green { background: #10b981; }
-        .btn-red { background: #ef4444; }
-        .btn-purple { background: #8b5cf6; }
-
+        /* نتائج الطلاب الاحترافية */
+        .results-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+        .results-table td { background: #f8fafc; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #eee; }
+        
         .hidden { display: none; }
-        .points-box { display: flex; align-items: center; gap: 5px; background: #eff6ff; padding: 5px 15px; border-radius: 10px; color: var(--primary); font-weight: bold; }
+        .student-q-card { border-right: 8px solid var(--accent); }
     </style>
 </head>
 <body>
 
 <nav class="top-nav">
-    <div class="user-profile">
-        <i class="fa-solid fa-graduation-cap"></i>
-        أ. عبدالعزيز الفيفي
-    </div>
-    <div class="school-badge">ثانوية الأمير عبدالمجيد 🏫</div>
+    <div class="user-profile"><i class="fa-solid fa-user-tie"></i> أ. عبدالعزيز الفيفي</div>
+    <div class="school-badge">النظام التعليمي المتكامل ⚖️</div>
 </nav>
 
 <div id="adminView" class="hidden">
     <div class="container">
         <div class="q-card" style="border-right: 10px solid var(--primary);">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0"><i class="fa-solid fa-gear"></i> إعدادات منصة القدرات</h3>
-                <div class="points-box" id="totalPointsSummary">مجموع الدرجات: 0</div>
+                <h3 style="margin:0"><i class="fa-solid fa-sliders"></i> إعدادات الاختبار</h3>
+                <div class="points-box" id="totalScoreInfo">الأسئلة: 0</div>
             </div>
             <input type="hidden" id="currentModelId">
-            <input type="text" id="quizTitle" placeholder="اسم الاختبار (مثال: تدريبات التناظر اللفظي - نموذج 1)" style="font-size: 1.1rem; font-weight: bold;">
+            <input type="text" id="quizTitle" placeholder="عنوان الاختبار الذكي..." style="font-size: 1.2rem; font-weight: bold;">
             <div style="display:flex; gap:20px; margin-top:10px;">
-                <label style="font-weight:bold; cursor:pointer;"><input type="checkbox" id="shuffleOpt" style="width:auto"> 🔀 عشوائية الأسئلة</label>
-                <label style="font-weight:bold; cursor:pointer;"><input type="checkbox" id="lockOpt" checked style="width:auto"> 🔒 محاولة واحدة</label>
+                <label><input type="checkbox" id="shuffleOpt" style="width:auto"> 🔀 خلط الأسئلة</label>
+                <label><input type="checkbox" id="lockOpt" checked style="width:auto"> 🔒 منع الإعادة</label>
             </div>
         </div>
 
         <div id="questionsArea"></div>
 
-        <div style="text-align:center; margin-bottom:100px;">
-            <button class="action-btn btn-blue" style="width:100%; padding:15px; font-size:1.1rem;" onclick="addQuestion()">
-                <i class="fa-solid fa-circle-plus"></i> إضافة سؤال جديد للأقسام
-            </button>
-        </div>
+        <button class="action-btn btn-blue" style="width:100%; padding:15px; border-radius:15px; justify-content:center;" onclick="addQuestion()">
+            <i class="fa-solid fa-plus-circle"></i> إضافة سؤال جديد للأقسام
+        </button>
     </div>
 
     <div class="floating-actions">
-        <button class="action-btn btn-green" onclick="saveToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ سحابي</button>
-        <button class="action-btn btn-blue" onclick="generateLink()"><i class="fa-solid fa-share-nodes"></i> رابط الطلاب</button>
-        <button class="action-btn btn-purple" onclick="viewAllModels()"><i class="fa-solid fa-folder-open"></i> النماذج</button>
-        <button class="action-btn btn-red" onclick="newQuiz()"><i class="fa-solid fa-rotate-right"></i> مسح</button>
+        <button class="action-btn btn-green" onclick="saveToCloud()"><i class="fa-solid fa-save"></i> حفظ</button>
+        <button class="action-btn btn-blue" onclick="generateLink()"><i class="fa-solid fa-link"></i> الرابط</button>
+        <button class="action-btn btn-purple" onclick="viewAllModels()"><i class="fa-solid fa-database"></i> النماذج</button>
+        <button class="action-btn btn-red" onclick="newQuiz()"><i class="fa-solid fa-trash"></i> مسح</button>
     </div>
 </div>
 
@@ -98,18 +88,18 @@
     <div class="container">
         <div class="q-card" id="studentLogin" style="text-align:center;">
             <h2 id="stQuizTitle">جاري تحميل الاختبار...</h2>
-            <input type="text" id="stName" placeholder="اسمك الثلاثي">
+            <input type="text" id="stName" placeholder="الاسم الثلاثي">
             <input type="text" id="stClass" placeholder="الفصل">
-            <button class="action-btn btn-blue" style="width:100%; justify-content:center; padding:15px;" onclick="startStudentQuiz()">بدء الاختبار الآن</button>
+            <button class="action-btn btn-blue" style="width:100%; justify-content:center; padding:15px;" onclick="startStudentQuiz()">بدء الاختبار</button>
         </div>
         <div id="stQuizArea" class="hidden">
             <div id="stQuestions"></div>
-            <button class="action-btn btn-green" style="width:100%; justify-content:center; padding:15px; margin-top:20px;" onclick="submitStudentAnswers()">إرسال الإجابات والنتيجة</button>
+            <button class="action-btn btn-green" style="width:100%; justify-content:center; padding:15px; margin-top:20px;" onclick="submitStudentAnswers()">إرسال وتصحيح آلي</button>
         </div>
         <div id="resultSummary" class="hidden q-card" style="text-align:center;">
-            <h2>🏁 نتيجتك النهائية</h2>
-            <div id="totalScoreDisp" style="font-size:3rem; font-weight:900; color:var(--primary);"></div>
-            <div id="summaryDetails" style="text-align:right; margin-top:20px;"></div>
+            <h2 style="color:var(--primary)">🏁 تقرير الأداء</h2>
+            <div id="totalScoreDisp" style="font-size:2.5rem; font-weight:900; margin:15px 0;"></div>
+            <div id="summaryDetails" style="text-align:right;"></div>
             <button class="action-btn btn-blue" style="margin:20px auto;" onclick="location.reload()">خروج</button>
         </div>
     </div>
@@ -136,141 +126,123 @@
         const qId = `q_${qCount}`;
         const html = `
             <div class="q-card q-box" id="${qId}">
-                <div class="q-num-badge">السؤال ${qCount}</div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px; margin-top:10px;">
-                    <select class="section-selector q-section">
-                        <option value="تناظر لفظي" ${data?.section=='تناظر لفظي'?'selected':''}>🔗 تناظر لفظي</option>
-                        <option value="إكمال جمل" ${data?.section=='إكمال جمل'?'selected':''}>✍️ إكمال جمل</option>
-                        <option value="خطأ سياقي" ${data?.section=='خطأ سياقي'?'selected':''}>❌ خطأ سياقي</option>
-                        <option value="استيعاب مقروء" ${data?.section=='استيعاب مقروء'?'selected':''}>📖 استيعاب مقروء</option>
-                        <option value="المفردة الشاذة" ${data?.section=='المفردة الشاذة'?'selected':''}>🧩 المفردة الشاذة</option>
-                        <option value="الارتباط والتقابل" ${data?.section=='الارتباط والتقابل'?'selected':''}>🔄 الارتباط والتقابل</option>
+                <div class="q-num-badge">سؤال ${qCount}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <select class="q-type" style="width:60%" onchange="renderQInputs(this, ${qCount})">
+                        <option value="text" ${data?.type=='text'?'selected':''}>📝 نصي / إعراب</option>
+                        <option value="choice" ${data?.type=='choice'?'selected':''}>🔘 اختيار من متعدد</option>
+                        <option value="extract" ${data?.type=='extract'?'selected':''}>🔍 استخراج من نص</option>
+                        <option value="true_false" ${data?.type=='true_false'?'selected':''}>✓/✗ صح وخطأ</option>
                     </select>
-                    <div class="points-box">الدرجة: <input type="number" id="pts_${qCount}" style="width:50px; padding:5px; margin:0; border:none; background:none;" value="${data?.points||1}"></div>
+                    <div class="points-box">الدرجة: <input type="number" id="pts_${qCount}" style="width:40px; border:none; background:none; font-weight:bold" value="${data?.points||1}"></div>
                 </div>
-                <textarea class="q-text" placeholder="اكتب نص السؤال هنا...">${data?.text||''}</textarea>
-                <div class="options-grid">
-                    <input type="text" class="opt1 opt-input" placeholder="خيار أ" value="${data?.opts?.[0]||''}">
-                    <input type="text" class="opt2 opt-input" placeholder="خيار ب" value="${data?.opts?.[1]||''}">
-                    <input type="text" class="opt3 opt-input" placeholder="خيار ج" value="${data?.opts?.[2]||''}">
-                    <input type="text" class="opt4 opt-input" placeholder="خيار د" value="${data?.opts?.[3]||''}">
-                </div>
+                <div id="inputs_${qCount}"></div>
                 <div class="correct-zone">
-                    <i class="fa-solid fa-check-double"></i> الإجابة الصحيحة: 
-                    <input type="text" id="correct_${qCount}" class="correct-answer-input" placeholder="اكتب الخيار الصحيح نصاً كما هو فوق" style="background:none; border:none; margin:0; padding:5px; width:70%;" value="${data?.correct||''}">
+                    <i class="fa-solid fa-square-check"></i> الإجابة الصحيحة (للتصحيح الآلي):
+                    <input type="text" id="correct_${qCount}" placeholder="اكتب الإجابة النموذجية هنا" style="background:none; border:none; margin:0;" value="${data?.correct||''}">
                 </div>
-                <button class="action-btn btn-red" style="margin-top:15px; font-size:0.7rem;" onclick="document.getElementById('${qId}').remove()"><i class="fa-solid fa-trash"></i> حذف السؤال</button>
+                <button class="action-btn btn-red" style="margin-top:15px; font-size:0.7rem;" onclick="document.getElementById('${qId}').remove()"><i class="fa-solid fa-trash"></i> حذف</button>
             </div>`;
         document.getElementById('questionsArea').insertAdjacentHTML('beforeend', html);
+        renderQInputs(document.querySelector(`#${qId} select`), qCount, data);
+        updatePointsCounter();
+    }
+
+    function renderQInputs(select, id, data = null) {
+        const target = document.getElementById(`inputs_${id}`);
+        const type = select.value;
+        let html = `<input type="text" class="q-text" placeholder="اكتب السؤال هنا..." value="${data?.text||''}">`;
+        if(type === 'extract') html = `<textarea class="q-text" placeholder="ضع النص أو القطعة هنا...">${data?.text||''}</textarea><input type="text" class="q-sub" placeholder="المطلوب استخراجه؟" value="${data?.sub||''}">`;
+        if(type === 'choice') html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input type="text" class="opt1" placeholder="خيار 1" value="${data?.opts?.[0]||''}"> <input type="text" class="opt2" placeholder="خيار 2" value="${data?.opts?.[1]||''}"> <input type="text" class="opt3" placeholder="خيار 3" value="${data?.opts?.[2]||''}"> <input type="text" class="opt4" placeholder="خيار 4" value="${data?.opts?.[3]||''}"></div>`;
+        target.innerHTML = html;
     }
 
     function saveToCloud() {
         const id = document.getElementById('currentModelId').value;
         const title = document.getElementById('quizTitle').value;
         const boxes = document.querySelectorAll('.q-box');
-        if(!title) return Swal.fire('تنبيه', 'أدخل اسم النموذج أولاً', 'warning');
-        
+        if(!title) return Swal.fire('تنبيه','أدخل العنوان','warning');
         let questions = [];
         boxes.forEach(box => {
             const qid = box.id.split('_')[1];
-            questions.push({
-                section: box.querySelector('.q-section').value,
-                text: box.querySelector('.q-text').value,
-                points: parseInt(box.querySelector(`#pts_${qid}`).value),
-                correct: box.querySelector(`#correct_${qid}`).value.trim(),
-                opts: [box.querySelector('.opt1').value, box.querySelector('.opt2').value, box.querySelector('.opt3').value, box.querySelector('.opt4').value]
-            });
+            const type = box.querySelector('.q-type').value;
+            let q = { type, text: box.querySelector('.q-text').value, points: parseInt(box.querySelector(`#pts_${qid}`).value), correct: box.querySelector(`#correct_${qid}`).value.trim() };
+            if(type==='extract') q.sub = box.querySelector('.q-sub').value;
+            if(type==='choice') q.opts = [box.querySelector('.opt1').value, box.querySelector('.opt2').value, box.querySelector('.opt3').value, box.querySelector('.opt4').value];
+            questions.push(q);
         });
-        
         const qData = { title, questions, shuffle: document.getElementById('shuffleOpt').checked, lock: document.getElementById('lockOpt').checked };
-        if(id) db.ref('models/'+id).update(qData).then(() => Swal.fire('تم التحديث!', '', 'success'));
-        else db.ref('models').push(qData).then(() => { Swal.fire('تم الحفظ سحابياً!', '', 'success'); newQuiz(); });
+        if(id) db.ref('models/'+id).update(qData).then(() => Swal.fire('تم التحديث','','success'));
+        else db.ref('models').push(qData).then(() => { Swal.fire('تم الحفظ','','success'); newQuiz(); });
     }
 
     function viewAllModels() {
         db.ref('models').once('value', snap => {
-            let html = '<div style="max-height:400px; overflow-y:auto; text-align:right;">';
+            let html = '<div style="max-height:300px; overflow-y:auto;">';
             snap.forEach(c => {
-                html += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                html += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;">
                     <span><b>${c.val().title}</b></span>
                     <div>
-                        <button class="action-btn btn-blue" style="padding:5px 10px; font-size:0.7rem;" onclick="loadToEdit('${c.key}')">تعديل</button>
-                        <button class="action-btn btn-red" style="padding:5px 10px; font-size:0.7rem;" onclick="deleteModel('${c.key}')">حذف</button>
+                        <button class="action-btn btn-blue" style="padding:4px 10px; font-size:0.7rem;" onclick="loadToEdit('${c.key}')">تعديل</button>
+                        <button class="action-btn btn-red" style="padding:4px 10px; font-size:0.7rem;" onclick="deleteModel('${c.key}')">حذف</button>
                     </div>
                 </div>`;
             });
-            Swal.fire({ title: 'النماذج المحفوظة', html: html + '</div>', showConfirmButton: false });
+            Swal.fire({ title: 'النماذج السحابية', html: html + '</div>', showConfirmButton: false });
         });
     }
 
-    // منطق الطالب والتصحيح (محفوظ كما هو بقوته البرمجية)
     let currentQuiz = null;
     function loadStudentQuiz(id) {
-        db.ref('models/'+id).once('value', snap => { 
-            if(snap.exists()){ currentQuiz = snap.val(); document.getElementById('stQuizTitle').innerText = currentQuiz.title; }
-        });
+        db.ref('models/'+id).once('value', snap => { if(snap.exists()){ currentQuiz = snap.val(); document.getElementById('stQuizTitle').innerText = currentQuiz.title; }});
     }
 
     function startStudentQuiz() {
-        if(!document.getElementById('stName').value || !document.getElementById('stClass').value) return Swal.fire('تنبيه','أكمل بياناتك','info');
+        if(!document.getElementById('stName').value) return Swal.fire('تنبيه','أدخل اسمك','info');
         document.getElementById('studentLogin').classList.add('hidden');
         document.getElementById('stQuizArea').classList.remove('hidden');
         const area = document.getElementById('stQuestions'); area.innerHTML = '';
         let qs = [...currentQuiz.questions]; if(currentQuiz.shuffle) qs = qs.sort(()=>Math.random()-0.5);
-        
         qs.forEach((q, i) => {
-            let h = `<div class="q-card student-q-card" data-idx="${currentQuiz.questions.indexOf(q)}">
-                <div class="school-badge" style="margin-bottom:10px; display:inline-block;">قسم: ${q.section}</div>
-                <h3 style="margin-top:5px;">${q.text}</h3><div class="options-grid">`;
-            q.opts.forEach(o => { 
-                if(o) h += `<label style="display:block; background:#f8fafc; padding:12px; border-radius:10px; cursor:pointer; border:1px solid #e2e8f0;">
-                    <input type="radio" name="q${i}" value="${o}" style="width:auto; margin-left:10px;"> ${o}
-                </label>`; 
-            });
-            area.innerHTML += h + `</div></div>`;
+            let h = `<div class="q-card student-q-card" data-idx="${currentQuiz.questions.indexOf(q)}"><h3>${q.text} <small>(${q.points} ن)</small></h3>`;
+            if(q.type==='extract') h = `<div class="q-card student-q-card" data-idx="${currentQuiz.questions.indexOf(q)}"><p style="background:#f1f5f9;padding:15px;border-radius:10px;">${q.text}</p><h3>${q.sub}</h3>`;
+            if(q.type==='choice') {
+                q.opts.forEach(o => { if(o) h += `<label style="display:block; margin:10px 0; padding:10px; background:#f8fafc; border-radius:10px; cursor:pointer;"><input type="radio" name="q${i}" value="${o}" style="width:auto; margin-left:10px;"> ${o}</label>`; });
+            } else { h += `<input type="text" class="ans-input" placeholder="اكتب إجابتك هنا...">`; }
+            area.innerHTML += h + `</div>`;
         });
     }
 
     function submitStudentAnswers() {
-        let totalScore = 0, maxScore = 0, summaryHtml = "";
+        let score = 0, max = 0, html = "";
         document.querySelectorAll('.student-q-card').forEach((card) => {
             const q = currentQuiz.questions[card.getAttribute('data-idx')];
-            const studentAns = (card.querySelector('input:checked')?.value || "").trim();
-            const isCorrect = studentAns === q.correct;
-            maxScore += q.points; if(isCorrect) totalScore += q.points;
-            summaryHtml += `<div class="q-card" style="border-right: 6px solid ${isCorrect?'#10b981':'#ef4444'}">
-                <b>${q.text}</b><br>إجابتك: ${studentAns || "لم تجب"}<br>
-                ${!isCorrect ? `<span style="color:#ef4444">الصحيح: ${q.correct}</span>` : '<span style="color:#10b981">إجابة نموذجية ✓</span>'}
+            const studentAns = (card.querySelector('input:checked')?.value || card.querySelector('.ans-input')?.value || "").trim();
+            const correct = studentAns === q.correct;
+            max += q.points; if(correct) score += q.points;
+            html += `<div class="q-card" style="border-right: 6px solid ${correct?'#10b981':'#ef4444'}">
+                <b>${q.type==='extract'?q.sub:q.text}</b><br>إجابتك: ${studentAns || "بدون إجابة"}<br>
+                ${!correct ? `<span style="color:#ef4444">الصحيح: ${q.correct}</span>` : '<span style="color:#10b981">✓ إجابة صحيحة</span>'}
             </div>`;
         });
-        const scoreStr = `${totalScore} من ${maxScore}`;
-        db.ref('results/'+quizId).push({ name: document.getElementById('stName').value, class: document.getElementById('stClass').value, score: scoreStr, time: Date.now() }).then(() => {
+        db.ref('results/'+quizId).push({ name: document.getElementById('stName').value, class: document.getElementById('stClass').value, score: `${score}/${max}`, time: Date.now() }).then(() => {
             document.getElementById('stQuizArea').classList.add('hidden');
             document.getElementById('resultSummary').classList.remove('hidden');
-            document.getElementById('totalScoreDisp').innerText = scoreStr;
-            document.getElementById('summaryDetails').innerHTML = summaryHtml;
+            document.getElementById('totalScoreDisp').innerText = `${score} / ${max}`;
+            document.getElementById('summaryDetails').innerHTML = html;
         });
     }
 
     function generateLink() {
         const id = document.getElementById('currentModelId').value;
-        if(!id) return Swal.fire('خطأ','احفظ الاختبار أولاً','error');
+        if(!id) return Swal.fire('خطأ','احفظ أولاً','error');
         const link = window.location.origin + window.location.pathname + '?id=' + id;
-        Swal.fire({ title: 'رابط الطالب', html: `<input value="${link}" id="copyL" style="width:100%; text-align:center; padding:10px; border:2px solid #3b82f6; border-radius:10px;">`, confirmButtonText: 'نسخ الرابط' }).then(() => { document.getElementById('copyL').select(); document.execCommand('copy'); });
+        Swal.fire({ title: 'رابط الطلاب', html: `<input value="${link}" id="copyL" style="width:100%; text-align:center; padding:10px; border-radius:10px; border:2px solid var(--accent);">`, confirmButtonText: 'نسخ' }).then(() => { document.getElementById('copyL').select(); document.execCommand('copy'); });
     }
 
+    function updatePointsCounter() { document.getElementById('totalScoreInfo').innerText = `الأسئلة: ${document.querySelectorAll('.q-box').length}`; }
     function newQuiz() { location.reload(); }
-    function loadToEdit(id) { 
-        db.ref('models/'+id).once('value', snap => { 
-            const m = snap.val(); 
-            document.getElementById('currentModelId').value=id; 
-            document.getElementById('quizTitle').value=m.title; 
-            document.getElementById('questionsArea').innerHTML=''; 
-            qCount=0;
-            m.questions.forEach(q => addQuestion(q)); 
-            Swal.close();
-        }); 
-    }
+    function loadToEdit(id) { db.ref('models/'+id).once('value', snap => { const m = snap.val(); document.getElementById('currentModelId').value=id; document.getElementById('quizTitle').value=m.title; document.getElementById('questionsArea').innerHTML=''; qCount=0; m.questions.forEach(q => addQuestion(q)); Swal.close(); }); }
     function deleteModel(id) { if(confirm('حذف نهائي؟')) db.ref('models/'+id).remove().then(()=>Swal.close()); }
 </script>
 </body>

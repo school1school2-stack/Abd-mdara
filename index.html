@@ -75,6 +75,7 @@
         .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .report-table th, .report-table td { padding: 12px; border: 1px solid #e2e8f0; text-align: center; }
         .score-edit { width: 45px; text-align: center; border: 1px solid #ccc; font-weight: bold; border-radius: 5px; }
+        .notif-badge { background: var(--q-red); color: white; border-radius: 50%; padding: 2px 7px; font-size: 0.7rem; position: absolute; top: -5px; right: -5px; display: none; }
     </style>
 </head>
 <body>
@@ -94,7 +95,7 @@
     </div>
 
     <div id="analysis-modal">
-        <h2 style="text-align: center; color: var(--royal-blue);"><i class="fas fa-chart-line"></i> تحليل نتائج النموذج</h2>
+        <h2 style="text-align: center; color: var(--royal-blue);"><i class="fas fa-chart-bar"></i> تحليل نتائج النموذج</h2>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; align-items:start;">
             <div style="height:300px;"><canvas id="statsChart"></canvas></div>
             <div style="overflow-y:auto; max-height:400px;">
@@ -130,7 +131,10 @@
         <button class="btn btn-pdf" onclick="saveAsPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
         <button class="btn btn-del" onclick="deleteFromCloud()"><i class="fas fa-trash-alt"></i> حذف</button>
         <button class="btn btn-link" onclick="generateStudentLink()"><i class="fas fa-link"></i> رابط الطلاب</button>
-        <button class="btn btn-load" onclick="loadFromCloud()"><i class="fas fa-cloud-download-alt"></i> فتح</button>
+        <button class="btn btn-load" style="position:relative;" onclick="loadFromCloud()">
+            <i class="fas fa-cloud-download-alt"></i> فتح
+            <span class="notif-badge" id="global-notif"></span>
+        </button>
         <button class="btn btn-save" onclick="saveToCloud()"><i class="fas fa-cloud-upload-alt"></i> حفظ</button>
         <button class="btn btn-add" onclick="addQuestion()"><i class="fas fa-plus"></i> سؤال</button>
     </div>
@@ -213,9 +217,7 @@
         }
 
         function renderOptions(t, d) {
-            if (['k_fill', 'k_irab', 'k_sentence', 'k_extract'].includes(t)) {
-                return `<div class="essay-input" contenteditable="true" placeholder="إجابة الطالب هنا..."></div>`;
-            }
+            if (['k_fill', 'k_irab', 'k_sentence', 'k_extract'].includes(t)) return `<div class="essay-input" contenteditable="true" placeholder="إجابة الطالب هنا..."></div>`;
             let h = '<div class="options-grid">';
             let count = (t === 'k_true') ? 2 : 4;
             for(let i=0; i<count; i++) {
@@ -238,7 +240,7 @@
 
                 if (['k_fill','k_irab','k_sentence','k_extract'].includes(type)) {
                     studentAns = c.querySelector('.essay-input').innerText;
-                    pts = studentAns.length > 1 ? 1 : 0; 
+                    pts = studentAns.length > 1 ? 1 : 0; // ذكاء مبدئي
                     correctKey = "مراجعة المعلم";
                 } else {
                     const selLabel = c.querySelector('.selected-opt .opt-label')?.innerText.replace(')','').trim() || "";
@@ -252,7 +254,7 @@
 
             const examId = new URLSearchParams(window.location.search).get('exam');
             if(examId) {
-                await db.ref('results/' + examId).push({ student: studentName, score: s, total: cards.length, date: new Date().toLocaleString(), details: details });
+                await db.ref('student_results/' + examId).push({ student: studentName, score: s, total: cards.length, date: new Date().toLocaleString(), details: details });
             }
             document.getElementById('score-summary').innerText = `النتيجة الإجمالية: ${s} من ${cards.length}`;
             document.getElementById('report-modal').style.display = 'block'; document.getElementById('modal-overlay').style.display = 'block';
@@ -266,7 +268,7 @@
                 if(c && ms[c]) {
                     const mode = confirm("اضغط OK لفتح النموذج للتعديل\nاضغط Cancel لتحليل نتائج الطلاب لهذا النموذج فقط");
                     if(mode) {
-                        localStorage.setItem('fifi_final_v5', JSON.stringify(ms[c].data));
+                        localStorage.setItem('fifi_final_v_secured', JSON.stringify(ms[c].data));
                         location.reload();
                     } else {
                         showAnalysis(c);
@@ -276,7 +278,47 @@
         }
 
         function showAnalysis(id) {
-            db.ref('results/' + id).once('value', snap => {
+            db.ref('student_results/' + id).once('value', snap => {
                 const data = snap.val();
                 const body = document.getElementById('analysis-body');
-             
+                body.innerHTML = "";
+                let stats = { high: 0, mid: 0, low: 0 };
+
+                if(data) {
+                    Object.values(data).forEach(res => {
+                        const perc = (res.score / res.total) * 100;
+                        if(perc >= 85) stats.high++; else if(perc >= 60) stats.mid++; else stats.low++;
+                        body.innerHTML += `<tr><td>${res.student}</td><td>${res.score}/${res.total}</td><td><button class="btn" style="background:var(--royal-blue); padding:2px 8px; font-size:0.7rem;" onclick="alert('إجابات الطالب:\\n' + JSON.stringify(res.details))">فتح</button></td></tr>`;
+                    });
+                    updateChart(stats);
+                    document.getElementById('analysis-modal').style.display = 'block';
+                    document.getElementById('modal-overlay').style.display = 'block';
+                } else { alert("لا توجد نتائج مسجلة لهذا النموذج بعد."); }
+            });
+        }
+
+        function updateChart(data) {
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            if(window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['ممتاز (85%+)', 'متوسط (60%+)', 'ضعيف'],
+                    datasets: [{ label: 'توزيع الطلاب', data: [data.high, data.mid, data.low], backgroundColor: ['#10b981', '#3b82f6', '#ef4444'] }]
+                },
+                options: { maintainAspectRatio: false }
+            });
+        }
+
+        function closeModals() { document.getElementById('report-modal').style.display = 'none'; document.getElementById('analysis-modal').style.display = 'none'; document.getElementById('modal-overlay').style.display = 'none'; }
+        function recalc() { let total = 0; document.querySelectorAll('.score-edit').forEach(input => total += parseFloat(input.value || 0)); document.getElementById('score-summary').innerText = `النتيجة المعدلة: ${total} من ${document.querySelectorAll('.question-card').length}`; }
+        function toggleType(s) { const c = s.closest('.question-card'); const val = s.value; const sec = c.dataset.section; c.querySelector('.q-area').innerHTML = renderQArea(val,null); c.querySelector('.ans-grid-area').innerHTML = renderOptions(val,null); c.querySelector('.correct-ans-box').style.display = (sec === 'qudrat' || ['k_true','k_multi'].includes(val)) ? '' : 'none'; saveAll(); }
+        function updateNumbers() { document.querySelectorAll('.q-number-badge').forEach((b, i) => b.innerText = `السؤال ${i+1}`); }
+        function saveAll() { const qs = []; document.querySelectorAll('.question-card').forEach(c => { const t = c.querySelector('.type-select').value; const sec = c.dataset.section; let d = { type: t, section: sec, ans: c.querySelector('.ans-val')?.value || '' }; if (t === 'tanazor') { d.text1 = c.querySelector('.t1').value; d.text2 = c.querySelector('.t2').value; d.opt_pair_val1 = Array.from(c.querySelectorAll('.op1')).map(i => i.value); d.opt_pair_val2 = Array.from(c.querySelectorAll('.op2')).map(i => i.value); } else { d.text = c.querySelector('.q-main')?.value || ""; if(t==='estieab' || t==='k_extract') d.text_area = c.querySelector('.estieab-box').innerText; d.opts = Array.from(c.querySelectorAll('.opt')).map(i => i.value); } qs.push(d); }); localStorage.setItem('fifi_final_v_secured', JSON.stringify(qs)); }
+        function loadQuestions() { const id = new URLSearchParams(window.location.search).get('exam'); if (id) { document.body.classList.add('student-mode'); document.getElementById('student-actions').style.display = 'block'; loadSpecificExam(id); } else { const s = localStorage.getItem('fifi_final_v_secured'); if(s) JSON.parse(s).filter(q => q.section === currentSection).forEach(q => addQuestion(q)); } }
+        async function saveToCloud() { const n = prompt("اسم النموذج:"); if(n) { await db.ref('models/' + n).set({ teacher: "أ. عبدالعزيز الفيفي", data: JSON.parse(localStorage.getItem('fifi_final_v_secured')), date: new Date().toLocaleString() }); alert("تم الحفظ بنجاح!"); } }
+        function generateStudentLink() { const n = prompt("اسم النموذج:"); if(n) prompt("الرابط:", window.location.origin + window.location.pathname + "?exam=" + encodeURIComponent(n)); }
+        function loadSpecificExam(id) { db.ref('models/' + id).once('value', s => { if (s.val()) s.val().data.forEach(q => addQuestion(q)); }); }
+    </script>
+</body>
+</html>

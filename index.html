@@ -48,7 +48,6 @@
         .estieab-box { background: #fff9c4 !important; border: 2px solid #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 15px; color: #000; font-weight: bold; line-height: 1.8; width: 100%; box-sizing: border-box; text-align: right; min-height: 100px; height: auto; white-space: pre-wrap; font-size: 1.1rem; }
         .q-text-input { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; color: var(--q-red) !important; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; outline: none; text-align: right; box-sizing: border-box; min-height: 50px; height: auto; word-wrap: break-word; font-family: inherit; }
 
-        /* منطقة إجابة الطالب المقالية */
         .essay-input { width: 100%; min-height: 60px; padding: 12px; border: 2px inset #e2e8f0; border-radius: 12px; background: #f8fafc; font-weight: bold; color: #1e293b; margin-top: 10px; outline: none; text-align: right; }
 
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -74,7 +73,7 @@
         #report-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 850px; height: 85%; background: white; z-index: 2000; border-radius: 20px; padding: 30px; overflow-y: auto; box-shadow: 0 0 50px rgba(0,0,0,0.4); }
         .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .report-table th, .report-table td { padding: 12px; border: 1px solid #e2e8f0; text-align: center; }
-        .score-edit { width: 40px; text-align: center; border: 1px solid #ccc; font-weight: bold; }
+        .score-edit { width: 45px; text-align: center; border: 1px solid #ccc; font-weight: bold; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -122,7 +121,6 @@
 
     <script>
         let currentSection = 'qudrat';
-        // استعادة كافة أقسامك الأصلية بالكامل
         const typeMap = { 
             'qudrat': {
                 'tanazor': 'تناظر لفظي ( : )', 
@@ -166,6 +164,9 @@
             card.className = `question-card ${currentSection==='kifayat'?'kifayat-style':''}`;
             card.dataset.section = currentSection;
 
+            // تحديد ما إذا كان السؤال يحتاج مفتاح إجابة (القدرات كلها + صح/خطأ واختياري في الكفايات)
+            const needsKey = (currentSection === 'qudrat') || (['k_true','k_multi'].includes(type));
+
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
                     <div class="card-meta">
@@ -181,8 +182,8 @@
                 </div>
                 <div class="q-area">${renderQArea(type, data)}</div>
                 <div class="ans-grid-area">${renderOptions(type, data)}</div>
-                <div class="correct-ans-box admin-only" style="${['k_fill','k_irab','k_sentence','k_extract'].includes(type)?'display:none':''}">
-                    <input type="text" placeholder="مفتاح الإجابة" class="correct-input ans-val" value="${data?data.ans||'':''}" oninput="saveAll()">
+                <div class="correct-ans-box admin-only" style="${needsKey ? '' : 'display:none'}">
+                    <input type="text" placeholder="حرف الإجابة فقط" class="correct-input ans-val" value="${data?data.ans||'':''}" oninput="saveAll()">
                 </div>
             `;
             container.appendChild(card);
@@ -201,7 +202,7 @@
         function renderQArea(t, d) {
             if (t === 'tanazor') return `<div class="pair-row"><input type="text" class="pair-word t1" placeholder="كلمة 1" value="${d?d.text1:''}" oninput="saveAll()"><span style="color:red; font-weight:bold; font-size:1.5rem"> : </span><input type="text" class="pair-word t2" placeholder="كلمة 2" value="${d?d.text2:''}" oninput="saveAll()"></div>`;
             if (t === 'estieab' || t === 'k_extract') return `<div class="estieab-box" contenteditable="true" oninput="saveAll()" placeholder="النص...">${d?d.text_area||'' : ''}</div><textarea class="q-text-input q-main" placeholder="السؤال..." oninput="saveAll()">${d?d.text:''}</textarea>`;
-            return `<textarea class="q-text-input q-main" placeholder="اكتب السؤال..." oninput="saveAll()">${d?d.text:''}</textarea>`;
+            return `<textarea class="q-text-input q-main" placeholder="اكتب السؤال هنا..." oninput="saveAll()">${d?d.text:''}</textarea>`;
         }
 
         function renderOptions(t, d) {
@@ -224,23 +225,24 @@
             cards.forEach((c, i) => {
                 const type = c.querySelector('.type-select').value;
                 const qTxt = c.querySelector('.q-main')?.value || (c.querySelector('.t1')?.value + ":" + c.querySelector('.t2')?.value) || "سؤال";
-                let studentAns = "", isCor = false, pts = 0;
+                let studentAns = "", correctKey = "", isCor = false, pts = 0;
 
                 if (['k_fill','k_irab','k_sentence','k_extract'].includes(type)) {
                     studentAns = c.querySelector('.essay-input').innerText;
                     pts = studentAns.length > 1 ? 1 : 0;
-                    isCor = pts > 0;
+                    correctKey = "تصحيح المعلم";
                 } else {
-                    const sel = c.querySelector('.selected-opt .opt-label')?.innerText.replace(')','').trim() || "";
+                    const selLabel = c.querySelector('.selected-opt .opt-label')?.innerText.replace(')','').trim() || "";
                     const key = c.querySelector('.ans-val').value.trim().toUpperCase();
-                    studentAns = sel;
-                    isCor = (sel === key);
+                    studentAns = selLabel;
+                    correctKey = key;
+                    isCor = (selLabel === key);
                     pts = isCor ? 1 : 0;
                 }
                 s += pts;
-                report.innerHTML += `<tr><td>${i+1}</td><td style="text-align:right">${qTxt}</td><td>${studentAns}</td><td>${c.querySelector('.ans-val')?.value || 'تصحيح معلم'}</td><td><input type="number" class="score-edit" value="${pts}" onchange="recalc()"></td></tr>`;
+                report.innerHTML += `<tr><td>${i+1}</td><td style="text-align:right">${qTxt}</td><td>${studentAns || '--'}</td><td style="color:var(--success-green); font-weight:bold">${correctKey}</td><td><input type="number" class="score-edit" value="${pts}" onchange="recalc()"></td></tr>`;
             });
-            document.getElementById('score-summary').innerText = `النتيجة: ${s} من ${cards.length}`;
+            document.getElementById('score-summary').innerText = `النتيجة الإجمالية: ${s} من ${cards.length}`;
             document.getElementById('report-modal').style.display = 'block'; document.getElementById('modal-overlay').style.display = 'block';
         }
 
@@ -249,7 +251,16 @@
             document.getElementById('score-summary').innerText = `النتيجة المعدلة: ${total} من ${document.querySelectorAll('.question-card').length}`;
         }
 
-        function toggleType(s) { const c = s.closest('.question-card'); const val = s.value; c.querySelector('.q-area').innerHTML = renderQArea(val,null); c.querySelector('.ans-grid-area').innerHTML = renderOptions(val,null); saveAll(); }
+        function toggleType(s) { 
+            const c = s.closest('.question-card'); 
+            const val = s.value; 
+            const sec = c.dataset.section;
+            c.querySelector('.q-area').innerHTML = renderQArea(val,null); 
+            c.querySelector('.ans-grid-area').innerHTML = renderOptions(val,null); 
+            c.querySelector('.correct-ans-box').style.display = (sec === 'qudrat' || ['k_true','k_multi'].includes(val)) ? '' : 'none';
+            saveAll(); 
+        }
+
         function updateNumbers() { document.querySelectorAll('.q-number-badge').forEach((b, i) => b.innerText = `السؤال ${i+1}`); }
         function closeReport() { document.getElementById('report-modal').style.display = 'none'; document.getElementById('modal-overlay').style.display = 'none'; }
         
@@ -262,25 +273,26 @@
                 else { d.text = c.querySelector('.q-main')?.value || ""; if(t==='estieab' || t==='k_extract') d.text_area = c.querySelector('.estieab-box').innerText; d.opts = Array.from(c.querySelectorAll('.opt')).map(i => i.value); }
                 qs.push(d);
             });
-            localStorage.setItem('fifi_total_v2', JSON.stringify(qs));
+            localStorage.setItem('fifi_total_v3', JSON.stringify(qs));
         }
 
         function loadQuestions() {
             const examId = new URLSearchParams(window.location.search).get('exam');
             if (examId) { document.body.classList.add('student-mode'); document.getElementById('student-actions').style.display = 'block'; loadSpecificExam(examId); }
             else { 
-                const s = localStorage.getItem('fifi_total_v2'); 
+                const s = localStorage.getItem('fifi_total_v3'); 
                 if(s) { JSON.parse(s).filter(q => q.section === currentSection).forEach(q => addQuestion(q)); } 
             }
         }
 
         function clearAll() { if(confirm("مسح الكل؟")) { localStorage.clear(); document.getElementById('quiz-content').innerHTML = ""; } }
-        async function saveToCloud() { const n = prompt("اسم النموذج:"); if(n) { await db.ref('models/' + n).set({ teacher: "أ. عبدالعزيز الفيفي", data: JSON.parse(localStorage.getItem('fifi_total_v2')), date: new Date().toLocaleString() }); alert("تم الحفظ!"); } }
-        function loadFromCloud() { db.ref('models').once('value', s => { const ms = s.val(); if(ms) { const c = prompt("اختر النموذج:\n" + Object.keys(ms).join("\n")); if(c && ms[c]) { localStorage.setItem('fifi_total_v2', JSON.stringify(ms[c].data)); location.reload(); } } }); }
+        async function saveToCloud() { const n = prompt("اسم النموذج:"); if(n) { await db.ref('models/' + n).set({ teacher: "أ. عبدالعزيز الفيفي", data: JSON.parse(localStorage.getItem('fifi_total_v3')), date: new Date().toLocaleString() }); alert("تم الحفظ بنجاح!"); } }
+        function loadFromCloud() { db.ref('models').once('value', s => { const ms = s.val(); if(ms) { const c = prompt("اختر النموذج:\n" + Object.keys(ms).join("\n")); if(c && ms[c]) { localStorage.setItem('fifi_total_v3', JSON.stringify(ms[c].data)); location.reload(); } } }); }
         function generateStudentLink() { const n = prompt("اسم النموذج:"); if(n) prompt("الرابط:", window.location.origin + window.location.pathname + "?exam=" + encodeURIComponent(n)); }
         function loadSpecificExam(id) { db.ref('models/' + id).once('value', s => { if (s.val()) { s.val().data.forEach(q => addQuestion(q)); } }); }
-        async function saveAsImages() { alert("ميزة الصور قيد التحميل..."); }
+        async function saveAsImages() { alert("جاري المعالجة..."); }
         function saveAsPDF() { window.print(); }
     </script>
 </body>
 </html>
+

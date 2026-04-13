@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة أ. عبدالعزيز الفيفي الذكية</title>
+    <title>منصة أ. عبدالعزيز الفيفي | لوحة التحكم المتكاملة</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -19,21 +19,21 @@
         input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1.5px solid #cbd5e1; border-radius: 12px; font-family: 'Cairo'; box-sizing: border-box; }
         .btn { padding: 12px 20px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; font-family: 'Cairo'; transition: 0.3s; }
         .btn-main { background: var(--primary); color: white; width: 100%; margin-top: 10px; }
-        .btn-action { font-size: 0.75rem; padding: 5px 12px; margin: 2px; color: white; border-radius: 8px; }
+        .btn-action { font-size: 0.75rem; padding: 6px 14px; margin: 2px; color: white; border-radius: 8px; }
         .q-box { background: #f8fafc; padding: 15px; border-radius: 15px; border: 1px solid #e2e8f0; margin-bottom: 15px; position: relative; }
         .hidden { display: none; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
-        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; }
-        th { background: #f1f5f9; }
-        .res-detail { background: #fff8f8; padding: 10px; border-radius: 8px; font-size: 0.8rem; text-align: right; margin-top: 5px; border: 1px dashed var(--primary); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; background: white; }
+        th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; }
+        th { background: #1e293b; color: white; }
+        .res-container { margin-top: 15px; padding: 10px; background: #fff5f5; border-radius: 12px; border: 1px solid #fecaca; }
     </style>
 </head>
 <body>
 
 <div id="adminView" class="hidden">
     <div class="admin-header">
-        <h1>لوحة تحكم المعلم (الإدارة والنتائج) ⚖️</h1>
-        <p>أ. عبدالعزيز الفيفي - نظام الربط السحابي المباشر</p>
+        <h1>لوحة تحكم المعلم (النماذج والنتائج) ⚖️</h1>
+        <p>أ. عبدالعزيز الفيفي - نظام الاستجابة السحابية</p>
     </div>
     <div class="container">
         <div class="card">
@@ -59,7 +59,7 @@
 
         <div class="card">
             <h3>📂 النماذج المحفوظة والنتائج الواردة</h3>
-            <div id="modelsList">جاري جلب البيانات...</div>
+            <div id="modelsList">جاري جلب البيانات من السحابة...</div>
         </div>
     </div>
 </div>
@@ -67,7 +67,7 @@
 <div id="studentView" class="hidden">
     <div class="container">
         <div class="card" id="studentLogin" style="text-align:center; margin-top:50px;">
-            <h2 id="stQuizTitle">تحميل...</h2>
+            <h2 id="stQuizTitle">تحميل الاختبار...</h2>
             <input type="text" id="stName" placeholder="الاسم الثلاثي">
             <input type="text" id="stClass" placeholder="الفصل">
             <button class="btn btn-main" onclick="startStudentQuiz()">دخول الاختبار</button>
@@ -80,7 +80,6 @@
 </div>
 
 <script>
-    // إعدادات Firebase
     const firebaseConfig = {
         databaseURL: "https://youy-apps-default-rtdb.firebaseio.com",
         projectId: "youy-apps",
@@ -134,7 +133,6 @@
         const title = document.getElementById('quizTitle').value;
         const boxes = document.querySelectorAll('.q-box');
         if(!title) return Swal.fire('تنبيه', 'أدخل العنوان', 'warning');
-
         let questions = [];
         boxes.forEach(box => {
             const type = box.querySelector('.q-type').value;
@@ -143,7 +141,6 @@
             if(type==='choice') q.opts = [box.querySelector('.opt1').value, box.querySelector('.opt2').value, box.querySelector('.opt3').value, box.querySelector('.opt4').value];
             questions.push(q);
         });
-
         const qData = { title, questions, shuffle: document.getElementById('shuffleOpt').checked, lock: document.getElementById('lockOpt').checked };
         if(id) db.ref('models/'+id).update(qData).then(() => Swal.fire('تم التحديث', '', 'success'));
         else db.ref('models').push(qData).then(() => { Swal.fire('تم الحفظ', '', 'success'); newQuiz(); });
@@ -155,7 +152,7 @@
             list.innerHTML = '';
             snap.forEach(child => {
                 const m = child.val();
-                list.innerHTML += `<div class="card" style="border-right:5px solid #1e293b; padding:15px;">
+                list.innerHTML += `<div class="card" style="border-right:5px solid #1e293b; padding:15px; margin-bottom:10px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <b>${m.title}</b>
                         <div>
@@ -164,32 +161,36 @@
                             <button onclick="deleteModel('${child.key}')" class="btn btn-action" style="background:#ef4444">🗑️</button>
                         </div>
                     </div>
-                    <div id="res_${child.key}" class="hidden"></div>
+                    <div id="res_container_${child.key}" class="hidden res-container"></div>
                 </div>`;
             });
         });
     }
 
     function viewResults(mId) {
-        const resDiv = document.getElementById('res_'+mId);
+        const resDiv = document.getElementById('res_container_'+mId);
         resDiv.classList.toggle('hidden');
-        db.ref('results/'+mId).once('value', (snap) => {
-            let html = `<table><tr><th>الطالب</th><th>الفصل</th><th>الوقت</th><th>التفاصيل</th></tr>`;
-            snap.forEach(c => {
-                const r = c.val();
-                let answersHtml = r.answers.map((a, i) => `س${i+1}: ${a}`).join(' | ');
-                html += `<tr><td>${r.name}</td><td>${r.class}</td><td>${new Date(r.time).toLocaleTimeString('ar-SA')}</td><td><button onclick="Swal.fire('إجابات الطالب','${answersHtml}')">👁️</button></td></tr>`;
+        if(!resDiv.classList.contains('hidden')) {
+            resDiv.innerHTML = 'جاري تحميل النتائج...';
+            db.ref('results/'+mId).once('value', (snap) => {
+                if(!snap.exists()) { resDiv.innerHTML = 'لا توجد نتائج بعد لهذا النموذج.'; return; }
+                let html = `<table><tr><th>الطالب</th><th>الفصل</th><th>الوقت</th><th>الإجابات</th></tr>`;
+                snap.forEach(c => {
+                    const r = c.val();
+                    let ansTxt = r.answers ? r.answers.map((a, i) => `س${i+1}: ${a}`).join(' | ') : 'لا يوجد';
+                    html += `<tr><td>${r.name}</td><td>${r.class}</td><td>${new Date(r.time).toLocaleTimeString('ar-SA')}</td>
+                             <td><button onclick="Swal.fire({title:'إجابات الطالب', text:'${ansTxt}', width:'80%'})">👁️</button></td></tr>`;
+                });
+                resDiv.innerHTML = html + `</table>`;
             });
-            resDiv.innerHTML = html + `</table>`;
-        });
+        }
     }
 
+    let currentQuiz = null;
     function loadStudentQuiz(id) {
         db.ref('models/'+id).once('value', (snap) => {
-            if(snap.exists()) {
-                currentQuiz = snap.val();
-                document.getElementById('stQuizTitle').innerText = currentQuiz.title;
-            }
+            if(snap.exists()) { currentQuiz = snap.val(); document.getElementById('stQuizTitle').innerText = currentQuiz.title; }
+            else Swal.fire('خطأ', 'النموذج غير موجود', 'error');
         });
     }
 
@@ -197,7 +198,6 @@
         const name = document.getElementById('stName').value;
         const cls = document.getElementById('stClass').value;
         if(!name || !cls) return Swal.fire('تنبيه', 'أكمل بياناتك', 'warning');
-        
         const device = btoa(navigator.userAgent).substring(0,20);
         if(currentQuiz.lock) {
             db.ref('results/'+quizId).orderByChild('device').equalTo(device).once('value', (s) => {
@@ -211,44 +211,52 @@
         document.getElementById('studentLogin').classList.add('hidden');
         document.getElementById('stQuizArea').classList.remove('hidden');
         const area = document.getElementById('stQuestions');
-        let qs = currentQuiz.questions;
+        area.innerHTML = '';
+        let qs = [...currentQuiz.questions];
         if(currentQuiz.shuffle) qs = qs.sort(() => Math.random() - 0.5);
         qs.forEach((q, i) => {
-            let h = `<div class="card"><h4>${q.text}</h4>`;
-            if(q.type==='extract') h = `<div class="card"><p style="background:#eee;padding:10px">${q.text}</p><h4>${q.sub}</h4>`;
-            if(q.type==='choice') q.opts.forEach(o => h += `<label style="display:block"><input type="radio" name="q${i}" value="${o}"> ${o}</label>`);
-            else h += `<input type="text" class="ans-input" placeholder="إجابتك...">`;
+            let h = `<div class="card" data-type="${q.type}"><h4>${q.text}</h4>`;
+            if(q.type==='extract') h = `<div class="card" data-type="extract"><p style="background:#eee;padding:10px;border-radius:10px;">${q.text}</p><h4>${q.sub}</h4>`;
+            if(q.type==='choice') {
+                q.opts.forEach(o => { h += `<label style="display:block; margin:8px 0;"><input type="radio" name="q${i}" value="${o}"> ${o}</label>`; });
+            } else {
+                h += `<input type="text" class="ans-input" placeholder="إجابتك هنا...">`;
+            }
             area.innerHTML += h + `</div>`;
         });
     }
 
     function submitStudentAnswers() {
-        const ansInputs = document.querySelectorAll('.ans-input, input:checked');
         let answers = [];
-        ansInputs.forEach(input => answers.push(input.value || input.nextSibling.textContent.trim()));
-        
-        const result = {
-            name: document.getElementById('stName').value,
-            class: document.getElementById('stClass').value,
-            answers: answers,
-            device: btoa(navigator.userAgent).substring(0,20),
-            time: Date.now()
-        };
+        const cards = document.querySelectorAll('#stQuestions .card');
+        cards.forEach((card, i) => {
+            const type = card.getAttribute('data-type');
+            if(type === 'choice') {
+                const checked = card.querySelector('input:checked');
+                answers.push(checked ? checked.value : "بدون إجابة");
+            } else {
+                const val = card.querySelector('.ans-input').value;
+                answers.push(val || "بدون إجابة");
+            }
+        });
+        const result = { name: document.getElementById('stName').value, class: document.getElementById('stClass').value, 
+                         answers, device: btoa(navigator.userAgent).substring(0,20), time: Date.now() };
         db.ref('results/'+quizId).push(result).then(() => {
-            Swal.fire('تم الإرسال', 'شكراً لك', 'success').then(() => location.reload());
+            Swal.fire('تم الإرسال', 'تم استلام إجاباتك بنجاح', 'success').then(() => location.reload());
         });
     }
 
     function generateLink() {
         const id = document.getElementById('currentModelId').value;
-        if(!id) return Swal.fire('خطأ', 'احفظ أولاً', 'error');
-        const link = window.location.href.split('?')[0] + '?id=' + id;
-        Swal.fire('رابط الطلاب', `<input id="copyL" value="${link}" style="width:100%; text-align:center" readonly>`, 'info');
+        if(!id) return Swal.fire('تنبيه', 'احفظ النموذج أولاً', 'error');
+        const link = window.location.origin + window.location.pathname + '?id=' + id;
+        Swal.fire({ title: 'رابط الطلاب', html: `<input id="copyL" value="${link}" style="width:100%; text-align:center; padding:10px;" readonly>`, 
+                   confirmButtonText: 'نسخ الرابط' }).then(() => { const input = document.getElementById('copyL'); input.select(); document.execCommand('copy'); });
     }
 
     function newQuiz() { document.getElementById('currentModelId').value=''; document.getElementById('quizTitle').value=''; document.getElementById('questionsArea').innerHTML=''; qCount=0; }
     function loadToEdit(id) { db.ref('models/'+id).once('value', snap => { const m = snap.val(); newQuiz(); document.getElementById('currentModelId').value=id; document.getElementById('quizTitle').value=m.title; m.questions.forEach(q => addQuestion(q)); }); }
-    function deleteModel(id) { if(confirm('حذف؟')) db.ref('models/'+id).remove(); }
+    function deleteModel(id) { if(confirm('حذف هذا النموذج نهائياً؟')) db.ref('models/'+id).remove(); }
 </script>
 </body>
 </html>

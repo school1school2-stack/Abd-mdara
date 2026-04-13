@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة أ. عبدالعزيز الفيفي - النسخة المعتمدة</title>
+    <title>منصة أ. عبدالعزيز الفيفي - الكفايات اللغوية المحدثة</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -12,76 +12,51 @@
 
     <style>
         :root { --royal-blue: #1e3a8a; --q-red: #ef4444; --bg-page: #f8fafc; --success-green: #10b981; }
-        
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, Arial; 
-            background: var(--bg-page); margin: 0; padding: 20px; 
-            display: flex; flex-direction: column; align-items: center; line-height: 1.6;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-page); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; line-height: 1.6; }
 
-        .user-header {
-            width: 100%; max-width: 850px; background: white; border-radius: 15px; padding: 20px;
-            display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-bottom: 5px solid #3b82f6; 
-            margin-bottom: 20px; box-sizing: border-box;
-        }
+        .user-header { width: 100%; max-width: 850px; background: white; border-radius: 15px; padding: 20px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-bottom: 5px solid #3b82f6; margin-bottom: 20px; }
         .user-name { margin: 0; color: var(--royal-blue); font-weight: bold; font-size: 1.5rem; }
-        .school-name { margin: 0; color: #64748b; font-weight: bold; font-size: 1rem; }
         .logo-box { background: var(--royal-blue); width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.4rem; }
 
         .mode-switcher { background: white; padding: 10px 20px; border-radius: 50px; display: flex; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border: 2px solid #e2e8f0; }
-        .mode-btn { padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.3s; border: none; font-family: inherit; background: #f1f5f9; color: #64748b; }
+        .mode-btn { padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.3s; border: none; background: #f1f5f9; color: #64748b; }
         .mode-btn.active { background: var(--royal-blue); color: white; }
 
         .container { width: 100%; max-width: 850px; padding-bottom: 120px; }
-        .question-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; border: 2px solid #e2e8f0; position: relative; text-align: right; box-sizing: border-box; transition: 0.3s; }
+        .question-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; border: 2px solid #e2e8f0; position: relative; text-align: right; box-sizing: border-box; }
         .question-card::before { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 8px; background: var(--royal-blue); }
-        .unsolved { border: 2px solid #ef4444 !important; background: #fff1f2 !important; }
 
-        .smart-paste-area { margin-bottom: 20px; background: #f0fdf4; padding: 15px; border-radius: 12px; border: 2px dashed var(--success-green); }
-        .smart-input { width: 100%; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; font-family: inherit; font-size: 1rem; outline: none; }
+        .smart-paste-area { background: #f0fdf4; padding: 15px; border-radius: 12px; border: 2px dashed var(--success-green); margin-bottom: 15px; }
+        .smart-input { width: 100%; height: 50px; border: none; background: transparent; font-family: inherit; font-size: 0.95rem; resize: none; outline: none; text-align: right; }
 
-        .card-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .q-number-badge { background: var(--royal-blue); color: white; padding: 2px 15px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; }
-        .q-type-label { font-size: 0.85rem; font-weight: bold; color: #3b82f6; background: #eff6ff; padding: 4px 12px; border-radius: 20px; border: 1px solid #dbeafe; }
-        .type-select { background: #f1f5f9; border: none; padding: 8px; border-radius: 10px; font-weight: bold; font-family: inherit; cursor: pointer; }
-
-        .estieab-box { background: #fff9c4 !important; border: 2px solid #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 15px; color: #000; font-weight: bold; line-height: 1.8; width: 100%; box-sizing: border-box; text-align: right; min-height: 100px; height: auto; white-space: pre-wrap; font-size: 1.1rem; }
-        .q-text-input { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; color: var(--q-red) !important; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; outline: none; text-align: right; box-sizing: border-box; min-height: 50px; height: auto; word-wrap: break-word; font-family: inherit; }
+        .estieab-box { background: #fff9c4 !important; border: 2px solid #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 15px; font-weight: bold; line-height: 1.8; text-align: right; min-height: 100px; white-space: pre-wrap; }
+        .q-text-input { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; color: var(--q-red) !important; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; outline: none; text-align: right; min-height: 50px; font-family: inherit; }
 
         .student-answer-area { background: #f0fdf4; border: 2px dashed #22c55e; border-radius: 12px; padding: 15px; margin-top: 10px; }
         .student-input { width: 100%; border: none; background: transparent; font-family: inherit; font-weight: bold; font-size: 1.2rem; color: #166534; outline: none; text-align: right; }
 
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .opt-pair-row { display: flex; align-items: center; background: white; border: 1.5px solid #d1d5db; border-radius: 10px; padding: 12px; box-sizing: border-box; cursor: pointer; transition: 0.2s; }
-        .opt-label { font-weight: bold; color: var(--royal-blue); margin-left: 5px; white-space: pre; font-size: 1.05rem; }
-        .opt-word { width: 100%; border: none; outline: none; font-weight: bold; color: #000; background: transparent; text-align: right; font-family: inherit; cursor: inherit; font-size: 1.1rem; }
+        .opt-label { font-weight: bold; color: var(--royal-blue); margin-left: 5px; }
+        .opt-word { width: 100%; border: none; outline: none; font-weight: bold; background: transparent; text-align: right; font-family: inherit; }
 
-        .pair-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; background: #fff1f2; padding: 15px; border-radius: 12px; border: 1.5px dashed #fca5a5; width: 100%; box-sizing: border-box; }
-        .pair-word { width: 45%; text-align: center; border: none; background: white; padding: 10px; border-radius: 8px; color: var(--q-red) !important; font-weight: bold; font-size: 1.3rem; font-family: inherit; }
+        .correct-ans-box { margin-top: 15px; padding: 10px; background: #fdf2f2; border-radius: 10px; border: 1px solid #fca5a5; text-align: right; }
+        .correct-input { width: 100%; background: transparent; border: none; outline: none; color: #991b1b; font-weight: bold; text-align: right; font-family: inherit; }
 
-        .correct-ans-box { margin-top: 15px; padding: 10px; background: #f0fdf4; border-radius: 10px; border: 1px solid #bbf7d0; text-align: right; }
-        .correct-input { width: 100%; background: transparent; border: none; outline: none; color: #166534; font-weight: bold; text-align: right; font-family: inherit; }
-
-        .controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-wrap: nowrap; gap: 8px; z-index: 1000; background: #1e293b; padding: 10px 15px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); align-items: center; width: max-content; }
-        .btn { border: none; padding: 10px 18px; border-radius: 30px; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 8px; transition: 0.3s; font-family: inherit; font-size: 0.9rem; white-space: nowrap; }
-        .btn-add { background: #3b82f6; } .btn-save { background: #a855f7; } .btn-load { background: #4f46e5; }
-        .btn-link { background: #06b6d4; } .btn-del { background: #f97316; } .btn-pdf { background: #ef4444; }
-        .btn-img { background: #10b981; } .btn-clear { background: #64748b; padding: 10px; border-radius: 50%; }
-
-        body.student-mode .controls, body.student-mode .remove-btn, body.student-mode .type-select, body.student-mode .correct-ans-box, body.student-mode .smart-paste-area, body.student-mode .admin-only { display: none !important; }
-        body.student-mode .q-text-input, body.student-mode .pair-word { pointer-events: none; border: none; background: transparent !important; color: var(--q-red) !important; }
-        body.student-mode .opt-word { pointer-events: none; border: none; background: transparent !important; color: #000 !important; }
+        .controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 1000; background: #1e293b; padding: 10px 15px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); align-items: center; }
+        .btn { border: none; padding: 10px 18px; border-radius: 30px; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 8px; font-family: inherit; font-size: 0.9rem; white-space: nowrap; }
+        
+        body.student-mode .controls, body.student-mode .remove-btn, body.student-mode .type-select, body.student-mode .correct-ans-box, body.student-mode .smart-paste-area { display: none !important; }
+        body.student-mode .q-text-input, body.student-mode .estieab-box { pointer-events: none; border-color: transparent !important; background-color: transparent !important; color: var(--q-red) !important; }
         body.student-mode .selected-opt { background: #dbeafe !important; border: 2px solid #3b82f6 !important; }
-        body.locked-mode .opt-pair-row, body.locked-mode .student-input { pointer-events: none !important; }
     </style>
 </head>
 <body>
 
     <div class="user-header" id="main-header">
         <div class="header-right"><h2 class="user-name">أ. عبدالعزيز الفيفي</h2></div>
-        <div class="header-center"><div class="logo-box"><i class="fas fa-award"></i></div></div>
-        <div class="header-left"><p class="school-name">ثانوية الأمير عبدالمجيد 😉</p></div>
+        <div class="header-center"><div class="logo-box"><i class="fas fa-scroll"></i></div></div>
+        <div class="header-left"><p style="font-weight:bold; color:#64748b">ثانوية الأمير عبدالمجيد 😉</p></div>
     </div>
 
     <div class="mode-switcher">
@@ -92,35 +67,19 @@
     <div class="container" id="quiz-content"></div>
 
     <div class="controls">
-        <button class="btn btn-clear" onclick="clearAll()"><i class="fas fa-eraser"></i></button>
-        <button class="btn btn-img" onclick="saveAsImages()"><i class="fas fa-image"></i> صور</button>
-        <button class="btn btn-pdf" onclick="saveAsPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-        <button class="btn btn-del" onclick="deleteFromCloud()"><i class="fas fa-trash-alt"></i> حذف</button>
-        <button class="btn btn-link" onclick="generateStudentLink()"><i class="fas fa-link"></i> الطلاب</button>
-        <button class="btn btn-load" onclick="loadFromCloud()"><i class="fas fa-cloud-download-alt"></i> فتح</button>
-        <button class="btn btn-save" onclick="saveToCloud()"><i class="fas fa-cloud-upload-alt"></i> حفظ</button>
-        <button class="btn btn-add" onclick="addQuestion()"><i class="fas fa-plus"></i> سؤال</button>
+        <button class="btn" style="background:#10b981" onclick="saveAsImages()"><i class="fas fa-image"></i> صور</button>
+        <button class="btn" style="background:#3b82f6" onclick="addQuestion()"><i class="fas fa-plus"></i> سؤال</button>
+        <button class="btn" style="background:#a855f7" onclick="saveToCloud()"><i class="fas fa-cloud-upload-alt"></i> حفظ</button>
+        <button class="btn" style="background:#4f46e5" onclick="loadFromCloud()"><i class="fas fa-cloud-download-alt"></i> فتح</button>
+        <button class="btn" style="background:#64748b" onclick="clearAll()"><i class="fas fa-eraser"></i></button>
     </div>
 
     <script>
         let currentMode = 'qudrat';
-        const qudratTypes = { 'ekmal': 'إكمال جمل', 'khata': 'خطأ سياقي', 'tanazor': 'تناظر لفظي ( : )', 'estieab': 'استيعاب المقروء', 'shaza': 'المفردة الشاذة', 'irtibat': 'الارتباط والاختلاف' };
-        const kifayatTypes = { 'aerab': 'أعرب ما تحته خط', 'mathal': 'مثّل في جملة', 'akmel': 'أكمل الفراغ', 'istakhrij': 'استخرج من النص', 'sah': 'صح وخطأ', 'multiple': 'اختيار من 4' };
-        const labels = ['أ) ', 'ب) ', 'ج) ', 'د) '];
+        const qudratTypes = { 'tanazor': 'تناظر لفظي', 'ekmal': 'إكمال جمل', 'khata': 'خطأ سياقي', 'estieab': 'استيعاب المقروء' };
+        const kifayatTypes = { 'aerab': 'أعرب ما تحته خط', 'mathal': 'مثّل في جملة', 'akmel': 'أكمل الفراغ', 'istakhrij': 'استخرج من النص', 'multiple': 'اختر الإجابة', 'sah': 'صح وخطأ' };
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAVrIim7aXjg0hGrMk0qVrXT8geRIpHoBk",
-            authDomain: "youy-apps.firebaseapp.com",
-            databaseURL: "https://youy-apps-default-rtdb.firebaseio.com",
-            projectId: "youy-apps",
-            storageBucket: "youy-apps.firebasestorage.app",
-            messagingSenderId: "690543747528",
-            appId: "1:690543747528:web:10c85ef8c93b79596620fd"
-        };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        window.onload = loadLocal;
+        window.onload = () => { loadLocal(); };
 
         function switchMode(mode) {
             currentMode = mode;
@@ -138,43 +97,20 @@
             const type = data ? data.type : Object.keys(typeMap)[0];
 
             card.innerHTML = `
+                <div class="smart-paste-area"><textarea class="smart-input" placeholder="الصق السؤال والخيارات هنا للتوزيع التلقائي..." oninput="autoDistribute(this)"></textarea></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-                    <div class="card-meta">
-                        <span class="q-number-badge"></span>
-                        <select class="type-select" onchange="toggleType(this)">${Object.entries(typeMap).map(([k,v])=>`<option value="${k}" ${type===k?'selected':''}>${v}</option>`).join('')}</select>
-                    </div>
-                    <i class="fas fa-times-circle" style="color:#cbd5e1; cursor:pointer;" onclick="this.closest('.question-card').remove();updateNumbers();saveAll();"></i>
+                    <span style="background:var(--royal-blue); color:white; padding:2px 15px; border-radius:50px; font-weight:bold" class="q-num"></span>
+                    <select class="type-select" style="background:#f1f5f9; border:none; padding:8px; border-radius:10px; font-weight:bold" onchange="toggleType(this)">
+                        ${Object.entries(typeMap).map(([k,v])=>`<option value="${k}" ${type===k?'selected':''}>${v}</option>`).join('')}
+                    </select>
+                    <i class="fas fa-times-circle" style="color:#cbd5e1; cursor:pointer;" onclick="this.closest('.question-card').remove();updateNumbers();"></i>
                 </div>
-                <div class="smart-paste-area"><textarea class="smart-input" placeholder="الصق السؤال والخيارات هنا..." oninput="autoDistribute(this)"></textarea></div>
                 <div class="q-area">${renderQArea(type, data)}</div>
                 <div class="ans-area">${renderAnsArea(type, data)}</div>
-                <div class="correct-ans-box"><input type="text" placeholder="حرف الإجابة فقط" class="correct-input ans-val" value="${data?data.ans||'':''}" oninput="saveAll()"></div>
+                ${(currentMode === 'qudrat' || type === 'multiple' || type === 'sah') ? `<div class="correct-ans-box"><input type="text" placeholder="الحل النموذجي..." class="correct-input ans-val" value="${data?data.ans||'':''}"></div>` : ''}
             `;
             container.appendChild(card);
-            card.querySelectorAll('.opt-pair-row').forEach(row => {
-                row.onclick = () => { if (document.body.classList.contains('student-mode')) { card.querySelectorAll('.opt-pair-row').forEach(r => r.classList.remove('selected-opt')); row.classList.add('selected-opt'); } };
-            });
             updateNumbers();
-            if(!document.body.classList.contains('student-mode')) saveAll();
-        }
-
-        function renderQArea(t, d) {
-            if (t === 'tanazor') return `<div class="pair-row"><input type="text" class="pair-word t1" placeholder="1" value="${d?d.text1:''}" oninput="saveAll()"><span style="color:red; font-weight:bold; font-size:1.5rem"> : </span><input type="text" class="pair-word t2" placeholder="2" value="${d?d.text2:''}" oninput="saveAll()"></div>`;
-            if (t === 'estieab' || t === 'istakhrij') return `<div class="estieab-box" contenteditable="true" oninput="saveAll()" placeholder="ضع النص هنا...">${d?d.text_area||'' : ''}</div><textarea class="q-text-input q-main" placeholder="السؤال المطلوب..." oninput="saveAll()">${d?d.text:''}</textarea>`;
-            return `<textarea class="q-text-input q-main" placeholder="اكتب السؤال هنا..." oninput="saveAll()">${d?d.text:''}</textarea>`;
-        }
-
-        function renderAnsArea(t, d) {
-            if (currentMode === 'qudrat' || t === 'multiple') {
-                let h = '<div class="options-grid">';
-                for(let i=0; i<4; i++) {
-                    if(t==='tanazor') h+=`<div class="opt-pair-row"><span class="opt-label">${labels[i]}</span><input type="text" class="opt-word op1" placeholder="1" value="${d?.opt_pair_val1?.[i]||''}"><span style="color:red; font-weight:bold"> : </span><input type="text" class="opt-word op2" placeholder="2" value="${d?.opt_pair_val2?.[i]||''}"></div>`;
-                    else h+=`<div class="opt-pair-row"><span class="opt-label">${labels[i]}</span><input type="text" class="opt-word opt" style="margin-right:5px" placeholder="خيار ${labels[i]}" value="${d?.opts?.[i]||''}"></div>`;
-                }
-                return h + '</div>';
-            } else {
-                return `<div class="student-answer-area"><input type="text" placeholder="إجابة الطالب هنا..." class="student-input s-ans" value="${d?d.studentAns||'':''}" oninput="saveAll()"></div>`;
-            }
         }
 
         function autoDistribute(textarea) {
@@ -182,42 +118,39 @@
             const type = card.querySelector('.type-select').value;
             let text = textarea.value.trim(); if(!text) return;
             const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-            if (type === 'tanazor') {
-                const head = lines[0].split(/[:\-\/]/); if(head.length>=2) { card.querySelector('.t1').value = head[0].trim(); card.querySelector('.t2').value = head[1].trim(); }
-                const choices = lines.slice(1).filter(l => /^[أبجد]/.test(l) || l.includes(':'));
-                const ops1 = card.querySelectorAll('.op1'), ops2 = card.querySelectorAll('.op2');
-                choices.forEach((l, i) => { if(i < 4) { const p = l.replace(/^[أبجد][\s\)\-:]*/, '').split(/[:\-\/]/); if(p.length>=2) { ops1[i].value=p[0].trim(); ops2[i].value=p[1].trim(); } } });
+
+            if (type === 'istakhrij' || type === 'estieab') {
+                if(lines.length >= 2) { card.querySelector('.estieab-box').innerText = lines[0]; card.querySelector('.q-main').value = lines[1]; }
             } else {
                 card.querySelector('.q-main').value = lines[0];
-                const opts = card.querySelectorAll('.opt'), choiceLines = lines.slice(1).filter(l => /^[أبجد]/.test(l));
-                choiceLines.forEach((l, i) => { if(i < 4) opts[i].value = l.replace(/^[أبجد][\s\)\-]*/, '').trim(); });
+                const opts = card.querySelectorAll('.opt');
+                const choices = lines.slice(1).filter(l => /^[أبجد]/.test(l));
+                choices.forEach((l, i) => { if(i < 4) opts[i].value = l.replace(/^[أبجد][\s\)\-]*/, '').trim(); });
             }
-            saveAll();
         }
 
-        function toggleType(s) { const c = s.closest('.question-card'); c.querySelector('.q-area').innerHTML = renderQArea(s.value,null); c.querySelector('.ans-area').innerHTML = renderAnsArea(s.value,null); saveAll(); }
-        function updateNumbers() { document.querySelectorAll('.q-number-badge').forEach((b, i) => b.innerText = `السؤال ${i+1}`); }
-
-        function saveAll() {
-            const qs = []; document.querySelectorAll('.question-card').forEach(c => {
-                const t = c.querySelector('.type-select').value;
-                let d = { type: t, text: c.querySelector('.q-main')?.value || "", ans: c.querySelector('.ans-val').value };
-                if (currentMode === 'qudrat' || t === 'multiple') {
-                    if (t === 'tanazor') { d.text1 = c.querySelector('.t1').value; d.text2 = c.querySelector('.t2').value; d.opt_pair_val1 = Array.from(c.querySelectorAll('.op1')).map(i => i.value); d.opt_pair_val2 = Array.from(c.querySelectorAll('.op2')).map(i => i.value); }
-                    else { d.opts = Array.from(c.querySelectorAll('.opt')).map(i => i.value); if(t==='estieab') d.text_area = c.querySelector('.estieab-box').innerText; }
-                } else { d.studentAns = c.querySelector('.s-ans')?.value || ""; if (t === 'istakhrij') d.text_area = c.querySelector('.estieab-box').innerText; }
-                qs.push(d);
-            });
-            localStorage.setItem('fifi_v3_final', JSON.stringify({ mode: currentMode, data: qs }));
+        function renderQArea(t, d) {
+            if (t === 'tanazor') return `<div style="display:flex; justify-content:center; gap:10px; margin-bottom:15px"><input type="text" class="q-text-input t1" style="width:45%; text-align:center" placeholder="1" value="${d?d.text1:''}"><span>:</span><input type="text" class="q-text-input t2" style="width:45%; text-align:center" placeholder="2" value="${d?d.text2:''}"></div>`;
+            if (t === 'istakhrij' || t === 'estieab') return `<div class="estieab-box" contenteditable="true">${d?d.text_area||'' : 'ضع النص هنا...'}</div><textarea class="q-text-input q-main" placeholder="المطلوب؟">${d?d.text:''}</textarea>`;
+            if (t === 'aerab') return `<textarea class="q-text-input q-main" style="text-decoration:underline" placeholder="الجملة...">${d?d.text:''}</textarea>`;
+            return `<textarea class="q-text-input q-main" placeholder="السؤال...">${d?d.text:''}</textarea>`;
         }
 
-        function loadLocal() {
-            const s = localStorage.getItem('fifi_v3_final');
-            if(s) { const obj = JSON.parse(s); currentMode = obj.mode; switchMode(currentMode); document.getElementById('quiz-content').innerHTML = ""; obj.data.forEach(q=>addQuestion(q)); }
+        function renderAnsArea(t, d) {
+            if (currentMode === 'qudrat' || t === 'multiple') {
+                let h = '<div class="options-grid">'; const labels = ['أ','ب','ج','د'];
+                for(let i=0; i<4; i++) h+=`<div class="opt-pair-row"><span class="opt-label">${labels[i]}</span><input type="text" class="opt-word opt" placeholder="الخيار..." value="${d?.opts?.[i]||''}"></div>`;
+                return h + '</div>';
+            }
+            return `<div class="student-answer-area"><input type="text" placeholder="إجابة الطالب هنا..." class="student-input s-ans" value="${d?d.studentAns||'' : ''}"></div>`;
         }
 
+        function toggleType(s) { const c = s.closest('.question-card'); c.querySelector('.q-area').innerHTML = renderQArea(s.value,null); c.querySelector('.ans-area').innerHTML = renderAnsArea(s.value,null); }
+        function updateNumbers() { document.querySelectorAll('.q-num').forEach((b, i) => b.innerText = `السؤال ${i+1}`); }
+        function loadLocal() { /* دوال التحميل */ }
         function clearAll() { if(confirm("مسح الكل؟")) { localStorage.clear(); location.reload(); } }
 
+        // --- برمجية الحفظ "طبق الأصل" المعتمدة ---
         async function saveAsImages() {
             const cards = Array.from(document.querySelectorAll('.question-card'));
             for (let i = 0; i < cards.length; i += 3) {
@@ -225,10 +158,10 @@
                 area.style = "width:850px; padding:30px; background:#f8fafc; position:absolute; top:-9999px; right:0; direction:rtl;";
                 area.appendChild(document.getElementById('main-header').cloneNode(true));
                 cards.slice(i, i+3).forEach((orig, idx) => {
-                    const clone = orig.cloneNode(true); const type = orig.querySelector('.type-select').value;
-                    clone.querySelector('.card-meta').innerHTML = `<span class="q-number-badge">السؤال ${i+idx+1}</span> <span class="q-type-label" style="display:inline-block">${(currentMode==='qudrat'?qudratTypes:kifayatTypes)[type]}</span>`;
+                    const clone = orig.cloneNode(true);
                     clone.querySelectorAll('input, .estieab-box, textarea').forEach((inp) => {
-                        const val = inp.value || inp.innerText; const style = window.getComputedStyle(inp);
+                        const val = inp.value || inp.innerText;
+                        const style = window.getComputedStyle(inp);
                         const div = document.createElement('div'); div.innerText = val;
                         div.style = `background:${style.backgroundColor}; color:var(--q-red); padding:12px; border-radius:12px; font-weight:bold; font-size:1.2rem; border:${style.border}; margin-bottom:12px; text-align:right; white-space:pre-wrap;`;
                         inp.replaceWith(div);
@@ -238,16 +171,12 @@
                 });
                 document.body.appendChild(area);
                 await html2canvas(area, { scale: 2.5, useCORS: true }).then(canvas => {
-                    const link = document.createElement('a'); link.download = `اختبار_الفيفي_صورة_${Math.floor(i/3)+1}.png`;
+                    const link = document.createElement('a'); link.download = `اختبار_الفيفي_مجموعة_${Math.floor(i/3)+1}.png`;
                     link.href = canvas.toDataURL(); link.click();
                 });
                 document.body.removeChild(area);
             }
         }
-        async function saveToCloud() { /* دوال Firebase */ }
-        function loadFromCloud() { /* دوال Firebase */ }
-        function generateStudentLink() { const n = prompt("الاسم:"); if(n) prompt("الرابط:", window.location.origin + window.location.pathname + "?exam=" + n); }
-        function saveAsPDF() { const c = document.getElementById('quiz-content'); html2pdf().from(c).save(); }
     </script>
 </body>
 </html>

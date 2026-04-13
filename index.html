@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة أ. عبدالعزيز الفيفي | لوحة التحكم المتكاملة</title>
+    <title>المنصة التعليمية | أ. عبدالعزيز الفيفي</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { --primary: #7f1d1d; --bg: #f8fafc; --dark: #1e293b; }
-        body { font-family: 'Cairo', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; color: #334155; }
+        body { font-family: 'Cairo', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
         .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
         .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border-right: 8px solid var(--primary); }
         .admin-header { background: var(--dark); color: white; padding: 30px; text-align: center; border-bottom: 6px solid var(--primary); }
@@ -22,10 +22,10 @@
         .btn-action { font-size: 0.75rem; padding: 6px 14px; margin: 2px; color: white; border-radius: 8px; }
         .q-box { background: #f8fafc; padding: 15px; border-radius: 15px; border: 1px solid #e2e8f0; margin-bottom: 15px; position: relative; }
         .hidden { display: none; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; background: white; }
-        th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; background: white; border-radius: 10px; overflow: hidden; }
+        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; }
         th { background: #1e293b; color: white; }
-        .res-container { margin-top: 15px; padding: 10px; background: #fff5f5; border-radius: 12px; border: 1px solid #fecaca; }
+        .res-container { margin-top: 15px; padding: 15px; background: #fff; border-radius: 12px; border: 2px solid #7f1d1d; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
@@ -33,11 +33,11 @@
 <div id="adminView" class="hidden">
     <div class="admin-header">
         <h1>لوحة تحكم المعلم (النماذج والنتائج) ⚖️</h1>
-        <p>أ. عبدالعزيز الفيفي - نظام الاستجابة السحابية</p>
+        <p>أ. عبدالعزيز الفيفي - نظام الربط السحابي الذكي</p>
     </div>
     <div class="container">
         <div class="card">
-            <h3>⚙️ إعدادات الاختبار</h3>
+            <h3>⚙️ إعدادات الاختبار الجديد</h3>
             <input type="hidden" id="currentModelId">
             <input type="text" id="quizTitle" placeholder="عنوان الاختبار (مثلاً: كفايات 4 - اختبار تشخيصي)">
             <div class="setup-grid">
@@ -51,7 +51,7 @@
 
         <div class="card" style="border-top: 5px solid #059669;">
             <div class="setup-grid">
-                <button class="btn btn-main" onclick="saveToCloud()">💾 حفظ السحابة</button>
+                <button class="btn btn-main" onclick="saveToCloud()">💾 حفظ في السحابة</button>
                 <button class="btn btn-main" style="background:#0284c7" onclick="generateLink()">🔗 رابط الطلاب</button>
                 <button class="btn btn-main" style="background:#64748b" onclick="newQuiz()">📄 نموذج جديد</button>
             </div>
@@ -59,7 +59,7 @@
 
         <div class="card">
             <h3>📂 النماذج المحفوظة والنتائج الواردة</h3>
-            <div id="modelsList">جاري جلب البيانات من السحابة...</div>
+            <div id="modelsList">جاري جلب النماذج...</div>
         </div>
     </div>
 </div>
@@ -80,6 +80,7 @@
 </div>
 
 <script>
+    // إعدادات Firebase
     const firebaseConfig = {
         databaseURL: "https://youy-apps-default-rtdb.firebaseio.com",
         projectId: "youy-apps",
@@ -92,6 +93,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const quizId = urlParams.get('id');
 
+    // تحديد الواجهة
     if (quizId) {
         document.getElementById('studentView').classList.remove('hidden');
         loadStudentQuiz(quizId);
@@ -161,27 +163,32 @@
                             <button onclick="deleteModel('${child.key}')" class="btn btn-action" style="background:#ef4444">🗑️</button>
                         </div>
                     </div>
-                    <div id="res_container_${child.key}" class="hidden res-container"></div>
+                    <div id="res_box_${child.key}" class="hidden res-container"></div>
                 </div>`;
             });
         });
     }
 
+    // دالة النتائج المحدثة والمؤكدة
     function viewResults(mId) {
-        const resDiv = document.getElementById('res_container_'+mId);
+        const resDiv = document.getElementById('res_box_'+mId);
         resDiv.classList.toggle('hidden');
         if(!resDiv.classList.contains('hidden')) {
-            resDiv.innerHTML = 'جاري تحميل النتائج...';
+            resDiv.innerHTML = '<p style="text-align:center">جاري جلب إجابات الطلاب...</p>';
             db.ref('results/'+mId).once('value', (snap) => {
-                if(!snap.exists()) { resDiv.innerHTML = 'لا توجد نتائج بعد لهذا النموذج.'; return; }
-                let html = `<table><tr><th>الطالب</th><th>الفصل</th><th>الوقت</th><th>الإجابات</th></tr>`;
+                if(!snap.exists()) { resDiv.innerHTML = '<p style="color:red; text-align:center">لا توجد نتائج لهذا النموذج حتى الآن.</p>'; return; }
+                let tableHtml = `<table><tr><th>اسم الطالب</th><th>الفصل</th><th>الوقت</th><th>الإجابات</th></tr>`;
                 snap.forEach(c => {
                     const r = c.val();
-                    let ansTxt = r.answers ? r.answers.map((a, i) => `س${i+1}: ${a}`).join(' | ') : 'لا يوجد';
-                    html += `<tr><td>${r.name}</td><td>${r.class}</td><td>${new Date(r.time).toLocaleTimeString('ar-SA')}</td>
-                             <td><button onclick="Swal.fire({title:'إجابات الطالب', text:'${ansTxt}', width:'80%'})">👁️</button></td></tr>`;
+                    let ansTxt = r.answers ? r.answers.map((a, i) => `س${i+1}: ${a}`).join('\n') : 'لا توجد بيانات';
+                    tableHtml += `<tr>
+                        <td>${r.name}</td>
+                        <td>${r.class}</td>
+                        <td>${new Date(r.time).toLocaleTimeString('ar-SA')}</td>
+                        <td><button class="btn" style="background:#0284c7; color:white; padding:4px 8px" onclick="Swal.fire({title:'تفاصيل إجابات الطالب', text:'${ansTxt.replace(/\n/g, ' | ')}'})">👁️ معاينة</button></td>
+                    </tr>`;
                 });
-                resDiv.innerHTML = html + `</table>`;
+                resDiv.innerHTML = tableHtml + `</table>`;
             });
         }
     }
@@ -190,14 +197,13 @@
     function loadStudentQuiz(id) {
         db.ref('models/'+id).once('value', (snap) => {
             if(snap.exists()) { currentQuiz = snap.val(); document.getElementById('stQuizTitle').innerText = currentQuiz.title; }
-            else Swal.fire('خطأ', 'النموذج غير موجود', 'error');
         });
     }
 
     function startStudentQuiz() {
         const name = document.getElementById('stName').value;
         const cls = document.getElementById('stClass').value;
-        if(!name || !cls) return Swal.fire('تنبيه', 'أكمل بياناتك', 'warning');
+        if(!name || !cls) return Swal.fire('تنبيه', 'أدخل بياناتك', 'warning');
         const device = btoa(navigator.userAgent).substring(0,20);
         if(currentQuiz.lock) {
             db.ref('results/'+quizId).orderByChild('device').equalTo(device).once('value', (s) => {
@@ -216,11 +222,11 @@
         if(currentQuiz.shuffle) qs = qs.sort(() => Math.random() - 0.5);
         qs.forEach((q, i) => {
             let h = `<div class="card" data-type="${q.type}"><h4>${q.text}</h4>`;
-            if(q.type==='extract') h = `<div class="card" data-type="extract"><p style="background:#eee;padding:10px;border-radius:10px;">${q.text}</p><h4>${q.sub}</h4>`;
+            if(q.type==='extract') h = `<div class="card" data-type="extract"><p style="background:#eee;padding:15px;border-radius:10px;">${q.text}</p><h4>${q.sub}</h4>`;
             if(q.type==='choice') {
-                q.opts.forEach(o => { h += `<label style="display:block; margin:8px 0;"><input type="radio" name="q${i}" value="${o}"> ${o}</label>`; });
+                q.opts.forEach(o => { h += `<label style="display:block; margin:10px 0;"><input type="radio" name="q${i}" value="${o}"> ${o}</label>`; });
             } else {
-                h += `<input type="text" class="ans-input" placeholder="إجابتك هنا...">`;
+                h += `<input type="text" class="ans-input" placeholder="اكتب إجابتك هنا...">`;
             }
             area.innerHTML += h + `</div>`;
         });
@@ -229,18 +235,17 @@
     function submitStudentAnswers() {
         let answers = [];
         const cards = document.querySelectorAll('#stQuestions .card');
-        cards.forEach((card, i) => {
+        cards.forEach((card) => {
             const type = card.getAttribute('data-type');
             if(type === 'choice') {
                 const checked = card.querySelector('input:checked');
-                answers.push(checked ? checked.value : "بدون إجابة");
+                answers.push(checked ? checked.value : "لم يتم الاختيار");
             } else {
                 const val = card.querySelector('.ans-input').value;
                 answers.push(val || "بدون إجابة");
             }
         });
-        const result = { name: document.getElementById('stName').value, class: document.getElementById('stClass').value, 
-                         answers, device: btoa(navigator.userAgent).substring(0,20), time: Date.now() };
+        const result = { name: document.getElementById('stName').value, class: document.getElementById('stClass').value, answers, device: btoa(navigator.userAgent).substring(0,20), time: Date.now() };
         db.ref('results/'+quizId).push(result).then(() => {
             Swal.fire('تم الإرسال', 'تم استلام إجاباتك بنجاح', 'success').then(() => location.reload());
         });
@@ -250,8 +255,7 @@
         const id = document.getElementById('currentModelId').value;
         if(!id) return Swal.fire('تنبيه', 'احفظ النموذج أولاً', 'error');
         const link = window.location.origin + window.location.pathname + '?id=' + id;
-        Swal.fire({ title: 'رابط الطلاب', html: `<input id="copyL" value="${link}" style="width:100%; text-align:center; padding:10px;" readonly>`, 
-                   confirmButtonText: 'نسخ الرابط' }).then(() => { const input = document.getElementById('copyL'); input.select(); document.execCommand('copy'); });
+        Swal.fire({ title: 'رابط الطلاب', html: `<input id="copyL" value="${link}" style="width:100%; text-align:center; padding:10px;" readonly>`, confirmButtonText: 'نسخ الرابط' }).then(() => { const input = document.getElementById('copyL'); input.select(); document.execCommand('copy'); });
     }
 
     function newQuiz() { document.getElementById('currentModelId').value=''; document.getElementById('quizTitle').value=''; document.getElementById('questionsArea').innerHTML=''; qCount=0; }

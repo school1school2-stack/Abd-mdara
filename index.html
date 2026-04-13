@@ -25,12 +25,12 @@
         
         select, input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1.5px solid #cbd5e1; border-radius: 10px; font-family: 'Cairo'; box-sizing: border-box; }
         .btn { padding: 12px 25px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; font-family: 'Cairo'; transition: 0.3s; }
-        .btn-main { background: var(--primary); color: white; width: 100%; }
+        .btn-main { background: var(--primary); color: white; width: 100%; margin-top: 10px; }
         .btn-add { background: #0f172a; color: white; margin-bottom: 20px; width: 100%; }
         .btn-delete { background: #ef4444; color: white; padding: 5px 15px; font-size: 0.8rem; }
-        .btn-view { background: #0284c7; color: white; font-size: 0.8rem; margin-top: 5px; }
+        .btn-action { background: #0284c7; color: white; font-size: 0.8rem; margin: 2px; }
         
-        .color-opt { width: 30px; height: 30px; border-radius: 50%; display: inline-block; cursor: pointer; border: 2px solid white; outline: 1px solid #ddd; }
+        .color-opt { width: 30px; height: 30px; border-radius: 50%; display: inline-block; cursor: pointer; border: 2px solid white; outline: 1px solid #ddd; margin-left: 5px; }
         .results-panel { background: #fff; border: 1px solid #ddd; border-radius: 15px; padding: 15px; margin-top: 10px; display: none; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
         th, td { border: 1px solid #eee; padding: 8px; text-align: center; }
@@ -39,49 +39,50 @@
 <body>
 
 <div class="admin-header">
-    <h1>لوحة تحكم المعلم الذكية 🛠️</h1>
-    <p>أ. عبدالعزيز الفيفي - الإدارة النحوية والسحابية</p>
+    <h1>لوحة تحكم المعلم الذكية ⚖️</h1>
+    <p>أ. عبدالعزيز الفيفي - نظام توليد وإدارة النماذج السحابية</p>
 </div>
 
 <div class="container">
     <div class="sidebar-settings">
-        <h3>⚙️ إعدادات النموذج</h3>
+        <h3>⚙️ إعدادات النموذج (التحكم)</h3>
         <input type="hidden" id="currentModelId">
-        <input type="text" id="quizTitle" placeholder="عنوان الاختبار (مثلاً: كفايات النحو - النموذج 4)">
+        <input type="text" id="quizTitle" placeholder="عنوان الاختبار (مثلاً: كفايات 4 - الفترة الأولى)">
         
         <div class="setup-grid">
             <div class="setting-item"><span>🔀 خلط عشوائي</span><input type="checkbox" id="shuffleOpt"></div>
             <div class="setting-item"><span>🔒 غلق الإعادة</span><input type="checkbox" id="lockOpt" checked></div>
-            <div class="setting-item"><span>🎨 لون الهوية</span>
+            <div class="setting-item"><span>🎨 لون النموذج</span>
                 <div id="colors">
                     <span class="color-opt" style="background:#7f1d1d" onclick="setTheme('#7f1d1d')"></span>
                     <span class="color-opt" style="background:#1e3a8a" onclick="setTheme('#1e3a8a')"></span>
                     <span class="color-opt" style="background:#065f46" onclick="setTheme('#065f46')"></span>
+                    <span class="color-opt" style="background:#92400e" onclick="setTheme('#92400e')"></span>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="questionsArea"></div>
-    <button class="btn btn-add" onclick="addQuestion()">+ إضافة سؤال جديد</button>
+    <button class="btn btn-add" onclick="addQuestion()">+ إضافة سؤال جديد واختيار نوعه</button>
 
     <div class="sidebar-settings" style="border-top: 4px solid var(--primary);">
         <div class="setup-grid">
-            <button class="btn btn-main" onclick="saveToCloud()">💾 حفظ في السحابة</button>
-            <button class="btn btn-main" style="background:#0284c7" onclick="generateLink()">🔗 توليد رابط</button>
+            <button class="btn btn-main" onclick="saveToCloud()">💾 حفظ وحفظ في السحابة</button>
+            <button class="btn btn-main" style="background:#0284c7" onclick="generateLink()">🔗 توليد رابط الطلاب</button>
             <button class="btn btn-main" style="background:#64748b" onclick="newQuiz()">📄 نموذج جديد</button>
             <button class="btn btn-delete" style="width:100%" onclick="deleteAll()">🗑️ حذف الكل</button>
         </div>
     </div>
 
     <div class="sidebar-settings">
-        <h3>📂 النماذج المحفوظة في السحاب والنتائج</h3>
-        <div id="cloudModelsList">جاري التحميل...</div>
+        <h3>📂 النماذج السحابية المحفوظة والنتائج</h3>
+        <div id="cloudModelsList">جاري جلب البيانات...</div>
     </div>
 </div>
 
 <script>
-    // إعدادات Firebase الخاصة بمشروعك
+    // إعدادات Firebase من واقع مشروعك
     const firebaseConfig = {
         apiKey: "AIzaSyAvRIim7axjg0hGrMk0qVrXT...", 
         authDomain: "youy-apps.firebaseapp.com",
@@ -100,7 +101,7 @@
     function setTheme(color) {
         currentColor = color;
         document.documentElement.style.setProperty('--primary', color);
-        Swal.fire({ title: 'تم اختيار اللون', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 1000 });
+        Swal.fire({ title: 'تم تغيير اللون', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 1000 });
     }
 
     function addQuestion(data = null) {
@@ -110,14 +111,15 @@
             <div class="q-card" id="${qId}">
                 <span class="q-type-badge">سؤال رقم ${qCount}</span>
                 <select onchange="renderQInputs(this, ${qCount})" class="q-type">
-                    <option value="text" ${data?.type=='text'?'selected':''}>✍️ سؤال وجواب (نصي)</option>
-                    <option value="true_false" ${data?.type=='true_false'?'selected':''}>✅ صح وخطأ</option>
-                    <option value="choice" ${data?.type=='choice'?'selected':''}>🔘 اختر الإجابة</option>
-                    <option value="parsing" ${data?.type=='parsing'?'selected':''}>⚖️ إعراب</option>
-                    <option value="extract" ${data?.type=='extract'?'selected':''}>📄 استخراج</option>
+                    <option value="text" ${data?.type=='text'?'selected':''}>مثل / سؤال وجواب</option>
+                    <option value="true_false" ${data?.type=='true_false'?'selected':''}>صح وخطأ / سؤال وجواب</option>
+                    <option value="complete" ${data?.type=='complete'?'selected':''}>أكمل / سؤال وجواب</option>
+                    <option value="choice" ${data?.type=='choice'?'selected':''}>اختر / سؤال و 4 خيارات</option>
+                    <option value="parsing" ${data?.type=='parsing'?'selected':''}>أعرب / سؤال وجواب</option>
+                    <option value="extract" ${data?.type=='extract'?'selected':''}>استخرج / نص وسؤال وجواب</option>
                 </select>
                 <div id="inputs_${qCount}"></div>
-                <button class="btn btn-delete" onclick="document.getElementById('${qId}').remove()">حذف</button>
+                <button class="btn btn-delete" onclick="document.getElementById('${qId}').remove()">حذف السؤال</button>
             </div>`;
         document.getElementById('questionsArea').insertAdjacentHTML('beforeend', html);
         renderQInputs(document.querySelector(`#${qId} select`), qCount, data);
@@ -127,10 +129,11 @@
         const target = document.getElementById(`inputs_${id}`);
         const type = select.value;
         let html = '';
+
         if(type === 'extract') {
-            html = `<textarea class="q-text" placeholder="النص الأصلي">${data?.text||''}</textarea>
+            html = `<textarea class="q-text" placeholder="مكان النص الأصلي">${data?.text||''}</textarea>
                     <input type="text" class="q-sub" placeholder="السؤال" value="${data?.sub||''}">
-                    <input type="text" class="q-ans" placeholder="الإجابة الصحيحة" value="${data?.ans||''}">`;
+                    <input type="text" class="q-ans" placeholder="مكان الجواب" value="${data?.ans||''}">`;
         } else if(type === 'choice') {
             html = `<input type="text" class="q-text" placeholder="السؤال" value="${data?.text||''}">
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px">
@@ -139,20 +142,19 @@
                         <input type="text" class="opt3" placeholder="خيار 3" value="${data?.opts?.[2]||''}">
                         <input type="text" class="opt4" placeholder="خيار 4" value="${data?.opts?.[3]||''}">
                     </div>
-                    <input type="text" class="q-ans" placeholder="الإجابة الصحيحة" value="${data?.ans||''}">`;
+                    <input type="text" class="q-ans" placeholder="مكان الإجابة الصحيحة" value="${data?.ans||''}">`;
         } else {
             html = `<input type="text" class="q-text" placeholder="السؤال" value="${data?.text||''}">
-                    <input type="text" class="q-ans" placeholder="الإجابة الصحيحة" value="${data?.ans||''}">`;
+                    <input type="text" class="q-ans" placeholder="مكان الجواب" value="${data?.ans||''}">`;
         }
         target.innerHTML = html + `<input type="text" class="q-hint" placeholder="تلميح المساعدة (?)" value="${data?.hint||''}">`;
     }
 
-    // حفظ أو تعديل النموذج في السحابة
     function saveToCloud() {
         const id = document.getElementById('currentModelId').value;
         const title = document.getElementById('quizTitle').value;
         const qCards = document.querySelectorAll('.q-card');
-        if(!title || qCards.length === 0) return Swal.fire('خطأ', 'أدخل العنوان والأسئلة', 'error');
+        if(!title) return Swal.fire('تنبيه', 'يرجى إدخال عنوان للنموذج', 'warning');
 
         let questions = [];
         qCards.forEach(card => {
@@ -163,16 +165,15 @@
             questions.push(qData);
         });
 
-        const finalData = { title: title, questions: questions, color: currentColor, shuffle: document.getElementById('shuffleOpt').checked, lock: document.getElementById('lockOpt').checked };
+        const finalData = { title: title, questions: questions, color: currentColor, shuffle: document.getElementById('shuffleOpt').checked, lock: document.getElementById('lockOpt').checked, lastUpdate: Date.now() };
 
         if(id) {
-            db.ref('models/' + id).update(finalData).then(() => Swal.fire('تم التحديث', 'تم حفظ التعديلات سحابياً', 'success'));
+            db.ref('models/' + id).update(finalData).then(() => Swal.fire('تم التحديث', 'تم حفظ التعديلات في السحابة', 'success'));
         } else {
-            db.ref('models').push(finalData).then(() => { Swal.fire('تم الحفظ', 'تم رفع النموذج للسحابة', 'success'); newQuiz(); });
+            db.ref('models').push(finalData).then(() => { Swal.fire('تم الحفظ', 'تم رفع النموذج بنجاح', 'success'); newQuiz(); });
         }
     }
 
-    // جلب القائمة من السحابة
     db.ref('models').on('value', (snap) => {
         const list = document.getElementById('cloudModelsList');
         list.innerHTML = '';
@@ -180,15 +181,16 @@
             const m = child.val();
             const id = child.key;
             list.innerHTML += `
-                <div class="setting-item" style="border-right:5px solid ${m.color}">
-                    <span>${m.title}</span>
+                <div class="setting-item" style="border-right:6px solid ${m.color}">
+                    <span><b>${m.title}</b></span>
                     <div>
-                        <button class="btn btn-view" style="background:#0284c7" onclick="loadToEdit('${id}')">📝 تعديل</button>
-                        <button class="btn btn-view" onclick="toggleResults('${id}')">📊 النتائج</button>
+                        <button class="btn btn-action" onclick="loadToEdit('${id}')">📝 تعديل</button>
+                        <button class="btn btn-action" style="background:#059669" onclick="toggleResults('${id}')">📊 نتائج الطلاب</button>
+                        <button class="btn btn-action" style="background:#ef4444" onclick="deleteModel('${id}')">🗑️ حذف</button>
                     </div>
                 </div>
                 <div id="res_${id}" class="results-panel">
-                    <table><thead><tr><th>الطالب</th><th>الدرجة</th><th>إجراء</th></tr></thead><tbody id="tbody_${id}"></tbody></table>
+                    <table><thead><tr><th>اسم الطالب</th><th>الدرجة</th><th>إجراء</th></tr></thead><tbody id="tbody_${id}"></tbody></table>
                 </div>`;
             loadResults(id);
         });
@@ -202,7 +204,7 @@
             document.getElementById('quizTitle').value = m.title;
             setTheme(m.color);
             m.questions.forEach(q => addQuestion(q));
-            window.scrollTo(0,0);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
 
@@ -213,7 +215,7 @@
             tbody.innerHTML = '';
             snap.forEach(child => {
                 const r = child.val();
-                tbody.innerHTML += `<tr><td>${r.name}</td><td>${r.score}</td><td><button onclick="editGrade('${mId}','${child.key}')">⚖️</button></td></tr>`;
+                tbody.innerHTML += `<tr><td>${r.name}</td><td>${r.score}</td><td><button onclick="reviewStudent('${mId}','${child.key}')">👁️ مراجعة</button></td></tr>`;
             });
         });
     }
@@ -224,8 +226,9 @@
     }
 
     function generateLink() {
-        const id = document.getElementById('currentModelId').value || "new";
-        Swal.fire('رابط الطالب', `https://alfaifi-edu.web.app/quiz?id=${id}`, 'info');
+        const id = document.getElementById('currentModelId').value;
+        if(!id) return Swal.fire('تنبيه', 'يجب حفظ النموذج في السحابة أولاً للحصول على رابط', 'warning');
+        Swal.fire('رابط الطلاب', `https://alfaifi-edu.web.app/quiz?id=${id}`, 'info');
     }
 
     function newQuiz() {
@@ -235,7 +238,11 @@
         qCount = 0;
     }
 
-    function deleteAll() { if(confirm('حذف كل الأسئلة؟')) { document.getElementById('questionsArea').innerHTML = ''; qCount = 0; } }
+    function deleteModel(id) {
+        if(confirm('هل أنت متأكد من حذف هذا النموذج نهائياً؟')) db.ref('models/' + id).remove();
+    }
+
+    function deleteAll() { if(confirm('حذف كل الأسئلة في الصفحة الحالية؟')) { document.getElementById('questionsArea').innerHTML = ''; qCount = 0; } }
 </script>
 </body>
 </html>

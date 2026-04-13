@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة الفيفي للاختبارات | الإصدار الشامل</title>
+    <title>منصة الفيفي الرقمية | النماذج المدمجة</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -11,71 +11,71 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        :root { --primary: #1e3a8a; --accent: #3b82f6; --success: #10b981; --bg: #f1f5f9; }
+        :root { --primary: #7f1d1d; --accent: #b91c1c; --success: #065f46; --bg: #fffafb; }
         body { font-family: 'Cairo', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
-        .header { background: linear-gradient(135deg, #0f172a, #1e3a8a); color: white; padding: 40px; text-align: center; border-bottom: 6px solid var(--accent); }
-        .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
-        
-        /* تصميم الكروت والأقسام */
-        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom: 25px; display: none; border: 1px solid #e2e8f0; }
-        .active { display: block; animation: slideIn 0.4s ease; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .section-title { background: var(--primary); color: white; padding: 10px 20px; border-radius: 10px; display: inline-block; margin-bottom: 20px; }
-        .q-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        .q-item { background: #f8fafc; padding: 20px; border-radius: 15px; border-right: 6px solid var(--accent); position: relative; }
-        
-        /* لوحة التحكم */
-        .admin-btn { position: fixed; bottom: 20px; left: 20px; background: #64748b; color: white; border: none; padding: 10px; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; opacity: 0.5; }
-        .admin-panel { background: #fff; padding: 20px; border-radius: 15px; border: 2px solid var(--primary); margin-top: 20px; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
-        th, td { padding: 12px; border: 1px solid #e2e8f0; text-align: center; }
-        
-        input[type="text"], select { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #cbd5e1; border-radius: 10px; font-family: 'Cairo'; }
-        .btn { padding: 12px 25px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; font-family: 'Cairo'; transition: 0.3s; }
-        .btn-main { background: var(--primary); color: white; width: 100%; }
-        .btn-next { background: var(--accent); color: white; float: left; }
+        .header { background: linear-gradient(135deg, #7f1d1d, #450a0a); color: white; padding: 40px 20px; text-align: center; border-bottom: 8px solid #fca5a5; }
+        .container { max-width: 900px; margin: 20px auto 50px; padding: 0 20px; }
+        #timer-bar { position: sticky; top: 10px; z-index: 100; background: white; border: 2px solid var(--primary); padding: 8px 25px; border-radius: 50px; width: fit-content; margin: 0 auto 20px; font-weight: 900; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .progress-box { background: #fee2e2; height: 10px; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+        #progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.5s; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(127, 29, 29, 0.1); display: none; border: 1px solid #fecaca; }
+        .card.active { display: block; animation: zoomIn 0.4s ease; }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .q-box { background: #fff5f5; padding: 20px; border-radius: 15px; margin-bottom: 20px; border-right: 6px solid var(--primary); position: relative; }
+        .hint-btn { position: absolute; left: 15px; top: 15px; background: #92400e; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .opt-label { background: white; padding: 12px; border: 2px solid #fecaca; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        input[type="text"], select { width: 100%; padding: 12px; border: 2px solid #fecaca; border-radius: 10px; font-family: 'Cairo'; margin-top: 10px; }
+        .btn { padding: 12px 35px; border-radius: 12px; border: none; font-family: 'Cairo'; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-next { background: var(--primary); color: white; width: 100%; margin-top: 10px; }
+        .admin-trigger { position: fixed; bottom: 20px; left: 20px; opacity: 0.3; cursor: pointer; font-size: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
+        th, td { padding: 10px; border: 1px solid #fecaca; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>منصة الفيفي الرقمية للاختبارات</h1>
-    <p id="subTitle">نظام الاختبارات المؤتمتة - الإصدار السحابي</p>
+    <h1>منصة كفايات النحو الشاملة</h1>
+    <p>بإشراف أ. عبدالعزيز الفيفي | نظام النماذج المدمجة</p>
 </div>
 
 <div class="container">
-    <div id="step0" class="card active">
-        <h3 style="text-align:center">تسجيل دخول الطالب</h3>
-        <input type="text" id="stdName" placeholder="الاسم الرباعي">
-        <input type="text" id="stdClass" placeholder="الصف / الفصل">
-        <select id="modelChoice">
-            <option value="random">توزيع تلقائي للنماذج</option>
-            <option value="1">النموذج 1</option>
-            <option value="2">النموذج 2</option>
-        </select>
-        <button class="btn btn-main" onclick="startEngine()">بدأ الاختبار</button>
-    </div>
+    <div id="timer-bar" style="display:none">⏱️ <span id="clock">45:00</span> | <span id="modelLabel"></span></div>
+    <div id="p-box" class="progress-box" style="display:none"><div id="progress-fill"></div></div>
 
-    <div id="examContainer"></div>
-
-    <button class="admin-btn" onclick="openAdmin()">⚙️</button>
-    <div id="adminPanel" class="container" style="display:none">
-        <div class="card active">
-            <h2>لوحة تحكم المعلم 🔒</h2>
-            <div id="resultsView">
-                <h3>نتائج الطلاب المباشرة</h3>
-                <div style="overflow-x:auto"><table id="resultsTable"><thead><tr><th>الطالب</th><th>الفصل</th><th>النموذج</th><th>الدرجة</th><th>التوقيت</th></tr></thead><tbody></tbody></table></div>
-            </div>
-            <hr>
-            <button class="btn" onclick="location.reload()">خروج</button>
+    <form id="quizForm">
+        <div class="card active" id="step0">
+            <h3 style="text-align:center; color:var(--primary)">تسجيل دخول الطالب</h3>
+            <input type="text" id="stdName" placeholder="الاسم الكامل" required>
+            <input type="text" id="stdClass" placeholder="الفصل" required>
+            <select id="modelChoice">
+                <option value="random">توزيع عشوائي للنماذج (1-4)</option>
+                <option value="1">النموذج 1</option>
+                <option value="2">النموذج 2</option>
+                <option value="3">النموذج 3</option>
+                <option value="4">النموذج 4</option>
+            </select>
+            <button type="button" class="btn btn-next" onclick="initSystem()">بدء الاختبار</button>
         </div>
+        <div id="dynamicContent"></div>
+    </form>
+
+    <div class="admin-trigger" onclick="openAdmin()">⚙️</div>
+    <div id="adminPanel" class="card">
+        <h2 style="text-align:center">لوحة تحكم المعلم السحابية</h2>
+        <div style="overflow-x:auto">
+            <table id="resultsTable">
+                <thead><tr><th>الطالب</th><th>الفصل</th><th>النموذج</th><th>الدرجة</th><th>الوقت</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <button class="btn btn-next" onclick="location.reload()">خروج</button>
     </div>
 </div>
 
 <script>
-    // --- بيانات Firebase (ضع بياناتك هنا ليعمل الحفظ) ---
+    // --- بيانات Firebase (ضع بياناتك هنا) ---
     const firebaseConfig = {
         apiKey: "AIzaSyAvRIim7axjg0hGrMk0qVrXT...", 
         authDomain: "youy-apps.firebaseapp.com",
@@ -85,100 +85,120 @@
         messagingSenderId: "690543747528",
         appId: "1:690543747528:web:10c85ef0c93b79596620fd"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // هيكلة الأقسام الستة (نموذج محاكي)
-    const sectionsNames = ["التمثيل والنحو", "الصح والخطأ", "الاختيارات المتعددة", "إكمال الفراغات", "الإعراب والتحليل", "الاستخراج من النص"];
-    
-    let currentStep = 0;
-    let score = 0;
+    // استيراد بيانات النماذج (تم دمج أسئلة النموذج 4 كمثال، ويمكن تكرارها للبقية)
+    const allModelsData = {
+        "1": [ /* أسئلة النموذج 1 هنا */ ],
+        "2": [ /* أسئلة النموذج 2 هنا */ ],
+        "3": [ /* أسئلة النموذج 3 هنا */ ],
+        "4": [
+            { q: "استخرج الفعل المنصوب من: (لن تنالوا البر حتى تنفقوا)", type: 'text', ans: "تنالوا", hint: "يوجد فعلان، اختر الأول." },
+            { q: "ما علامة جزم الفعل في: (لم يخشَ إلا الله)؟", type: 'text', ans: "حذف حرف العلة", hint: "أصله يخشى." },
+            // ... (باقي الـ 42 سؤال للنموذج 4)
+        ]
+    };
 
-    function startEngine() {
+    let selectedModel = "1";
+    let currentStep = 1;
+    let timer;
+
+    function initSystem() {
         const name = document.getElementById('stdName').value;
-        if(!name) return Swal.fire('تنبيه','ادخل اسمك','warning');
-        
+        const cls = document.getElementById('stdClass').value;
+        if(!name || !cls) return Swal.fire('تنبيه','أكمل بياناتك','error');
+
+        let choice = document.getElementById('modelChoice').value;
+        selectedModel = (choice === "random") ? (Math.floor(Math.random() * 4) + 1).toString() : choice;
+
         document.getElementById('step0').classList.remove('active');
-        buildExamSteps();
-        document.getElementById('sectionStep1').classList.add('active');
+        document.getElementById('timer-bar').style.display = 'block';
+        document.getElementById('p-box').style.display = 'block';
+        document.getElementById('modelLabel').innerText = "النموذج: " + selectedModel;
+
+        renderModel(selectedModel);
+        startTimer(2700);
     }
 
-    function buildExamSteps() {
-        const container = document.getElementById('examContainer');
-        for(let i=1; i<=6; i++) {
-            let sectionHtml = `
-                <div id="sectionStep${i}" class="card">
-                    <div class="section-title">القسم ${i}: ${sectionsNames[i-1]}</div>
-                    <div class="q-grid">
-                        ${generateQuestionsForSection(i)}
-                    </div>
-                    <div style="margin-top:20px; overflow:hidden">
-                        <button class="btn btn-next" onclick="nextStep(${i})">${i===6 ? 'إرسال النتيجة للسحابة' : 'القسم التالي'}</button>
-                    </div>
-                </div>`;
-            container.innerHTML += sectionHtml;
+    function renderModel(m) {
+        const cont = document.getElementById('dynamicContent');
+        const questions = allModelsData[m] || allModelsData["4"]; // افتراضياً نستخدم 4 إذا لم تتوفر البقية
+
+        for (let s = 0; s < 6; s++) {
+            const div = document.createElement('div');
+            div.className = 'card'; div.id = `step${s+1}`;
+            div.innerHTML = `<h2 style="text-align:center; color:var(--primary)">المرحلة ${s+1} من 6</h2>`;
+            
+            for (let q = 0; q < 7; q++) {
+                const idx = (s * 7) + q;
+                const item = questions[idx] || {q:"سؤال إضافي", type:"text", ans:"-", hint:"-"};
+                div.innerHTML += `
+                    <div class="q-box">
+                        <button type="button" class="hint-btn" onclick="Swal.fire('تلميح','${item.hint}','info')">?</button>
+                        <b>س${idx+1}: ${item.q}</b>
+                        ${item.type === 'radio' ? renderOptions(idx, item.opts) : `<input type="text" id="ans${idx}" placeholder="اكتب إجابتك هنا...">`}
+                    </div>`;
+            }
+            const isLast = (s === 5);
+            div.innerHTML += `<button type="button" class="btn btn-next" onclick="${isLast?'saveToCloud()':'goNext('+(s+1)+')'}">${isLast?'إرسال النتائج للسحابة':'القسم التالي'}</button>`;
+            cont.appendChild(div);
         }
+        document.getElementById('step1').classList.add('active');
     }
 
-    function generateQuestionsForSection(sIdx) {
-        let qs = '';
-        for(let q=1; q<=7; q++) {
-            qs += `
-                <div class="q-item">
-                    <b>س${q}: سؤال افتراضي في ${sectionsNames[sIdx-1]}؟</b>
-                    <input type="text" class="q-input-s${sIdx}" placeholder="إجابتك...">
-                </div>`;
-        }
-        return qs;
+    function renderOptions(idx, opts) {
+        let html = '<div class="options-grid">';
+        opts.forEach(o => html += `<label class="opt-label"><input type="radio" name="q${idx}" value="${o}"> ${o}</label>`);
+        return html + '</div>';
     }
 
-    function nextStep(current) {
-        if(current < 6) {
-            document.getElementById(`sectionStep${current}`).classList.remove('active');
-            document.getElementById(`sectionStep${current+1}`).classList.add('active');
-            window.scrollTo(0,0);
-        } else {
-            finishAndSave();
-        }
+    function goNext(curr) {
+        document.getElementById(`step${curr}`).classList.remove('active');
+        document.getElementById(`step${curr+1}`).classList.add('active');
+        document.getElementById('progress-fill').style.width = (curr / 6) * 100 + "%";
+        window.scrollTo(0,0);
     }
 
-    function finishAndSave() {
-        // حساب الدرجة (هنا نضع منطق التصحيح)
-        let finalScore = Math.floor(Math.random() * 20) + 22; // مثال
+    function saveToCloud() {
+        // حساب الدرجة (مثال سريع)
+        let score = Math.floor(Math.random() * 10) + 32; 
 
         const data = {
             name: document.getElementById('stdName').value,
             class: document.getElementById('stdClass').value,
-            model: "نموذج سحابي 1",
-            score: finalScore + " / 42",
-            time: new Date().toLocaleString('ar-SA')
+            model: selectedModel,
+            score: score + " / 42",
+            timestamp: new Date().toLocaleString('ar-SA')
         };
 
-        db.ref('results').push(data).then(() => {
-            Swal.fire('تم الحفظ','تم إرسال إجاباتك كاملة للأقسام الستة إلى قاعدة بيانات المعلم','success').then(()=>location.reload());
+        db.ref('all_results').push(data).then(() => {
+            Swal.fire('تم الإرسال','شكراً لك، تم حفظ نتيجتك في سحابة المعلم.','success').then(()=>location.reload());
         });
     }
 
     function openAdmin() {
-        const p = prompt("كلمة مرور المعلم:");
-        if(p === "admin123") {
-            document.getElementById('examContainer').style.display = 'none';
-            document.getElementById('step0').style.display = 'none';
-            document.getElementById('adminPanel').style.display = 'block';
-            fetchResults();
+        const pass = prompt("كلمة مرور المعلم:");
+        if(pass === "admin123") {
+            document.getElementById('quizForm').style.display = 'none';
+            document.getElementById('adminPanel').classList.add('active');
+            db.ref('all_results').on('value', (snap) => {
+                let rows = '';
+                snap.forEach(c => {
+                    const r = c.val();
+                    rows += `<tr><td>${r.name}</td><td>${r.class}</td><td>${r.model}</td><td>${r.score}</td><td>${r.timestamp}</td></tr>`;
+                });
+                document.querySelector('#resultsTable tbody').innerHTML = rows;
+            });
         }
     }
 
-    function fetchResults() {
-        db.ref('results').on('value', (snap) => {
-            let rows = '';
-            snap.forEach(c => {
-                const r = c.val();
-                rows += `<tr><td>${r.name}</td><td>${r.class}</td><td>${r.model}</td><td>${r.score}</td><td>${r.time}</td></tr>`;
-            });
-            document.querySelector('#resultsTable tbody').innerHTML = rows;
-        });
+    function startTimer(sec) {
+        timer = setInterval(() => {
+            let m = Math.floor(sec/60), s = sec%60;
+            document.getElementById('clock').innerText = `${m}:${s<10?'0'+s:s}`;
+            if(sec-- <= 0) { clearInterval(timer); saveToCloud(); }
+        }, 1000);
     }
 </script>
 </body>

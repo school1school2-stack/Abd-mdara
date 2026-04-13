@@ -3,154 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الفيفي التعليمي السحابي</title>
+    <title>اختبار النحو الشامل (نموذج 4) | أ. عبدالعزيز الفيفي</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-
     <style>
-        :root { --primary: #1e3a8a; --accent: #3b82f6; --success: #10b981; --hint: #f59e0b; --bg: #f8fafc; }
-        body { font-family: 'Cairo', sans-serif; background: var(--bg); margin: 0; direction: rtl; }
-        .header { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 30px 20px; text-align: center; clip-path: polygon(0 0, 100% 0, 100% 95%, 0% 100%); }
-        .container { max-width: 900px; margin: -20px auto 50px; padding: 0 15px; }
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: none; border: 1px solid #e2e8f0; }
-        .active { display: block; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #e2e8f0; border-radius: 10px; font-family: 'Cairo'; box-sizing: border-box; }
-        .btn { padding: 12px 25px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; width: 100%; transition: 0.3s; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-admin { background: #4f46e5; color: white; margin-top: 10px; }
-        .q-row { background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-right: 5px solid var(--accent); }
-        .admin-panel { background: #fff; border: 2px dashed #4f46e5; }
+        :root { --primary: #7f1d1d; --accent: #b91c1c; --success: #065f46; --error: #991b1b; --hint: #92400e; --bg: #fffafb; }
+        body { font-family: 'Cairo', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
+        .header { background: linear-gradient(135deg, #7f1d1d, #450a0a); color: white; padding: 40px 20px; text-align: center; border-bottom: 8px solid #fca5a5; }
+        .container { max-width: 900px; margin: 20px auto 50px; padding: 0 20px; }
+        #timer-bar { position: sticky; top: 10px; z-index: 100; background: white; border: 2px solid var(--primary); padding: 8px 25px; border-radius: 50px; width: fit-content; margin: 0 auto 20px; font-weight: 900; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .progress-box { background: #fee2e2; height: 10px; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+        #progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.5s; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(127, 29, 29, 0.1); display: none; border: 1px solid #fecaca; }
+        .card.active { display: block; animation: zoomIn 0.4s ease; }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .q-box { background: #fff5f5; padding: 20px; border-radius: 15px; margin-bottom: 20px; border-right: 6px solid var(--primary); position: relative; }
+        .hint-btn { position: absolute; left: 15px; top: 15px; background: var(--hint); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .opt-label { background: white; padding: 12px; border: 2px solid #fecaca; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .opt-label:hover { background: #fff1f2; }
+        input[type="text"] { width: 100%; padding: 12px; border: 2px solid #fecaca; border-radius: 10px; font-family: 'Cairo'; margin-top: 10px; }
+        .btn { padding: 12px 35px; border-radius: 12px; border: none; font-family: 'Cairo'; font-weight: 700; cursor: pointer; }
+        .btn-next { background: var(--primary); color: white; width: 100%; margin-top: 10px; }
+        .btn-finish { background: var(--success); color: white; width: 100%; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { padding: 12px; border: 1px solid #fecaca; text-align: right; }
     </style>
 </head>
+<script>
+    if (localStorage.getItem('alfaifi_quiz_lock')) {
+        window.stop(); 
+        document.documentElement.innerHTML = `<body style="background:#fff5f5; display:flex; align-items:center; justify-content:center; height:100vh; font-family:'Cairo';"><div style="text-align:center; padding:30px; background:white; border-radius:20px; border:2px solid #7f1d1d;"><h1>🛑 عذراً، النموذج مغلق</h1><p>لقد استهلكت محاولتك في هذا الاختبار.</p></div></body>`;
+    }
+</script>
 <body>
 
 <div class="header">
-    <h1 id="mainTitle">اختبار كفايات اللغة العربية</h1>
-    <p>أ. عبدالعزيز الفيفي</p>
+    <h1>اختبار كفايات المضارع الشامل</h1>
+    <p>بإشراف أ. عبدالعزيز الفيفي - النموذج (4)</p>
 </div>
 
 <div class="container">
-    <div class="card active" id="loginCard">
-        <h3 style="text-align:center">تسجيل الدخول</h3>
-        <input type="text" id="userName" placeholder="الاسم الكامل (أو رمز الإدارة)">
-        <input type="text" id="userClass" placeholder="الصف / الفصل">
-        <button class="btn btn-primary" onclick="checkAccess()">دخول</button>
-    </div>
+    <div id="timer-bar">⏱️ <span id="clock">45:00</span></div>
+    <div class="progress-box"><div id="progress-fill"></div></div>
 
-    <div class="card admin-panel" id="adminCard">
-        <h2 style="color:#4f46e5">🛠️ لوحة إدارة الأسئلة (السحابة)</h2>
-        <p>تستطيع هنا كتابة 42 سؤالاً وسيتم حفظها مباشرة لطلابك.</p>
-        <div id="questionsEditor" style="max-height: 500px; overflow-y: auto; padding: 10px;"></div>
-        <button class="btn btn-admin" onclick="saveQuestionsToCloud()">💾 حفظ كافة الأسئلة في السحابة</button>
-    </div>
-
-    <div id="testArea" style="display:none">
-        <div id="timer" style="text-align:center; font-weight:bold; color:var(--primary); margin-bottom:10px;"></div>
+    <form id="quizForm">
+        <div class="card active" id="step0">
+            <h3 style="text-align:center; color:var(--primary)">بيانات طالب النموذج (4)</h3>
+            <input type="text" id="stdName" placeholder="الاسم الكامل" required>
+            <input type="text" id="stdClass" placeholder="الفصل" required>
+            <button type="button" class="btn btn-next" onclick="startExam()">انطلاق الاختبار</button>
+        </div>
         <div id="quizContent"></div>
+    </form>
+
+    <div id="resultCard" class="card">
+        <h2 style="text-align:center">نتيجة النموذج النهائي (4)</h2>
+        <div id="scoreBox" style="text-align:center; font-size:50px; font-weight:900; color:var(--primary); margin:20px 0;"></div>
+        <div id="studentInfo" style="text-align:center; font-weight:bold;"></div>
+        <div style="overflow-x:auto"><table id="summaryTable"><thead><tr><th>س</th><th>السؤال</th><th>إجابتك</th><th>الصحيحة</th></tr></thead><tbody></tbody></table></div>
     </div>
 </div>
 
 <script>
-// --- إعدادات Firebase الخاصة بك ---
-const firebaseConfig = {
-  apiKey: "AIzaSyAVRIim7aXjg8h6rMk8qVrXT-....", 
-  authDomain: "youy-apps.firebaseapp.com",
-  databaseURL: "https://youy-apps-default-rtdb.firebaseio.com",
-  projectId: "youy-apps",
-  storageBucket: "youy-apps.appspot.com",
-  messagingSenderId: "690543747528",
-  appId: "1:690543747528:web:10c85ef0c93b79596620fd"
-};
+const examData = [
+    // قسم 1: استخراج
+    { q: "استخرج الفعل المنصوب من: (لن تنالوا البر حتى تنفقوا)", type: 'text', ans: "تنالوا", hint: "يوجد فعلان، اختر الأول." },
+    { q: "ما علامة جزم الفعل في: (لم يخشَ إلا الله)؟", type: 'text', ans: "حذف حرف العلة", hint: "أصله يخشى." },
+    { q: "استخرج الفعل المرفوع من: (الطائر يغردُ فوق الغصن)", type: 'text', ans: "يغرد", hint: "فعل لم يسبقه شيء." },
+    { q: "ما علامة رفع الفعل في: (المجتهدان يفوزان)؟", type: 'text', ans: "ثبوت النون", hint: "أفعال خمسة." },
+    { q: "استخرج الأداة الجازمة من: (لتعملْ بجد)", type: 'text', ans: "لام الامر", hint: "تفيد الطلب." },
+    { q: "استخرج الفعل المبني: (المعلمات يخلصنَ في العمل)", type: 'text', ans: "يخلصن", hint: "اتصل بنون النسوة." },
+    { q: "ما علامة نصب الفعل في: (لن يدعو الفاشل للعمل)؟", type: 'text', ans: "الفتحة الظاهرة", hint: "تظهر على الواو." },
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+    // قسم 2: إكمال
+    { q: "يُرفع المضارع بضمة مقدرة للتعذر إذا كان آخره _______.", type: 'text', ans: "ألف", hint: "مثل يسعى." },
+    { q: "علامة جزم (لم يكتبوا) هي حذف _______.", type: 'text', ans: "النون", hint: "لأنه من الأفعال الخمسة." },
+    { q: "ينصب المضارع بفتحة _______ إذا كان معتل الآخر بالياء.", type: 'text', ans: "ظاهرة", hint: "مثل لن يرميَ." },
+    { q: "يجزم الفعل المضارع صحيح الآخر وعلامة جزمه _______.", type: 'text', ans: "السكون", hint: "مثل لم يذهبْ." },
+    { q: "لام _______ هي التي تنصب المضارع لبيان العلة.", type: 'text', ans: "التعليل", hint: "أدرس لأنجح." },
+    { q: "الفعل المضارع يبنى على _______ إذا اتصلت به نون التوكيد.", type: 'text', ans: "الفتح", hint: "مثل ليكتبَنَّ." },
+    { q: "الاسم الذي يعوض عن حرف العلة المحذوف في (لم يدعُ) هو _______.", type: 'text', ans: "الضمة", hint: "توضع على العين." },
 
-let cloudQuestions = [];
+    // قسم 3: اختيارات
+    { q: "أي الأدوات التالية تفيد نفي المستقبل؟", type: 'radio', opts: ["لم", "لن", "لا الناهية", "لام الأمر"], ans: "لن", hint: "تنفي الفعل مستقبلاً." },
+    { q: "علامة رفع (يقضون) هي:", type: 'radio', opts: ["الضمة", "الواو", "ثبوت النون", "ثبوت الواو"], ans: "ثبوت النون", hint: "أفعال خمسة." },
+    { q: "إعراب (يسعى) في: المؤمن يسعى للخير.", type: 'radio', opts: ["مرفوع بضمة ظاهرة", "مرفوع بضمة مقدرة", "منصوب بالفتحة", "مجزوم"], ans: "مرفوع بضمة مقدرة", hint: "منتهي بالألف." },
+    { q: "الأداة 'كي' هي حرف:", type: 'radio', opts: ["جزم", "نصب", "رفع", "بناء"], ans: "نصب", hint: "تفيد التعليل والنصب." },
+    { q: "علامة جزم (لا تمشِ) هي:", type: 'radio', opts: ["السكون", "حذف النون", "حذف حرف العلة", "الكسرة"], ans: "حذف حرف العلة", hint: "أصله تمشي." },
+    { q: "عند اتصال نون النسوة بالمضارع يصبح:", type: 'radio', opts: ["منصوباً", "مجزوماً", "مبنياً على السكون", "مبنياً على الفتح"], ans: "مبنياً على السكون", hint: "مثل يذهبنَ." },
+    { q: "علامة نصب الأفعال الخمسة:", type: 'radio', opts: ["الفتحة", "النون", "حذف النون", "حذف حرف العلة"], ans: "حذف النون", hint: "تحذف في النصب والجزم." },
 
-// 1. التحقق من الهوية (طالب أم معلم)
-function checkAccess() {
-    const val = document.getElementById('userName').value.trim();
-    if (val === "مدير123") {
-        openAdminPanel();
-    } else if (val !== "") {
-        startStudentQuiz();
-    } else {
-        Swal.fire('تنبيه', 'يرجى إدخال الاسم', 'warning');
-    }
+    // قسم 4: صح وخطأ
+    { q: "تُقدر الضمة للثقل على الألف والواو والياء.", type: 'radio', opts: ["صح", "خطأ"], ans: "خطأ", hint: "الألف للتعذر." },
+    { q: "يجزم المضارع إذا سبق بلام التعليل.", type: 'radio', opts: ["صح", "خطأ"], ans: "خطأ", hint: "لام التعليل تنصب." },
+    { q: "الأفعال الخمسة هي كل مضارع اتصلت به واو الجماعة أو ألف الاثنين أو ياء المخاطبة.", type: 'radio', opts: ["صح", "خطأ"], ans: "صح", hint: "قاعدة ثابتة." },
+    { q: "علامة جزم الفعل الصحيح الآخر هي السكون.", type: 'radio', opts: ["صح", "خطأ"], ans: "صح", hint: "مثل لم يلدْ." },
+    { q: "أنْ حرف مصدري ونصب.", type: 'radio', opts: ["صح", "خطأ"], ans: "صح", hint: "من أدوات النصب." },
+    { q: "علامة رفع (يدعو) ضمة ظاهرة.", type: 'radio', opts: ["صح", "خطأ"], ans: "خطأ", hint: "ضمة مقدرة للثقل." },
+    { q: "حذف النون علامة فرعية للجزم.", type: 'radio', opts: ["صح", "خطأ"], ans: "صح", hint: "في الأفعال الخمسة." },
+
+    // قسم 5: إعراب
+    { q: "إعراب (ليكتبْ) في: ليكتبْ محمد درسه.", type: 'radio', opts: ["منصوب", "مرفوع", "مجزوم بالسكون", "مبني"], ans: "مجزوم بالسكون", hint: "لام الأمر جازمة." },
+    { q: "إعراب (لن يرميَ) في: لن يرميَ اللاعب الكرة.", type: 'radio', opts: ["منصوب بفتحة ظاهرة", "منصوب بفتحة مقدرة", "مرفوع", "مبني"], ans: "منصوب بفتحة ظاهرة", hint: "الفتحة تظهر على الياء." },
+    { q: "علامة رفع (تذهبون):", type: 'radio', opts: ["الواو", "ثبوت النون", "الضمة", "النون"], ans: "ثبوت النون", hint: "أفعال خمسة." },
+    { q: "إعراب (حتى ينجحوا) في: اجتهدوا حتى ينجحوا.", type: 'radio', opts: ["منصوب بحذف النون", "مرفوع بثبوت النون", "مجزوم", "منصوب بالفتحة"], ans: "منصوب بحذف النون", hint: "بعد حتى." },
+    { q: "إعراب (يسجدُ) في: المسلم يسجدُ لله.", type: 'radio', opts: ["منصوب", "مرفوع بالضمة", "مجزوم", "مبني"], ans: "مرفوع بالضمة", hint: "لم يسبقه ناصب ولا جازم." },
+    { q: "علامة جزم (لم يرضَ):", type: 'radio', opts: ["السكون", "حذف حرف العلة", "الفتحة", "حذف النون"], ans: "حذف حرف العلة", hint: "أصله يرضى." },
+    { q: "إعراب (أنتِ تكتبين):", type: 'radio', opts: ["مرفوع بثبوت النون", "منصوب", "مبني", "مرفوع بالياء"], ans: "مرفوع بثبوت النون", hint: "اتصل بياء المخاطبة." },
+
+    // قسم 6: تمثيل
+    { q: "مثل لـ: مضارع مجزوم بـ (لا الناهية)", type: 'text', ans: "لا تهمل", hint: "لا + فعل بالسكون." },
+    { q: "مثل لـ: مضارع منصوب بـ (حتى)", type: 'text', ans: "حتى يذاكر", hint: "حتى + فعل بالفتحة." },
+    { q: "مثل لـ: مضارع مرفوع بضمة مقدرة للتعذر", type: 'text', ans: "يسعى", hint: "فعل ينتهي بالألف." },
+    { q: "مثل لـ: فعل من الأفعال الخمسة منصوب", type: 'text', ans: "لن يذهبوا", hint: "لن + فعل بحذف النون." },
+    { q: "مثل لـ: مضارع مجزوم بـ (لم) وعلامته السكون", type: 'text', ans: "لم ينجح", hint: "فعل صحيح الآخر." },
+    { q: "مثل لـ: مضارع منصوب بفتحة ظاهرة على الواو", type: 'text', ans: "لن يدعو", hint: "لن + فعل ينتهي بواو." },
+    { q: "مثل لـ: مضارع مبني على الفتح", type: 'text', ans: "ليذاكرن", hint: "اتصل بنون التوكيد." }
+];
+
+let timer;
+function startExam() {
+    const n = document.getElementById('stdName').value;
+    const c = document.getElementById('stdClass').value;
+    if(!n || !c) return Swal.fire('تنبيه','أكمل بياناتك','error');
+    generateSections();
+    document.getElementById('step0').style.display = 'none';
+    document.getElementById('step1').classList.add('active');
+    updateProgress(1);
+    startTimer(2700);
 }
 
-// 2. فتح لوحة الإدارة للمعلم
-function openAdminPanel() {
-    document.getElementById('loginCard').classList.remove('active');
-    document.getElementById('adminCard').classList.add('active');
-    
-    const editor = document.getElementById('questionsEditor');
-    editor.innerHTML = "";
-    
-    // توليد 42 نموذج سؤال للتعديل
-    for(let i=0; i<42; i++) {
-        editor.innerHTML += `
-            <div class="q-row">
-                <strong>سؤال ${i+1}</strong>
-                <input type="text" id="qText${i}" placeholder="نص السؤال">
-                <input type="text" id="qAns${i}" placeholder="الإجابة الصحيحة">
-                <input type="text" id="qHint${i}" placeholder="تلميحة للطالب">
-            </div>
-        `;
-    }
-}
-
-// 3. حفظ الأسئلة للسحابة
-function saveQuestionsToCloud() {
-    let tempQuestions = [];
-    for(let i=0; i<42; i++) {
-        tempQuestions.push({
-            q: document.getElementById(`qText${i}`).value || `سؤال تجريبي ${i+1}`,
-            ans: document.getElementById(`qAns${i}`).value || "صح",
-            hint: document.getElementById(`qHint${i}`).value || "فكر جيداً"
-        });
-    }
-    
-    db.ref('CloudExam/Current').set(tempQuestions).then(() => {
-        Swal.fire('تم الحفظ', 'تم رفع الأسئلة للسحابة بنجاح!', 'success');
-    });
-}
-
-// 4. تشغيل الاختبار للطالب (يسحب من السحابة)
-function startStudentQuiz() {
-    db.ref('CloudExam/Current').once('value', (snapshot) => {
-        if(snapshot.exists()) {
-            cloudQuestions = snapshot.val();
-            renderQuiz();
-        } else {
-            Swal.fire('خطأ', 'لم يقم المعلم بوضع الأسئلة بعد', 'error');
-        }
-    });
-}
-
-function renderQuiz() {
-    document.getElementById('loginCard').classList.remove('active');
-    document.getElementById('testArea').style.display = 'block';
+function generateSections() {
     const cont = document.getElementById('quizContent');
-    
-    cloudQuestions.forEach((item, i) => {
-        cont.innerHTML += `
-            <div class="card active" style="margin-bottom:15px">
-                <p><strong>س${i+1}:</strong> ${item.q}</p>
-                <input type="text" id="studentAns${i}" placeholder="أجب هنا...">
-                <button onclick="Swal.fire('تلميحة','${item.hint}','info')" style="font-size:12px; background:none; border:none; color:var(--hint); cursor:pointer">💡 مساعدة؟</button>
-            </div>
-        `;
-    });
-    cont.innerHTML += `<button class="btn btn-primary" onclick="submitFinal()">إرسال النتيجة النهائية</button>`;
+    for (let s = 0; s < 6; s++) {
+        const div = document.createElement('div');
+        div.className = 'card'; div.id = `step${s+1}`;
+        div.innerHTML = `<h2 style="text-align:center; color:var(--primary)">المرحلة ${s+1}</h2>`;
+        for (let q = 0; q < 7; q++) {
+            const idx = (s * 7) + q;
+            const item = examData[idx];
+            let qHtml = `<div class="q-box"><button type="button" class="hint-btn" onclick="Swal.fire('مساعدة','${item.hint}','info')">?</button>
+                         <b>س${idx+1}: ${item.q}</b>`;
+            if(item.type === 'radio') {
+                qHtml += `<div class="options-grid">`;
+                item.opts.forEach(o => qHtml += `<label class="opt-label"><input type="radio" name="q${idx}" value="${o}"> ${o}</label>`);
+                qHtml += `</div>`;
+            } else { qHtml += `<input type="text" id="ans${idx}" placeholder="اكتب إجابتك هنا...">`; }
+            qHtml += `</div>`;
+            div.innerHTML += qHtml;
+        }
+        const isLast = (s === 5);
+        div.innerHTML += `<button type="button" class="btn ${isLast?'btn-finish':'btn-next'}" onclick="${isLast?'processResults()':'nextSection('+(s+1)+')'}">${isLast?'إرسال النموذج 4 النهائي':'الانتقال للمرحلة التالية'}</button>`;
+        cont.appendChild(div);
+    }
 }
 
-function submitFinal() {
-    // كود التصحيح والإرسال لـ Results كما في النسخة السابقة
-    Swal.fire('تم التسليم', 'تم إرسال إجاباتك للسحابة', 'success');
+function nextSection(current) {
+    let missing = [];
+    for(let q = 0; q < 7; q++) {
+        const idx = ((current-1) * 7) + q;
+        if(examData[idx].type === 'radio') { if(!document.querySelector(`input[name="q${idx}"]:checked`)) missing.push(idx+1); }
+        else { if(!document.getElementById(`ans${idx}`).value.trim()) missing.push(idx+1); }
+    }
+    if(missing.length > 0) return Swal.fire('لم تكتمل','حل الأسئلة التالية أولاً: ' + missing.join(', '),'warning');
+    document.getElementById(`step${current}`).classList.remove('active');
+    document.getElementById(`step${current+1}`).classList.add('active');
+    updateProgress(current+1); window.scrollTo(0,0);
+}
+
+function updateProgress(step) { document.getElementById('progress-fill').style.width = (step / 6) * 100 + "%"; }
+
+function startTimer(sec) {
+    timer = setInterval(() => {
+        let m = Math.floor(sec/60), s = sec%60;
+        document.getElementById('clock').innerText = `${m}:${s<10?'0'+s:s}`;
+        if(sec-- <= 0) { clearInterval(timer); processResults(); }
+    }, 1000);
+}
+
+function smartCheck(u, a) {
+    if(!u) return false;
+    const clean = (s) => s.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/\s+/g, '').trim();
+    return clean(u).includes(clean(a)) || clean(u) === clean(a);
+}
+
+function processResults() {
+    let allMissing = [];
+    examData.forEach((item, i) => {
+        if(item.type === 'radio') { if(!document.querySelector(`input[name="q${i}"]:checked`)) allMissing.push(i+1); }
+        else { if(!document.getElementById(`ans${i}`).value.trim()) allMissing.push(i+1); }
+    });
+    if(allMissing.length > 0) return Swal.fire('تنبيه','تأكد من حل الأسئلة: ' + allMissing.join(', '),'warning');
+
+    let score = 0;
+    const tbody = document.querySelector('#summaryTable tbody');
+    tbody.innerHTML = '';
+    examData.forEach((item, i) => {
+        let uVal = (item.type === 'radio') ? document.querySelector(`input[name="q${i}"]:checked`).value : document.getElementById(`ans${i}`).value;
+        let isCorrect = smartCheck(uVal, item.ans);
+        if(isCorrect) score++;
+        tbody.innerHTML += `<tr><td>${i+1}</td><td>${item.q}</td><td>${uVal}</td><td>${item.ans}</td></tr>`;
+    });
+
+    localStorage.setItem('alfaifi_quiz_lock', 'true');
+    clearInterval(timer);
+    document.getElementById('quizForm').style.display = 'none';
+    document.getElementById('resultCard').style.display = 'block';
+    document.getElementById('scoreBox').innerText = `${score} / 42`;
+    document.getElementById('studentInfo').innerText = `اسم الطالب: ${document.getElementById('stdName').value}`;
 }
 </script>
 </body>

@@ -114,7 +114,8 @@
         <div class="header-left"><p class="school-name">ثانوية الأمير عبدالمجيد 😉</p></div>
     </div>
 
-    <div class="section-tabs admin-only">
+    <!-- إزالة كلاس admin-only حتى تظهر التبويبات دائماً للتنقل بسهولة بين القدرات والكفايات -->
+    <div class="section-tabs">
         <button class="tab-btn active" onclick="setSection('qudrat')">قسم القدرات اللفظي</button>
         <button class="tab-btn" onclick="setSection('kifayat')">قسم الكفايات اللغوية</button>
     </div>
@@ -141,6 +142,8 @@
 
     <script>
         let currentSection = 'qudrat';
+        let loadedExamQuestions = null;
+
         const typeMap = { 
             'qudrat': {
                 'tanazor': 'تناظر لفظي ( : )', 'ekmal': 'إكمال جمل', 'khata': 'خطأ سياقي',
@@ -166,7 +169,12 @@
             currentSection = sec;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText.includes(sec==='qudrat'?'القدرات':'الكفايات')));
             document.getElementById('quiz-content').innerHTML = '';
-            loadQuestions();
+            
+            if (loadedExamQuestions) {
+                renderExamQuestionsForSection(loadedExamQuestions, sec);
+            } else {
+                loadQuestions();
+            }
         }
 
         function addQuestion(data = null) {
@@ -240,7 +248,7 @@
 
                 if (['k_fill','k_irab','k_sentence','k_extract'].includes(type)) {
                     studentAns = c.querySelector('.essay-input').innerText;
-                    pts = studentAns.length > 1 ? 1 : 0; // ذكاء مبدئي
+                    pts = studentAns.length > 1 ? 1 : 0;
                     correctKey = "مراجعة المعلم";
                 } else {
                     const selLabel = c.querySelector('.selected-opt .opt-label')?.innerText.replace(')','').trim() || "";
@@ -315,10 +323,53 @@
         function toggleType(s) { const c = s.closest('.question-card'); const val = s.value; const sec = c.dataset.section; c.querySelector('.q-area').innerHTML = renderQArea(val,null); c.querySelector('.ans-grid-area').innerHTML = renderOptions(val,null); c.querySelector('.correct-ans-box').style.display = (sec === 'qudrat' || ['k_true','k_multi'].includes(val)) ? '' : 'none'; saveAll(); }
         function updateNumbers() { document.querySelectorAll('.q-number-badge').forEach((b, i) => b.innerText = `السؤال ${i+1}`); }
         function saveAll() { const qs = []; document.querySelectorAll('.question-card').forEach(c => { const t = c.querySelector('.type-select').value; const sec = c.dataset.section; let d = { type: t, section: sec, ans: c.querySelector('.ans-val')?.value || '' }; if (t === 'tanazor') { d.text1 = c.querySelector('.t1').value; d.text2 = c.querySelector('.t2').value; d.opt_pair_val1 = Array.from(c.querySelectorAll('.op1')).map(i => i.value); d.opt_pair_val2 = Array.from(c.querySelectorAll('.op2')).map(i => i.value); } else { d.text = c.querySelector('.q-main')?.value || ""; if(t==='estieab' || t==='k_extract') d.text_area = c.querySelector('.estieab-box').innerText; d.opts = Array.from(c.querySelectorAll('.opt')).map(i => i.value); } qs.push(d); }); localStorage.setItem('fifi_final_v_secured', JSON.stringify(qs)); }
-        function loadQuestions() { const id = new URLSearchParams(window.location.search).get('exam'); if (id) { document.body.classList.add('student-mode'); document.getElementById('student-actions').style.display = 'block'; loadSpecificExam(id); } else { const s = localStorage.getItem('fifi_final_v_secured'); if(s) JSON.parse(s).filter(q => q.section === currentSection).forEach(q => addQuestion(q)); } }
+        
+        function renderExamQuestionsForSection(qs, sec) {
+            const filtered = qs.filter(q => (q.section || 'qudrat') === sec);
+            if(filtered.length === 0 && document.body.classList.contains('student-mode')) {
+                document.getElementById('quiz-content').innerHTML = '<p style="text-align:center; font-weight:bold; color:#64748b; margin-top:20px;">لا توجد أسئلة في هذا القسم لهذا النموذج.</p>';
+            } else {
+                filtered.forEach(q => addQuestion(q));
+            }
+        }
+
+        function loadQuestions() { 
+            const id = new URLSearchParams(window.location.search).get('exam'); 
+            if (id) { 
+                document.body.classList.add('student-mode'); 
+                document.getElementById('student-actions').style.display = 'block'; 
+                loadSpecificExam(id); 
+            } else { 
+                const s = localStorage.getItem('fifi_final_v_secured'); 
+                if(s) {
+                    const questions = JSON.parse(s);
+                    questions.filter(q => (q.section || 'qudrat') === currentSection).forEach(q => addQuestion(q)); 
+                }
+            } 
+        }
+
         async function saveToCloud() { const n = prompt("اسم النموذج:"); if(n) { await db.ref('models/' + n).set({ teacher: "أ. عبدالعزيز الفيفي", data: JSON.parse(localStorage.getItem('fifi_final_v_secured')), date: new Date().toLocaleString() }); alert("تم الحفظ بنجاح!"); } }
         function generateStudentLink() { const n = prompt("اسم النموذج:"); if(n) prompt("الرابط:", window.location.origin + window.location.pathname + "?exam=" + encodeURIComponent(n)); }
-        function loadSpecificExam(id) { db.ref('models/' + id).once('value', s => { if (s.val()) s.val().data.forEach(q => addQuestion(q)); }); }
+        
+        function loadSpecificExam(id) { 
+            db.ref('models/' + id).once('value', s => { 
+                if (s.val() && s.val().data) {
+                    loadedExamQuestions = s.val().data;
+                    renderExamQuestionsForSection(loadedExamQuestions, currentSection);
+                }
+            }); 
+        }
+
+        function clearAll() {
+            if(confirm("هل أنت تأكد من مسح جميع الأسئلة؟")) {
+                document.getElementById('quiz-content').innerHTML = '';
+                localStorage.removeItem('fifi_final_v_secured');
+            }
+        }
+
+        window.onload = function() {
+            loadQuestions();
+        };
     </script>
 </body>
 </html>

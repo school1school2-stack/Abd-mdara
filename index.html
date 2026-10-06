@@ -22,12 +22,16 @@
 
         .user-header {
             width: 100%; max-width: 850px; background: white; border-radius: 15px; padding: 20px;
-            display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+            display: flex; justify-content: space-between; align-items: center; text-align: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-bottom: 5px solid #3b82f6; 
-            margin-bottom: 30px; box-sizing: border-box;
+            margin-bottom: 30px; box-sizing: border-box; gap: 15px; flex-wrap: wrap;
         }
-        .user-name { margin: 0; color: var(--royal-blue); font-weight: bold; font-size: 1.5rem; }
-        .school-name { margin: 0; color: #64748b; font-weight: bold; font-size: 1rem; }
+        .header-right { flex: 1; text-align: right; min-width: 140px; }
+        .header-center { flex: 0 0 auto; display: flex; justify-content: center; }
+        .header-left { flex: 1; text-align: left; min-width: 140px; }
+
+        .user-name { margin: 0; color: var(--royal-blue); font-weight: bold; font-size: 1.3rem; }
+        .school-name { margin: 0; color: #64748b; font-weight: bold; font-size: 0.95rem; }
         .logo-box { background: var(--royal-blue); width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.4rem; }
 
         .container { width: 100%; max-width: 850px; padding-bottom: 120px; }
@@ -235,16 +239,30 @@
         function loadFromCloud() {
             db.ref('models').once('value', s => {
                 const ms = s.val();
-                if(!ms) return;
-                const c = prompt("اختر النموذج:\n" + Object.keys(ms).join("\n"));
+                if(!ms) {
+                    alert("لا توجد أي نماذج محفوظة في السحاب حالياً.");
+                    return;
+                }
+                
+                const modelNames = Object.keys(ms);
+                let listStr = "النماذج المحفوظة حالياً في السحاب:\n\n";
+                modelNames.forEach((name, index) => {
+                    listStr += `${index + 1} - ${name}\n`;
+                });
+                listStr += "\nالرجاء كتابة اسم النموذج المراد فتحه تماماً كما يظهر في القائمة أعلاه:";
+
+                const c = prompt(listStr);
+                
                 if(c && ms[c]) {
-                    const mode = confirm("اضغط OK لفتح النموذج للتعديل\nاضغط Cancel لتحليل نتائج الطلاب لهذا النموذج فقط");
+                    const mode = confirm(`تم العثور على النموذج: "${c}"\n\n- اضغط (OK) لفتح النموذج للتعديل.\n- اضغط (Cancel) لتحليل نتائج الطلاب لهذا النموذج.`);
                     if(mode) {
                         localStorage.setItem('fifi_final_v_secured', JSON.stringify(ms[c].data));
                         location.reload();
                     } else {
                         showAnalysis(c);
                     }
+                } else if(c) {
+                    alert("اسم النموذج غير صحيح أو غير موجود بالقائمة!");
                 }
             });
         }

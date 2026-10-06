@@ -7,8 +7,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -107,7 +108,7 @@
         <div class="header-left"><p class="school-name">ثانوية الأمير عبدالمجيد 😉</p></div>
     </div>
 
-    <!-- شاشة التحقق من إيميل الطالب المعتمد قبل بدء الاختبار -->
+    <!-- شاشة التحقق من إيميل الطالب عبر Firestore -->
     <div id="student-auth-container" style="display:none;">
         <div class="auth-card">
             <h2 style="color: var(--royal-blue); margin-top: 0;">تسجيل دخول الطالب 🎓</h2>
@@ -148,6 +149,7 @@
     <script>
         let authenticatedStudentEmail = "";
         let authenticatedStudentName = "";
+        let loadedExamQuestions = null;
 
         const typeMap = {
             'k_fill': 'أكمل الفراغ', 'k_irab': 'أعرب ما تحته خط', 'k_sentence': 'مثل في جملة مفيدة',
@@ -155,14 +157,23 @@
         };
         const labels = ['أ) ', 'ب) ', 'ج) ', 'د) '];
 
-        const firebaseConfig = {
+        // تهيئة Firebase الموحدة (Realtime للنماذج و Firestore لإيميلات الطلاب والنتائج الذكية)
+        const firebaseConfigRT = {
             apiKey: "AIzaSyAVrIim7aXjg0hGrMk0qVrXT8geRIpHoBk",
             authDomain: "youy-apps.firebaseapp.com",
             databaseURL: "https://youy-apps-default-rtdb.firebaseio.com",
             projectId: "youy-apps"
         };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfigRT);
+
+        const firestoreConfig = {
+            apiKey: "AIzaSyBkCO7FDQXd89YDf843J4_AtvEFvzzt-R0",
+            authDomain: "aztlg-494c3.firebaseapp.com",
+            projectId: "aztlg-494c3"
+        };
+        const secondaryApp = firebase.apps.length > 1 ? firebase.apps[1] : firebase.initializeApp(firestoreConfig, "secondary");
+        const fsDb = secondaryApp.firestore();
+        const rtdb = firebase.database();
 
         function addQuestion(data = null) {
             const container = document.getElementById('quiz-content');
@@ -255,7 +266,7 @@
             }
         }
 
-        // دالة التحقق من إيميل الطالب من قاعدة البيانات (Realtime Database)
+        // دالة التحقق من إيميل الطالب من جدول allowed_students في Firestore
         async function verifyStudentEmail() {
             const emailInput = document.getElementById('studentEmailInput').value.trim().toLowerCase();
             const msgEl = document.getElementById('auth-status-msg');
@@ -270,30 +281,26 @@
             msgEl.innerText = "جاري التحقق من السجل المدرسي... ⏳";
 
             try {
-                // البحث في مسار allowed_students داخل قاعدة البيانات
-                const sanitizedEmailKey = emailInput.replace(/[.#$\/\[\]]/g, "_");
-                const snapshot = await db.ref("allowed_students/" + sanitizedEmailKey).once('value');
-                
-                if (!snapshot.exists()) {
-                    // تجربة البحث بالتنسيق المباشر إن وُجد
-                    const altSnap = await db.ref("allowed_students").orderByChild("email").equalTo(emailInput).once('value');
-                    if (!altSnap.exists()) {
-                        msgEl.style.color = "var(--q-red)";
-                        msgEl.innerText = "❌ هذا الإيميل غير مسجل في قائمة طلاب المدرسة المعتمدين!";
-                        return;
-                    }
+                const docRef = await fsDb.collection("allowed_students").doc(emailInput).get();
+                if (!docRef.exists) {
+                    msgEl.style.color = "var(--q-red)";
+                    msgEl.innerText = "❌ هذا الإيميل غير مسجل في قائمة طلاب المدرسة المعتمدين!";
+                    return;
                 }
 
                 authenticatedStudentEmail = emailInput;
-                authenticatedStudentName = snapshot.exists() ? (snapshot.val().name || "طالب") : "طالب";
+                authenticatedStudentName = docRef.data().name || "طالب";
 
                 const examId = new URLSearchParams(window.location.search).get('exam');
                 
                 // التأكد من عدم تكرار الاختبار
-                const resultCheck = await db.ref("student_results/" + examId).orderByChild("email").equalTo(emailInput).once('value');
-                if (resultCheck.exists() || localStorage.getItem('submitted_' + examId) === 'true') {
+                const prevResult = await fsDb.collection("alkfaeat_results")
+                    .where("email", "==", authenticatedStudentEmail)
+                    .where("model_id", "==", examId).get();
+
+                if (!prevResult.empty || localStorage.getItem('submitted_' + examId) === 'true') {
                     msgEl.style.color = "var(--q-red)";
-                    msgEl.innerText = `عذراً يا ${authenticatedStudentName}، لقد أديت هذا الاختبار مسبقاً ولا يمكنك إعادتة.`;
+                    msgEl.innerText = `عذراً يا ${authenticatedStudentName}، لقد أديت هذا الاختبار مسبقاً ولا يمكنك إعادته.`;
                     return;
                 }
 
@@ -306,7 +313,7 @@
             } catch (err) {
                 console.error(err);
                 msgEl.style.color = "var(--q-red)";
-                msgEl.innerText = "حدث خطأ في الاتصال بالشبكة. حاول مرة أخرى.";
+                msgEl.innerText = "حدث خطأ في الاتصال بقاعدة البيانات. حاول مرة أخرى.";
             }
         }
 
@@ -350,19 +357,21 @@
                     if (selWord === key || selLabel.toUpperCase() === key.toUpperCase() || selWord.trim() === key.trim()) pts = 1;
                 }
                 s += pts;
-                details.push({ q: qTxt, a: studentAns });
+                details.push({ q: qTxt, studentAns: studentAns, correctAns: correctKey, isCorrect: pts > 0 });
                 report.innerHTML += `<tr><td>${i+1}</td><td style="text-align:right">${qTxt}</td><td>${studentAns || '--'}</td><td style="color:var(--success-green); font-weight:bold">${correctKey}</td><td>${pts}</td></tr>`;
             });
 
             const examId = new URLSearchParams(window.location.search).get('exam');
             if(examId && authenticatedStudentEmail) {
-                await db.ref('student_results/' + examId).push({ 
-                    student: authenticatedStudentName, 
-                    email: authenticatedStudentEmail, 
-                    score: s, 
-                    total: cards.length, 
-                    date: new Date().toLocaleString(), 
-                    details: details 
+                // حفظ النتيجة في Firestore لتظهر مباشرة في لوحة التحكم والتحليل الذكي
+                await fsDb.collection("alkfaeat_results").add({
+                    name: authenticatedStudentName,
+                    email: authenticatedStudentEmail,
+                    score: s,
+                    total: cards.length,
+                    model_id: examId,
+                    answers: details,
+                    time: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
                 localStorage.setItem('submitted_' + examId, 'true');
@@ -375,7 +384,7 @@
         }
 
         function loadFromCloud() {
-            db.ref('models').once('value', s => {
+            rtdb.ref('models').once('value', s => {
                 const ms = s.val();
                 if(!ms) { alert("لا توجد أي نماذج محفوظة في السحاب حالياً."); return; }
                 
@@ -413,10 +422,10 @@
             if (id) { 
                 document.body.classList.add('student-mode'); 
                 
-                // إذا دخل الطالب عبر رابط الاختبار، نظهر شاشة إدخال الإيميل المدرسي أولاً
+                // إظهار شاشة تسجيل دخول الإيميل المدرسي أولاً للطلاب
                 document.getElementById('student-auth-container').style.display = 'block';
 
-                db.ref('models/' + id).once('value', s => { 
+                rtdb.ref('models/' + id).once('value', s => { 
                     if (s.val() && s.val().data) {
                         loadedExamQuestions = s.val().data;
                         loadedExamQuestions.forEach(q => addQuestion(q));
@@ -426,19 +435,15 @@
                 }); 
             } else { 
                 const s = localStorage.getItem('fifi_final_v_secured'); 
-                if(s) { 
-                    document.querySelector('.container').style.display = 'block';
-                    JSON.parse(s).forEach(q => addQuestion(q)); 
-                } else {
-                    document.querySelector('.container').style.display = 'block';
-                }
+                document.querySelector('.container').style.display = 'block';
+                if(s) { JSON.parse(s).forEach(q => addQuestion(q)); }
             } 
         }
 
         async function saveToCloud() { 
             const n = prompt("اسم النموذج:"); 
             if(n) { 
-                await db.ref('models/' + n).set({ teacher: "أ. عبدالعزيز الفيفي", data: JSON.parse(localStorage.getItem('fifi_final_v_secured')), date: new Date().toLocaleString() }); 
+                await rtdb.ref('models/' + n).set({ teacher: "أ. عبدالعزيز الفيفي", data: JSON.parse(localStorage.getItem('fifi_final_v_secured')), date: new Date().toLocaleString() }); 
                 alert("تم الحفظ بنجاح!"); 
             } 
         }

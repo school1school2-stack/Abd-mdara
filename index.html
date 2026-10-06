@@ -24,7 +24,7 @@
             width: 100%; max-width: 850px; background: white; border-radius: 15px; padding: 20px;
             display: flex; justify-content: space-between; align-items: center; text-align: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-bottom: 5px solid #3b82f6; 
-            margin-bottom: 30px; box-sizing: border-box; gap: 15px; flex-wrap: wrap;
+            margin-bottom: 20px; box-sizing: border-box; gap: 15px; flex-wrap: wrap;
         }
         .header-right { flex: 1; text-align: right; min-width: 140px; }
         .header-center { flex: 0 0 auto; display: flex; justify-content: center; }
@@ -33,6 +33,16 @@
         .user-name { margin: 0; color: var(--royal-blue); font-weight: bold; font-size: 1.3rem; }
         .school-name { margin: 0; color: #64748b; font-weight: bold; font-size: 0.95rem; }
         .logo-box { background: var(--royal-blue); width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.4rem; }
+
+        /* لوحة مخصصة لاستيراد المصفوفات باللصق المريح */
+        .array-import-box {
+            width: 100%; max-width: 850px; background: white; border-radius: 15px; padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px dashed #0284c7; margin-bottom: 25px; box-sizing: border-box;
+        }
+        .array-textarea {
+            width: 100%; height: 100px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px;
+            font-family: monospace; font-size: 0.9rem; direction: ltr; text-align: left; outline: none; box-sizing: border-box; resize: vertical; margin-bottom: 10px;
+        }
 
         .container { width: 100%; max-width: 850px; padding-bottom: 120px; }
         .question-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; border: 2px solid #e2e8f0; position: relative; text-align: right; box-sizing: border-box; transition: 0.3s; }
@@ -64,7 +74,7 @@
         .btn-link { background: #06b6d4; } .btn-del { background: #f97316; } .btn-pdf { background: #ef4444; }
         .btn-img { background: #10b981; } .btn-clear { background: #64748b; padding: 10px; border-radius: 50%; }
 
-        body.student-mode .controls, body.student-mode .remove-btn, body.student-mode .type-select, body.student-mode .correct-ans-box, body.student-mode .smart-paste-area, body.student-mode .admin-only { display: none !important; }
+        body.student-mode .controls, body.student-mode .array-import-box, body.student-mode .remove-btn, body.student-mode .type-select, body.student-mode .correct-ans-box, body.student-mode .smart-paste-area, body.student-mode .admin-only { display: none !important; }
         body.student-mode .selected-opt { background: #dbeafe !important; border: 2px solid #3b82f6 !important; }
 
         #report-modal, #analysis-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 850px; height: 85%; background: white; z-index: 2000; border-radius: 20px; padding: 30px; overflow-y: auto; box-shadow: 0 0 50px rgba(0,0,0,0.4); }
@@ -110,6 +120,13 @@
         <div class="header-left"><p class="school-name">ثانوية الأمير عبدالمجيد 😉</p></div>
     </div>
 
+    <!-- لوحة مخصصة للصق واستيراد المصفوفات البرمجية مباشرة -->
+    <div class="array-import-box admin-only">
+        <label style="display: block; font-weight: bold; color: #0284c7; margin-bottom: 8px;"><i class="fas fa-file-code"></i> استيراد مصفوفة أسئلة جماعية (الصق هنا مباشرة):</label>
+        <textarea id="arrayInputText" class="array-textarea" placeholder="الصق مصفوفة الـ JSON هنا (مع أو بدون const rawQuizData = [...])"></textarea>
+        <button class="btn" style="background:#0284c7;" onclick="importArrayQuestions()"><i class="fas fa-magic"></i> توليد وتوزيع الأسئلة تلقائياً</button>
+    </div>
+
     <div class="container" id="quiz-content"></div>
 
     <div id="student-actions" style="display: none; text-align: center; margin-bottom: 50px;">
@@ -120,7 +137,6 @@
         <button class="btn btn-clear" title="مسح الكل" onclick="clearAll()"><i class="fas fa-eraser"></i></button>
         <button class="btn btn-img" onclick="saveAsImages()"><i class="fas fa-image"></i> صور</button>
         <button class="btn btn-pdf" onclick="saveAsPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-        <button class="btn" style="background:#0284c7;" onclick="importArrayQuestions()" title="استيراد مصفوفة أسئلة"><i class="fas fa-file-code"></i> استيراد مصفوفة</button>
         <button class="btn btn-del" onclick="deleteFromCloud()"><i class="fas fa-trash-alt"></i> حذف</button>
         <button class="btn btn-link" onclick="generateStudentLink()"><i class="fas fa-link"></i> رابط الطلاب</button>
         <button class="btn btn-load" style="position:relative;" onclick="loadFromCloud()">
@@ -204,14 +220,16 @@
             return h + '</div>';
         }
 
-        // دالة ذكية تقبل النص كاملاً (حتى لو احتوى على const rawQuizData =) وتقوم بتنظيفه وتحويله
+        // دالة الاستيراد عبر مربع النصوص المخصص لتفادي مشاكل النوافذ المنسدلة
         function importArrayQuestions() {
-            let rawData = prompt("الصق مصفوفة الأسئلة هنا:");
-            if (!rawData) return;
+            let rawData = document.getElementById('arrayInputText').value.trim();
+            if (!rawData) {
+                alert("الرجاء لصق مصفوفة الأسئلة في مربع النص أولاً!");
+                return;
+            }
 
             try {
-                // إزالة كود تعريف المتغير الزائد لو وجد لضمان عدم حدوث خطأ
-                rawData = rawData.trim();
+                // إزالة تعريف المتغيرات أو علامات التساوي لو وجدت في بداية النص المنسوخ
                 if (rawData.startsWith("const") || rawData.startsWith("let") || rawData.startsWith("var")) {
                     const equalIndex = rawData.indexOf("=");
                     if (equalIndex !== -1) {
@@ -224,7 +242,7 @@
 
                 const arr = JSON.parse(rawData);
                 if (!Array.isArray(arr)) {
-                    alert("الخطأ: النص المدخل ليس مصفوفة صحيحة!");
+                    alert("الخطأ: النص المدخل ليس مصفوفة (Array) صحيحة!");
                     return;
                 }
 
@@ -250,9 +268,10 @@
                 });
 
                 saveAll();
+                document.getElementById('arrayInputText').value = ""; // تفريغ المربع بعد النجاح
                 alert(`تم استيراد وتوزيع ${arr.length} سؤالاً بنجاح!`);
             } catch (e) {
-                alert("خطأ في قراءة البيانات، تأكد من صحة النسخ ومطابقة الأقواس.");
+                alert("خطأ في قراءة البيانات، تأكد من أنك نسخت المصفوفة بشكل صحيح وبكامل أقواسها.");
             }
         }
 
@@ -399,8 +418,15 @@
             }); 
         }
 
-        function clearAll() {
+        def clearAll() {
             if(confirm("هل أنت تأكد من مسح جميع الأسئلة؟")) {
+                document.getElementById('quiz-content').innerHTML = '';
+                localStorage.removeItem('fifi_final_v_secured');
+            }
+        }
+        
+        function clearAll() {
+            if(confirm("هل أنت متأكد من مسح جميع الأسئلة؟")) {
                 document.getElementById('quiz-content').innerHTML = '';
                 localStorage.removeItem('fifi_final_v_secured');
             }

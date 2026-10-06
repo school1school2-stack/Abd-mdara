@@ -68,11 +68,11 @@
         .q-number-badge { background: var(--k-purple); color: white; padding: 2px 15px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; transition: 0.3s; }
         .type-select { background: #f1f5f9; border: none; padding: 8px; border-radius: 10px; font-weight: bold; font-family: inherit; cursor: pointer; }
 
-        /* تمدد تلقائي لمربعات النصوص بدون أشرطة تمرير */
-        .estieab-box { background: #fff9c4 !important; border: 2px solid #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 15px; color: #000; font-weight: bold; line-height: 1.8; width: 100%; box-sizing: border-box; text-align: right; min-height: 80px; overflow: hidden; resize: none; white-space: pre-wrap; font-size: 1.1rem; }
-        .q-text-input { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; color: var(--q-red) !important; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; outline: none; text-align: right; box-sizing: border-box; min-height: 50px; overflow: hidden; resize: none; word-wrap: break-word; font-family: inherit; background: transparent; }
+        /* تمدد تلقائي كامل لضمان ظهور النصوص والأسئلة الطويلة بدون اقتطاع */
+        .estieab-box { background: #fff9c4 !important; border: 2px solid #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 15px; color: #000; font-weight: bold; line-height: 1.8; width: 100%; box-sizing: border-box; text-align: right; min-height: 80px; overflow: visible; white-space: pre-wrap; font-size: 1.1rem; }
+        .q-text-input { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; color: var(--q-red) !important; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; outline: none; text-align: right; box-sizing: border-box; min-height: 55px; overflow: visible; resize: none; word-wrap: break-word; font-family: inherit; background: transparent; display: block; }
 
-        .essay-input { width: 100%; min-height: 60px; padding: 12px; border: 2px inset #e2e8f0; border-radius: 12px; background: #f8fafc; font-weight: bold; color: #1e293b; margin-top: 10px; outline: none; text-align: right; overflow: hidden; }
+        .essay-input { width: 100%; min-height: 60px; padding: 12px; border: 2px inset #e2e8f0; border-radius: 12px; background: #f8fafc; font-weight: bold; color: #1e293b; margin-top: 10px; outline: none; text-align: right; overflow: visible; }
 
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .opt-pair-row { display: flex; align-items: center; background: white; border: 1.5px solid #d1d5db; border-radius: 10px; padding: 12px; box-sizing: border-box; cursor: pointer; transition: 0.2s; }
@@ -194,10 +194,9 @@
         const fsDb = secondaryApp.firestore();
         const rtdb = firebase.database();
 
-        // دالة التمدد التلقائي لمربعات النص بناءً على المحتوى
         function autoResizeTextarea(el) {
             el.style.height = 'auto';
-            el.style.height = (el.scrollHeight) + 'px';
+            el.style.height = (el.scrollHeight + 5) + 'px';
         }
 
         function addQuestion(data = null) {
@@ -227,7 +226,6 @@
             `;
             container.appendChild(card);
             
-            // تفعيل التمدد التلقائي مباشرة للعناصر الموجودة
             card.querySelectorAll('textarea').forEach(ta => {
                 autoResizeTextarea(ta);
                 ta.addEventListener('input', function() { autoResizeTextarea(this); saveAll(); });
@@ -253,7 +251,7 @@
             const readonlyAttr = isStudent ? 'readonly style="background:#f8fafc; cursor:default;"' : '';
             const contenteditableAttr = isStudent ? 'contenteditable="false"' : 'contenteditable="true"';
             
-            if (t === 'k_extract') return `<div class="estieab-box" ${contenteditableAttr} oninput="saveAll()" placeholder="النص...">${d?d.text_area||'' : ''}</div><textarea class="q-text-input q-main" ${readonlyAttr} placeholder="السؤال...">${d?d.text:''}</textarea>`;
+            if (t === 'k_extract') return `<div class="estieab-box" ${contenteditableAttr} oninput="saveAll()" placeholder="النص...">${d?d.text_area||'' : ''}</div><textarea class="q-text-input q-main" ${readonlyAttr} placeholder="اكتب السؤال هنا...">${d?d.text:''}</textarea>`;
             return `<textarea class="q-text-input q-main" ${readonlyAttr} placeholder="اكتب السؤال هنا...">${d?d.text:''}</textarea>`;
         }
 
@@ -464,6 +462,7 @@
                 document.getElementById('quiz-content').innerHTML = "";
                 snap.val().data.forEach(q => addQuestion(q));
                 
+                setTimeout(() => { document.querySelectorAll('textarea').forEach(ta => autoResizeTextarea(ta)); }, 100);
                 closeModals();
             }
         }
@@ -566,8 +565,7 @@
                     if (s.val() && s.val().data) {
                         loadedExamQuestions = s.val().data;
                         loadedExamQuestions.forEach(q => addQuestion(q));
-                        // ضبط مقاسات النصوص بعد التحميل
-                        setTimeout(() => { document.querySelectorAll('textarea').forEach(ta => autoResizeTextarea(ta)); }, 100);
+                        setTimeout(() => { document.querySelectorAll('textarea').forEach(ta => autoResizeTextarea(ta)); }, 150);
                     } else {
                         alert("هذا النموذج غير موجود أو تم حذفه من السحاب.");
                     }
@@ -577,7 +575,7 @@
                 const s = localStorage.getItem('fifi_final_v_secured'); 
                 if(s) { 
                     JSON.parse(s).forEach(q => addQuestion(q));
-                    setTimeout(() => { document.querySelectorAll('textarea').forEach(ta => autoResizeTextarea(ta)); }, 100);
+                    setTimeout(() => { document.querySelectorAll('textarea').forEach(ta => autoResizeTextarea(ta)); }, 150);
                 } 
             } 
         }

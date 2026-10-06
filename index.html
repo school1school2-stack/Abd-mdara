@@ -67,11 +67,14 @@
         .estieab-box { background: #fff9c4 !important; border: 2px solid #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 15px; color: #000; font-weight: bold; line-height: 1.8; width: 100%; box-sizing: border-box; text-align: right; min-height: 90px; outline: none; white-space: pre-wrap; font-size: 1.15rem; }
         .q-text-input { width: 100%; min-height: 90px; padding: 15px; border: 2px solid #cbd5e1; border-radius: 12px; color: inherit; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; outline: none; text-align: right; box-sizing: border-box; word-wrap: break-word; font-family: inherit; background: rgba(0,0,0,0.02); line-height: 1.8; }
         .essay-input { width: 100%; min-height: 70px; padding: 12px; border: 2px inset #e2e8f0; border-radius: 12px; background: rgba(0,0,0,0.02); font-weight: bold; color: inherit; margin-top: 10px; outline: none; text-align: right; font-size: 1.1rem; }
-        /* تعديل شبكة الخيارات لتصبح عمودية وواسعة لتتحمل النصوص الطويلة بالكامل بدون اقتطاع */
-        .options-grid { display: flex; flex-direction: column; gap: 12px; }
-        .opt-pair-row { display: flex; align-items: center; background: var(--card-bg); border: 1.5px solid #d1d5db; border-radius: 12px; padding: 14px 18px; box-sizing: border-box; cursor: pointer; transition: 0.2s, background 0.5s; width: 100%; }
-        .opt-label { font-weight: bold; color: var(--royal-blue); margin-left: 12px; white-space: nowrap; font-size: 1.15rem; flex-shrink: 0; }
-        .opt-word { width: 100%; border: none; outline: none; font-weight: bold; color: inherit; background: transparent; text-align: right; font-family: inherit; cursor: inherit; font-size: 1.15rem; }
+        /* نظام العرض المتجاوب للخيارات: شبكة للكمبيوتر والأيباد، وعمودي للهواتف الذكية */
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 600px) {
+            .options-grid { display: flex; flex-direction: column; }
+        }
+        .opt-pair-row { display: flex; align-items: center; background: var(--card-bg); border: 1.5px solid #d1d5db; border-radius: 10px; padding: 12px; box-sizing: border-box; cursor: pointer; transition: 0.2s, background 0.5s; }
+        .opt-label { font-weight: bold; color: var(--royal-blue); margin-left: 8px; white-space: nowrap; font-size: 1.05rem; flex-shrink: 0; }
+        .opt-word { width: 100%; border: none; outline: none; font-weight: bold; color: inherit; background: transparent; text-align: right; font-family: inherit; cursor: inherit; font-size: 1.05rem; }
         .correct-ans-box { margin-top: 15px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid #bbf7d0; text-align: right; }
         .correct-input { width: 100%; background: transparent; border: none; outline: none; color: #166534; font-weight: bold; text-align: right; font-family: inherit; }
         .btn { border: none; padding: 8px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 6px; transition: 0.3s; font-family: inherit; font-size: 0.85rem; white-space: nowrap; }
@@ -79,7 +82,7 @@
         .btn-link { background: #06b6d4; } .btn-del { background: #ef4444; } .btn-rename { background: #f59e0b; }
         .btn-clear { background: #64748b; padding: 8px; border-radius: 50%; }
         body.student-mode .top-action-bar, body.student-mode .array-import-box, body.student-mode .remove-btn, body.student-mode .type-select, body.student-mode .correct-ans-box, body.student-mode .admin-only { display: none !important; }
-        body.student-mode .selected-opt { background: rgba(59, 130, 246, 0.15) !important; border: 2px solid var(--royal-blue) !important; }
+        body.student-mode .selected-opt { background: rgba(59, 130, 246, 0.2) !important; border: 2px solid var(--royal-blue) !important; }
         #report-modal, #cloud-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 700px; max-height: 85%; background: #ffffff; color: #1e293b; z-index: 2000; border-radius: 20px; padding: 25px; overflow-y: auto; box-shadow: 0 0 50px rgba(0,0,0,0.4); }
         .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .report-table th, .report-table td { padding: 12px; border: 1px solid #e2e8f0; text-align: center; }
@@ -90,7 +93,7 @@
 </head>
 <body>
     <script>
-        // مصفوفة الثيمات المتنوعة (بدون الثيم الليلي)
+        // مصفوفة الثيمات المتنوعة المعتمدة (بدون الثيم الليلي)
         const themes = [
             { bg: "#f8fafc", primary: "#1e3a8a", purple: "#7c3aed", text: "#1e293b", card: "#ffffff", border: "#e2e8f0" },
             { bg: "#fdf4ff", primary: "#86198f", purple: "#c084fc", text: "#1e293b", card: "#ffffff", border: "#f5d0fe" },

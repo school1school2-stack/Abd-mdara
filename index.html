@@ -204,15 +204,27 @@
             return h + '</div>';
         }
 
-        // دالة متوافقة تماماً مع مصفوفَتِك (تترجم t إلى النوع البرمجي الصحيح و q إلى text)
+        // دالة ذكية تقبل النص كاملاً (حتى لو احتوى على const rawQuizData =) وتقوم بتنظيفه وتحويله
         function importArrayQuestions() {
-            const rawData = prompt("الصق مصفوفة الأسئلة هنا (بصيغة JSON):");
+            let rawData = prompt("الصق مصفوفة الأسئلة هنا:");
             if (!rawData) return;
 
             try {
+                // إزالة كود تعريف المتغير الزائد لو وجد لضمان عدم حدوث خطأ
+                rawData = rawData.trim();
+                if (rawData.startsWith("const") || rawData.startsWith("let") || rawData.startsWith("var")) {
+                    const equalIndex = rawData.indexOf("=");
+                    if (equalIndex !== -1) {
+                        rawData = rawData.substring(equalIndex + 1).trim();
+                    }
+                }
+                if (rawData.endsWith(";")) {
+                    rawData = rawData.substring(0, rawData.length - 1).trim();
+                }
+
                 const arr = JSON.parse(rawData);
                 if (!Array.isArray(arr)) {
-                    alert("الخطأ: النص المدخل ليس مصفوفة (Array) صحيحة!");
+                    alert("الخطأ: النص المدخل ليس مصفوفة صحيحة!");
                     return;
                 }
 
@@ -227,7 +239,6 @@
                     else if (tName === "صحح") mappedType = 'k_multi';
                     else if (tName === "مثل") mappedType = 'k_multi';
 
-                    // تجهيز كائن السؤال بالتنسيق الذي تفهمه المنصة
                     let formattedData = {
                         type: mappedType,
                         text: item.q || "",
@@ -241,7 +252,7 @@
                 saveAll();
                 alert(`تم استيراد وتوزيع ${arr.length} سؤالاً بنجاح!`);
             } catch (e) {
-                alert("خطأ في تنسيق الـ JSON، تأكد من صحة الأقواس وعلامات التنصيص.");
+                alert("خطأ في قراءة البيانات، تأكد من صحة النسخ ومطابقة الأقواس.");
             }
         }
 
@@ -268,7 +279,6 @@
                     studentAns = selWord || selLabel; 
                     correctKey = key; 
                     
-                    // مقارنة الإجابة سواء كتب حرف الخيار أو نص الخيار مباشرة
                     if (selWord === key || selLabel.toUpperCase() === key.toUpperCase() || selWord.trim() === key.trim()) {
                         pts = 1;
                     } else {

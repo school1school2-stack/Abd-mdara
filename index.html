@@ -30,20 +30,15 @@
         .school-name { margin: 0; color: #64748b; font-weight: bold; font-size: 1rem; }
         .logo-box { background: var(--royal-blue); width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.4rem; }
 
-        .section-tabs { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; max-width: 850px; }
-        .tab-btn { flex: 1; padding: 12px; background: white; border: 2px solid #e2e8f0; border-radius: 10px; cursor: pointer; font-weight: bold; color: #64748b; transition: 0.3s; }
-        .tab-btn.active { border-color: var(--royal-blue); color: var(--royal-blue); background: #eff6ff; }
-
         .container { width: 100%; max-width: 850px; padding-bottom: 120px; }
         .question-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; border: 2px solid #e2e8f0; position: relative; text-align: right; box-sizing: border-box; transition: 0.3s; }
-        .question-card::before { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 8px; background: var(--royal-blue); }
-        .kifayat-style::before { background: var(--k-purple) !important; }
+        .question-card::before { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 8px; background: var(--k-purple); }
 
         .smart-paste-area { margin-bottom: 20px; background: #f0fdf4; padding: 15px; border-radius: 12px; border: 2px dashed var(--success-green); }
         .smart-input { width: 100%; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; font-family: inherit; font-size: 1rem; outline: none; }
 
         .card-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .q-number-badge { background: var(--royal-blue); color: white; padding: 2px 15px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; }
+        .q-number-badge { background: var(--k-purple); color: white; padding: 2px 15px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; }
         .type-select { background: #f1f5f9; border: none; padding: 8px; border-radius: 10px; font-weight: bold; font-family: inherit; cursor: pointer; }
 
         .estieab-box { background: #fff9c4 !important; border: 2px solid #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 15px; color: #000; font-weight: bold; line-height: 1.8; width: 100%; box-sizing: border-box; text-align: right; min-height: 100px; height: auto; white-space: pre-wrap; font-size: 1.1rem; }
@@ -55,9 +50,6 @@
         .opt-pair-row { display: flex; align-items: center; background: white; border: 1.5px solid #d1d5db; border-radius: 10px; padding: 12px; box-sizing: border-box; cursor: pointer; transition: 0.2s; }
         .opt-label { font-weight: bold; color: var(--royal-blue); margin-left: 5px; white-space: pre; font-size: 1.05rem; }
         .opt-word { width: 100%; border: none; outline: none; font-weight: bold; color: #000; background: transparent; text-align: right; font-family: inherit; cursor: inherit; font-size: 1.1rem; }
-
-        .pair-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; background: #fff1f2; padding: 15px; border-radius: 12px; border: 1.5px dashed #fca5a5; width: 100%; box-sizing: border-box; }
-        .pair-word { width: 45%; text-align: center; border: none; background: white; padding: 10px; border-radius: 8px; color: var(--q-red) !important; font-weight: bold; font-size: 1.3rem; font-family: inherit; }
 
         .correct-ans-box { margin-top: 15px; padding: 10px; background: #f0fdf4; border-radius: 10px; border: 1px solid #bbf7d0; text-align: right; }
         .correct-input { width: 100%; background: transparent; border: none; outline: none; color: #166534; font-weight: bold; text-align: right; font-family: inherit; }
@@ -114,12 +106,6 @@
         <div class="header-left"><p class="school-name">ثانوية الأمير عبدالمجيد 😉</p></div>
     </div>
 
-    <!-- إزالة كلاس admin-only حتى تظهر التبويبات دائماً للتنقل بسهولة بين القدرات والكفايات -->
-    <div class="section-tabs">
-        <button class="tab-btn active" onclick="setSection('qudrat')">قسم القدرات اللفظي</button>
-        <button class="tab-btn" onclick="setSection('kifayat')">قسم الكفايات اللغوية</button>
-    </div>
-
     <div class="container" id="quiz-content"></div>
 
     <div id="student-actions" style="display: none; text-align: center; margin-bottom: 50px;">
@@ -141,18 +127,11 @@
     </div>
 
     <script>
-        let currentSection = 'qudrat';
         let loadedExamQuestions = null;
 
-        const typeMap = { 
-            'qudrat': {
-                'tanazor': 'تناظر لفظي ( : )', 'ekmal': 'إكمال جمل', 'khata': 'خطأ سياقي',
-                'estieab': 'استيعاب المقروء', 'shaza': 'المفردة الشاذة', 'irtibat': 'الارتباط والاختلاف'
-            },
-            'kifayat': {
-                'k_fill': 'أكمل الفراغ', 'k_irab': 'أعرب ما تحته خط', 'k_sentence': 'مثل في جملة مفيدة',
-                'k_extract': 'استخرج من النص', 'k_true': 'صح وخطأ', 'k_multi': 'اختر الإجابة الصحيحة'
-            }
+        const typeMap = {
+            'k_fill': 'أكمل الفراغ', 'k_irab': 'أعرب ما تحته خط', 'k_sentence': 'مثل في جملة مفيدة',
+            'k_extract': 'استخرج من النص', 'k_true': 'صح وخطأ', 'k_multi': 'اختر الإجابة الصحيحة'
         };
         const labels = ['أ) ', 'ب) ', 'ج) ', 'د) '];
 
@@ -165,33 +144,20 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function setSection(sec) {
-            currentSection = sec;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText.includes(sec==='qudrat'?'القدرات':'الكفايات')));
-            document.getElementById('quiz-content').innerHTML = '';
-            
-            if (loadedExamQuestions) {
-                renderExamQuestionsForSection(loadedExamQuestions, sec);
-            } else {
-                loadQuestions();
-            }
-        }
-
         function addQuestion(data = null) {
             const container = document.getElementById('quiz-content');
             const card = document.createElement('div');
-            const type = data ? data.type : (currentSection === 'qudrat' ? 'tanazor' : 'k_fill');
-            card.className = `question-card ${currentSection==='kifayat'?'kifayat-style':''}`;
-            card.dataset.section = currentSection;
+            const type = data ? data.type : 'k_fill';
+            card.className = `question-card`;
 
-            const needsKey = (currentSection === 'qudrat') || (['k_true','k_multi'].includes(type));
+            const needsKey = (['k_true','k_multi'].includes(type));
 
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
                     <div class="card-meta">
                         <span class="q-number-badge"></span>
                         <select class="type-select" onchange="toggleType(this)">
-                            ${Object.entries(typeMap[currentSection]).map(([k,v])=>`<option value="${k}" ${type===k?'selected':''}>${v}</option>`).join('')}
+                            ${Object.entries(typeMap).map(([k,v])=>`<option value="${k}" ${type===k?'selected':''}>${v}</option>`).join('')}
                         </select>
                     </div>
                     <i class="fas fa-times-circle remove-btn" style="color:#cbd5e1; cursor:pointer;" onclick="this.closest('.question-card').remove();updateNumbers();saveAll();"></i>
@@ -219,8 +185,7 @@
         }
 
         function renderQArea(t, d) {
-            if (t === 'tanazor') return `<div class="pair-row"><input type="text" class="pair-word t1" placeholder="كلمة 1" value="${d?d.text1:''}" oninput="saveAll()"><span style="color:red; font-weight:bold; font-size:1.5rem"> : </span><input type="text" class="pair-word t2" placeholder="كلمة 2" value="${d?d.text2:''}" oninput="saveAll()"></div>`;
-            if (t === 'estieab' || t === 'k_extract') return `<div class="estieab-box" contenteditable="true" oninput="saveAll()" placeholder="النص...">${d?d.text_area||'' : ''}</div><textarea class="q-text-input q-main" placeholder="السؤال..." oninput="saveAll()">${d?d.text:''}</textarea>`;
+            if (t === 'k_extract') return `<div class="estieab-box" contenteditable="true" oninput="saveAll()" placeholder="النص...">${d?d.text_area||'' : ''}</div><textarea class="q-text-input q-main" placeholder="السؤال..." oninput="saveAll()">${d?d.text:''}</textarea>`;
             return `<textarea class="q-text-input q-main" placeholder="اكتب السؤال هنا..." oninput="saveAll()">${d?d.text:''}</textarea>`;
         }
 
@@ -229,8 +194,7 @@
             let h = '<div class="options-grid">';
             let count = (t === 'k_true') ? 2 : 4;
             for(let i=0; i<count; i++) {
-                if(t==='tanazor') h+=`<div class="opt-pair-row"><span class="opt-label">${labels[i]}</span><input type="text" class="opt-word op1" placeholder="1" value="${d?.opt_pair_val1?.[i] || ''}" oninput="saveAll()"><span style="color:red; font-weight:bold"> : </span><input type="text" class="opt-word op2" placeholder="2" value="${d?.opt_pair_val2?.[i] || ''}" oninput="saveAll()"></div>`;
-                else h+=`<div class="opt-pair-row"><span class="opt-label">${labels[i]}</span><input type="text" class="opt-word opt" placeholder="خيار ${labels[i]}" value="${d?.opts?.[i]||(t==='k_true'?(i===0?'صح':'خطأ'):'')}" oninput="saveAll()"></div>`;
+                h+=`<div class="opt-pair-row"><span class="opt-label">${labels[i]}</span><input type="text" class="opt-word opt" placeholder="خيار ${labels[i]}" value="${d?.opts?.[i]||(t==='k_true'?(i===0?'صح':'خطأ'):'')}" oninput="saveAll()"></div>`;
             }
             return h + '</div>';
         }
@@ -243,7 +207,7 @@
 
             cards.forEach((c, i) => {
                 const type = c.querySelector('.type-select').value;
-                const qTxt = c.querySelector('.q-main')?.value || (c.querySelector('.t1')?.value + ":" + c.querySelector('.t2')?.value) || "سؤال";
+                const qTxt = c.querySelector('.q-main')?.value || "سؤال";
                 let studentAns = "", correctKey = "", pts = 0;
 
                 if (['k_fill','k_irab','k_sentence','k_extract'].includes(type)) {
@@ -320,17 +284,12 @@
 
         function closeModals() { document.getElementById('report-modal').style.display = 'none'; document.getElementById('analysis-modal').style.display = 'none'; document.getElementById('modal-overlay').style.display = 'none'; }
         function recalc() { let total = 0; document.querySelectorAll('.score-edit').forEach(input => total += parseFloat(input.value || 0)); document.getElementById('score-summary').innerText = `النتيجة المعدلة: ${total} من ${document.querySelectorAll('.question-card').length}`; }
-        function toggleType(s) { const c = s.closest('.question-card'); const val = s.value; const sec = c.dataset.section; c.querySelector('.q-area').innerHTML = renderQArea(val,null); c.querySelector('.ans-grid-area').innerHTML = renderOptions(val,null); c.querySelector('.correct-ans-box').style.display = (sec === 'qudrat' || ['k_true','k_multi'].includes(val)) ? '' : 'none'; saveAll(); }
+        function toggleType(s) { const c = s.closest('.question-card'); const val = s.value; c.querySelector('.q-area').innerHTML = renderQArea(val,null); c.querySelector('.ans-grid-area').innerHTML = renderOptions(val,null); c.querySelector('.correct-ans-box').style.display = (['k_true','k_multi'].includes(val)) ? '' : 'none'; saveAll(); }
         function updateNumbers() { document.querySelectorAll('.q-number-badge').forEach((b, i) => b.innerText = `السؤال ${i+1}`); }
-        function saveAll() { const qs = []; document.querySelectorAll('.question-card').forEach(c => { const t = c.querySelector('.type-select').value; const sec = c.dataset.section; let d = { type: t, section: sec, ans: c.querySelector('.ans-val')?.value || '' }; if (t === 'tanazor') { d.text1 = c.querySelector('.t1').value; d.text2 = c.querySelector('.t2').value; d.opt_pair_val1 = Array.from(c.querySelectorAll('.op1')).map(i => i.value); d.opt_pair_val2 = Array.from(c.querySelectorAll('.op2')).map(i => i.value); } else { d.text = c.querySelector('.q-main')?.value || ""; if(t==='estieab' || t==='k_extract') d.text_area = c.querySelector('.estieab-box').innerText; d.opts = Array.from(c.querySelectorAll('.opt')).map(i => i.value); } qs.push(d); }); localStorage.setItem('fifi_final_v_secured', JSON.stringify(qs)); }
+        function saveAll() { const qs = []; document.querySelectorAll('.question-card').forEach(c => { const t = c.querySelector('.type-select').value; let d = { type: t, ans: c.querySelector('.ans-val')?.value || '' }; d.text = c.querySelector('.q-main')?.value || ""; if(t==='k_extract') d.text_area = c.querySelector('.estieab-box').innerText; d.opts = Array.from(c.querySelectorAll('.opt')).map(i => i.value); qs.push(d); }); localStorage.setItem('fifi_final_v_secured', JSON.stringify(qs)); }
         
-        function renderExamQuestionsForSection(qs, sec) {
-            const filtered = qs.filter(q => (q.section || 'qudrat') === sec);
-            if(filtered.length === 0 && document.body.classList.contains('student-mode')) {
-                document.getElementById('quiz-content').innerHTML = '<p style="text-align:center; font-weight:bold; color:#64748b; margin-top:20px;">لا توجد أسئلة في هذا القسم لهذا النموذج.</p>';
-            } else {
-                filtered.forEach(q => addQuestion(q));
-            }
+        function renderExamQuestions(qs) {
+            qs.forEach(q => addQuestion(q));
         }
 
         function loadQuestions() { 
@@ -343,7 +302,7 @@
                 const s = localStorage.getItem('fifi_final_v_secured'); 
                 if(s) {
                     const questions = JSON.parse(s);
-                    questions.filter(q => (q.section || 'qudrat') === currentSection).forEach(q => addQuestion(q)); 
+                    questions.forEach(q => addQuestion(q)); 
                 }
             } 
         }
@@ -355,7 +314,7 @@
             db.ref('models/' + id).once('value', s => { 
                 if (s.val() && s.val().data) {
                     loadedExamQuestions = s.val().data;
-                    renderExamQuestionsForSection(loadedExamQuestions, currentSection);
+                    renderExamQuestions(loadedExamQuestions);
                 }
             }); 
         }

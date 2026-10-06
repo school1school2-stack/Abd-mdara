@@ -54,7 +54,6 @@
         .question-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; border: 2px solid #e2e8f0; position: relative; text-align: right; box-sizing: border-box; transition: 0.3s; }
         .question-card::before { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 8px; background: var(--k-purple); }
         
-        /* تنسيق السؤال غير المجاب عند التنبيه */
         .question-card.unanswered-alert { border: 2px solid var(--q-red) !important; background-color: #fff5f5; }
         .question-card.unanswered-alert .q-number-badge { background-color: var(--q-red) !important; }
 
@@ -210,7 +209,7 @@
                     const examId = new URLSearchParams(window.location.search).get('exam');
                     if (examId && localStorage.getItem('submitted_' + examId) === 'true') return;
                     if (isStudent) { 
-                        card.classList.remove('unanswered-alert'); // إزالة التنبيه عند إجابة السؤال
+                        card.classList.remove('unanswered-alert');
                         card.querySelectorAll('.opt-pair-row').forEach(r => r.classList.remove('selected-opt')); 
                         row.classList.add('selected-opt');
                     }
@@ -240,7 +239,7 @@
                 const readonlyInput = isStudent ? 'readonly style="background:transparent; cursor:pointer;"' : '';
                 h+=`<div class="opt-pair-row"><span class="opt-label">${labels[i]}</span><input type="text" class="opt-word opt" ${readonlyInput} placeholder="خيار ${labels[i]}" value="${d?.opts?.[i]||(t==='k_true'?(i===0?'صح':'خطأ'):'')}" oninput="saveAll()"></div>`;
             }
-            return h + '<div>';
+            return h + '</div>';
         }
 
         function importArrayQuestions() {
@@ -304,15 +303,20 @@
 
                 const examId = new URLSearchParams(window.location.search).get('exam');
                 
+                // التحقق من قاعدة بيانات النتائج لمعرفة إن كان قد أدى الاختبار أم لا
                 const prevResult = await fsDb.collection("alkfaeat_results")
                     .where("email", "==", authenticatedStudentEmail)
                     .where("model_id", "==", examId).get();
 
-                if (!prevResult.empty || localStorage.getItem('submitted_' + examId) === 'true') {
+                // إذا قام المعلم بحذف النتيجة من لوحة التحكم، فلن يوجد سجل في Firestore، وسيسمح له بالاختبار
+                if (!prevResult.empty) {
                     msgEl.style.color = "var(--q-red)";
                     msgEl.innerText = `عذراً يا ${authenticatedStudentName}، لقد أديت هذا الاختبار مسبقاً ولا يمكنك إعادتة.`;
                     return;
                 }
+
+                // مسح أي قفل محلي قديم إن وُجد
+                localStorage.removeItem('submitted_' + examId);
 
                 document.getElementById('student-auth-container').style.display = 'none';
                 document.querySelector('.container').style.display = 'block';
@@ -349,8 +353,7 @@
 
             if (firstUnansweredIndex !== -1) {
                 alert(`⚠️ تنبيه: لديك سؤال تركته بدون إجابة!\n\n🔴 رقم السؤال غير المجاب: (السؤال رقم ${firstUnansweredIndex})\n\nتم تلوينه باللون الأحمر لتحديد مكانه.`);
-                // التمرير تلقائياً للسؤال غير المجاب
-                document.querySelectorAll('.question-card')[firstUnansweredIndex - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                cards[firstUnansweredIndex - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
 

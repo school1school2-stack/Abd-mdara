@@ -53,13 +53,17 @@
         .container { width: 100%; max-width: 850px; padding-bottom: 120px; display: none; }
         .question-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; border: 2px solid #e2e8f0; position: relative; text-align: right; box-sizing: border-box; transition: 0.3s; }
         .question-card::before { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 8px; background: var(--k-purple); }
+        
+        /* تنسيق السؤال غير المجاب عند التنبيه */
+        .question-card.unanswered-alert { border: 2px solid var(--q-red) !important; background-color: #fff5f5; }
+        .question-card.unanswered-alert .q-number-badge { background-color: var(--q-red) !important; }
 
         .card-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .q-number-badge { background: var(--k-purple); color: white; padding: 2px 15px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; }
+        .q-number-badge { background: var(--k-purple); color: white; padding: 2px 15px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; transition: 0.3s; }
         .type-select { background: #f1f5f9; border: none; padding: 8px; border-radius: 10px; font-weight: bold; font-family: inherit; cursor: pointer; }
 
         .estieab-box { background: #fff9c4 !important; border: 2px solid #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 15px; color: #000; font-weight: bold; line-height: 1.8; width: 100%; box-sizing: border-box; text-align: right; min-height: 100px; height: auto; white-space: pre-wrap; font-size: 1.1rem; }
-        .q-text-input { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; color: var(--q-red) !important; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; outline: none; text-align: right; box-sizing: border-box; min-height: 50px; height: auto; word-wrap: break-word; font-family: inherit; }
+        .q-text-input { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; color: var(--q-red) !important; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; outline: none; text-align: right; box-sizing: border-box; min-height: 50px; height: auto; word-wrap: break-word; font-family: inherit; background: transparent; }
 
         .essay-input { width: 100%; min-height: 60px; padding: 12px; border: 2px inset #e2e8f0; border-radius: 12px; background: #f8fafc; font-weight: bold; color: #1e293b; margin-top: 10px; outline: none; text-align: right; }
 
@@ -157,14 +161,13 @@
         };
         const labels = ['أ) ', 'ب) ', 'ج) ', 'د) '];
 
-        // تهيئة Firebase الموحدة (Realtime للنماذج و Firestore لإيميلات الطلاب والنتائج الذكية)
-        const firebaseConfigRT = {
+        const firebaseConfig = {
             apiKey: "AIzaSyAVrIim7aXjg0hGrMk0qVrXT8geRIpHoBk",
             authDomain: "youy-apps.firebaseapp.com",
             databaseURL: "https://youy-apps-default-rtdb.firebaseio.com",
             projectId: "youy-apps"
         };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfigRT);
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
         const firestoreConfig = {
             apiKey: "AIzaSyBkCO7FDQXd89YDf843J4_AtvEFvzzt-R0",
@@ -182,19 +185,20 @@
             card.className = `question-card`;
 
             const needsKey = (['k_true','k_multi'].includes(type));
+            const isStudent = document.body.classList.contains('student-mode');
 
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
                     <div class="card-meta">
                         <span class="q-number-badge"></span>
-                        <select class="type-select" onchange="toggleType(this)">
+                        <select class="type-select" ${isStudent ? 'disabled' : ''} onchange="toggleType(this)">
                             ${Object.entries(typeMap).map(([k,v])=>`<option value="${k}" ${type===k?'selected':''}>${v}</option>`).join('')}
                         </select>
                     </div>
                     <i class="fas fa-times-circle remove-btn" style="color:#cbd5e1; cursor:pointer;" onclick="this.closest('.question-card').remove();updateNumbers();saveAll();"></i>
                 </div>
-                <div class="q-area">${renderQArea(type, data)}</div>
-                <div class="ans-grid-area">${renderOptions(type, data)}</div>
+                <div class="q-area">${renderQArea(type, data, isStudent)}</div>
+                <div class="ans-grid-area">${renderOptions(type, data, isStudent)}</div>
                 <div class="correct-ans-box admin-only" style="${needsKey ? '' : 'display:none'}">
                     <input type="text" placeholder="حرف الإجابة أو نصها" class="correct-input ans-val" value="${data?data.ans||'':''}" oninput="saveAll()">
                 </div>
@@ -205,7 +209,8 @@
                 row.onclick = () => { 
                     const examId = new URLSearchParams(window.location.search).get('exam');
                     if (examId && localStorage.getItem('submitted_' + examId) === 'true') return;
-                    if (document.body.classList.contains('student-mode')) { 
+                    if (isStudent) { 
+                        card.classList.remove('unanswered-alert'); // إزالة التنبيه عند إجابة السؤال
                         card.querySelectorAll('.opt-pair-row').forEach(r => r.classList.remove('selected-opt')); 
                         row.classList.add('selected-opt');
                     }
@@ -213,22 +218,29 @@
             });
 
             updateNumbers();
-            if(!document.body.classList.contains('student-mode')) saveAll();
+            if(!isStudent) saveAll();
         }
 
-        function renderQArea(t, d) {
-            if (t === 'k_extract') return `<div class="estieab-box" contenteditable="true" oninput="saveAll()" placeholder="النص...">${d?d.text_area||'' : ''}</div><textarea class="q-text-input q-main" placeholder="السؤال..." oninput="saveAll()">${d?d.text:''}</textarea>`;
-            return `<textarea class="q-text-input q-main" placeholder="اكتب السؤال هنا..." oninput="saveAll()">${d?d.text:''}</textarea>`;
+        function renderQArea(t, d, isStudent) {
+            const readonlyAttr = isStudent ? 'readonly style="background:#f8fafc; cursor:default;"' : '';
+            const contenteditableAttr = isStudent ? 'contenteditable="false"' : 'contenteditable="true"';
+            
+            if (t === 'k_extract') return `<div class="estieab-box" ${contenteditableAttr} oninput="saveAll()" placeholder="النص...">${d?d.text_area||'' : ''}</div><textarea class="q-text-input q-main" ${readonlyAttr} placeholder="السؤال..." oninput="saveAll()">${d?d.text:''}</textarea>`;
+            return `<textarea class="q-text-input q-main" ${readonlyAttr} placeholder="اكتب السؤال هنا..." oninput="saveAll()">${d?d.text:''}</textarea>`;
         }
 
-        function renderOptions(t, d) {
-            if (['k_fill', 'k_irab', 'k_sentence'].includes(t)) return `<div class="essay-input" contenteditable="true" placeholder="إجابة الطالب هنا..."></div>`;
+        function renderOptions(t, d, isStudent) {
+            if (['k_fill', 'k_irab', 'k_sentence'].includes(t)) {
+                const contenteditableAttr = isStudent ? 'contenteditable="true" oninput="this.closest(\'.question-card\').classList.remove(\'unanswered-alert\')"' : 'contenteditable="true"';
+                return `<div class="essay-input" ${contenteditableAttr} placeholder="إجابة الطالب هنا..."></div>`;
+            }
             let h = '<div class="options-grid">';
             let count = (t === 'k_true') ? 2 : 4;
             for(let i=0; i<count; i++) {
-                h+=`<div class="opt-pair-row"><span class="opt-label">${labels[i]}</span><input type="text" class="opt-word opt" placeholder="خيار ${labels[i]}" value="${d?.opts?.[i]||(t==='k_true'?(i===0?'صح':'خطأ'):'')}" oninput="saveAll()"></div>`;
+                const readonlyInput = isStudent ? 'readonly style="background:transparent; cursor:pointer;"' : '';
+                h+=`<div class="opt-pair-row"><span class="opt-label">${labels[i]}</span><input type="text" class="opt-word opt" ${readonlyInput} placeholder="خيار ${labels[i]}" value="${d?.opts?.[i]||(t==='k_true'?(i===0?'صح':'خطأ'):'')}" oninput="saveAll()"></div>`;
             }
-            return h + '</div>';
+            return h + '<div>';
         }
 
         function importArrayQuestions() {
@@ -266,7 +278,6 @@
             }
         }
 
-        // دالة التحقق من إيميل الطالب من جدول allowed_students في Firestore
         async function verifyStudentEmail() {
             const emailInput = document.getElementById('studentEmailInput').value.trim().toLowerCase();
             const msgEl = document.getElementById('auth-status-msg');
@@ -293,18 +304,16 @@
 
                 const examId = new URLSearchParams(window.location.search).get('exam');
                 
-                // التأكد من عدم تكرار الاختبار
                 const prevResult = await fsDb.collection("alkfaeat_results")
                     .where("email", "==", authenticatedStudentEmail)
                     .where("model_id", "==", examId).get();
 
                 if (!prevResult.empty || localStorage.getItem('submitted_' + examId) === 'true') {
                     msgEl.style.color = "var(--q-red)";
-                    msgEl.innerText = `عذراً يا ${authenticatedStudentName}، لقد أديت هذا الاختبار مسبقاً ولا يمكنك إعادته.`;
+                    msgEl.innerText = `عذراً يا ${authenticatedStudentName}، لقد أديت هذا الاختبار مسبقاً ولا يمكنك إعادتة.`;
                     return;
                 }
 
-                // إخفاء شاشة تسجيل الدخول وإظهار الأسئلة للطالب
                 document.getElementById('student-auth-container').style.display = 'none';
                 document.querySelector('.container').style.display = 'block';
                 document.getElementById('student-actions').style.display = 'block';
@@ -319,19 +328,29 @@
 
         async function gradeExam() {
             const cards = document.querySelectorAll('.question-card');
-            let hasUnanswered = false;
+            let firstUnansweredIndex = -1;
 
-            cards.forEach((c) => {
+            cards.forEach((c, index) => {
+                c.classList.remove('unanswered-alert');
                 const type = c.querySelector('.type-select').value;
+                let isAnswered = true;
+                
                 if (['k_fill', 'k_irab', 'k_sentence'].includes(type)) {
-                    if (!c.querySelector('.essay-input').innerText.trim()) hasUnanswered = true;
+                    if (!c.querySelector('.essay-input').innerText.trim()) isAnswered = false;
                 } else {
-                    if (!c.querySelector('.selected-opt')) hasUnanswered = true;
+                    if (!c.querySelector('.selected-opt')) isAnswered = false;
+                }
+
+                if (!isAnswered) {
+                    c.classList.add('unanswered-alert');
+                    if (firstUnansweredIndex === -1) firstUnansweredIndex = index + 1;
                 }
             });
 
-            if (hasUnanswered) {
-                alert("⚠️ تنبيه: يوجد سؤال واحد على الأقل لم تقم بالإجابة عليه! يرجى إكمال جميع الإجابات.");
+            if (firstUnansweredIndex !== -1) {
+                alert(`⚠️ تنبيه: لديك سؤال تركته بدون إجابة!\n\n🔴 رقم السؤال غير المجاب: (السؤال رقم ${firstUnansweredIndex})\n\nتم تلوينه باللون الأحمر لتحديد مكانه.`);
+                // التمرير تلقائياً للسؤال غير المجاب
+                document.querySelectorAll('.question-card')[firstUnansweredIndex - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
 
@@ -363,7 +382,6 @@
 
             const examId = new URLSearchParams(window.location.search).get('exam');
             if(examId && authenticatedStudentEmail) {
-                // حفظ النتيجة في Firestore لتظهر مباشرة في لوحة التحكم والتحليل الذكي
                 await fsDb.collection("alkfaeat_results").add({
                     name: authenticatedStudentName,
                     email: authenticatedStudentEmail,
@@ -402,7 +420,7 @@
         }
 
         function closeModals() { document.getElementById('report-modal').style.display = 'none'; document.getElementById('analysis-modal').style.display = 'none'; document.getElementById('modal-overlay').style.display = 'none'; }
-        function toggleType(s) { const c = s.closest('.question-card'); const val = s.value; c.querySelector('.q-area').innerHTML = renderQArea(val,null); c.querySelector('.ans-grid-area').innerHTML = renderOptions(val,null); c.querySelector('.correct-ans-box').style.display = (['k_true','k_multi'].includes(val)) ? '' : 'none'; saveAll(); }
+        function toggleType(s) { const c = s.closest('.question-card'); const val = s.value; c.querySelector('.q-area').innerHTML = renderQArea(val,null,false); c.querySelector('.ans-grid-area').innerHTML = renderOptions(val,null,false); c.querySelector('.correct-ans-box').style.display = (['k_true','k_multi'].includes(val)) ? '' : 'none'; saveAll(); }
         function updateNumbers() { document.querySelectorAll('.q-number-badge').forEach((b, i) => b.innerText = `السؤال ${i+1}`); }
         function saveAll() { 
             const qs = []; 
@@ -421,8 +439,6 @@
             const id = new URLSearchParams(window.location.search).get('exam'); 
             if (id) { 
                 document.body.classList.add('student-mode'); 
-                
-                // إظهار شاشة تسجيل دخول الإيميل المدرسي أولاً للطلاب
                 document.getElementById('student-auth-container').style.display = 'block';
 
                 rtdb.ref('models/' + id).once('value', s => { 

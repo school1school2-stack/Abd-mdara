@@ -104,16 +104,25 @@
 </head>
 <body>
 
-    <script>
-        // نظام الثيمات والألوان المتنوعة العشوائية عند كل تحديث للصفحة
-        const themes = [
-            { bg: "#f8fafc", primary: "#1e3a8a", purple: "#7c3aed" }, // أزرق ملكي
-            { bg: "#fdf4ff", primary: "#86198f", purple: "#c084fc" }, // بنفسجي فخم
-            { bg: "#f0fdf4", primary: "#166534", purple: "#059669" }, // أخضر هادئ
-            { bg: "#fffbeb", primary: "#b45309", purple: "#d97706" }, // ذهبي دافئ
-            { bg: "#fdf2f8", primary: "#9d174d", purple: "#db2777" }, // وردي أنيق
-            { bg: "#f0f9ff", primary: "#0369a1", purple: "#0284c7" }  // سماوي عالي الوضوح
-        ];
+const themes = [
+    // الثيمات الحالية
+    { bg: "#f8fafc", primary: "#1e3a8a", purple: "#7c3aed" }, // أزرق ملكي
+    { bg: "#fdf4ff", primary: "#86198f", purple: "#c084fc" }, // بنفسجي فخم
+    { bg: "#f0fdf4", primary: "#166534", purple: "#059669" }, // أخضر هادئ
+    { bg: "#fffbeb", primary: "#b45309", purple: "#d97706" }, // ذهبي دافئ
+    { bg: "#fdf2f8", primary: "#9d174d", purple: "#db2777" }, // وردي أنيق
+    { bg: "#f0f9ff", primary: "#0369a1", purple: "#0284c7" }, // سماوي عالي الوضوح
+
+    // ثيمات جديدة إضافية
+    { bg: "#fafaf9", primary: "#292524", purple: "#78716c" }, // كلاسيكي رمادي/أسود
+    { bg: "#fff7ed", primary: "#c2410c", purple: "#ea580c" }, // برتقالي دافئ (غروب)
+    { bg: "#f0fdfa", primary: "#0f766e", purple: "#0d9488" }, // فيروزي / تركواز
+    { bg: "#ecfeff", primary: "#155e75", purple: "#0891b2" }, // أزرق سياني عميق
+    { bg: "#f5f3ff", primary: "#4c1d95", purple: "#6d28d9" }, // نيلي ملكي
+    { bg: "#f4fef1", primary: "#3f6212", purple: "#65a30d" }, // أخضر زيتي / زيتوني
+    { bg: "#fef2f2", primary: "#991b1b", purple: "#dc2626" }, // أحمر ياقوتي
+    { bg: "#18181b", primary: "#e4e4e7", purple: "#a1a1aa" }  // ثيم داكن (Dark Mode)
+];
         const selectedTheme = themes[Math.floor(Math.random() * themes.length)];
         document.documentElement.style.setProperty('--royal-blue', selectedTheme.primary);
         document.documentElement.style.setProperty('--k-purple', selectedTheme.purple);

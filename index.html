@@ -34,7 +34,6 @@
         .school-name { margin: 0; color: #64748b; font-weight: bold; font-size: 0.95rem; }
         .logo-box { background: var(--royal-blue); width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.4rem; }
 
-        /* لوحة مخصصة لاستيراد المصفوفات باللصق المريح */
         .array-import-box {
             width: 100%; max-width: 850px; background: white; border-radius: 15px; padding: 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px dashed #0284c7; margin-bottom: 25px; box-sizing: border-box;
@@ -120,7 +119,6 @@
         <div class="header-left"><p class="school-name">ثانوية الأمير عبدالمجيد 😉</p></div>
     </div>
 
-    <!-- لوحة مخصصة للصق واستيراد المصفوفات البرمجية مباشرة -->
     <div class="array-import-box admin-only">
         <label style="display: block; font-weight: bold; color: #0284c7; margin-bottom: 8px;"><i class="fas fa-file-code"></i> استيراد مصفوفة أسئلة جماعية (الصق هنا مباشرة):</label>
         <textarea id="arrayInputText" class="array-textarea" placeholder="الصق مصفوفة الـ JSON هنا (مع أو بدون const rawQuizData = [...])"></textarea>
@@ -220,7 +218,6 @@
             return h + '</div>';
         }
 
-        // دالة الاستيراد عبر مربع النصوص المخصص لتفادي مشاكل النوافذ المنسدلة
         function importArrayQuestions() {
             let rawData = document.getElementById('arrayInputText').value.trim();
             if (!rawData) {
@@ -229,7 +226,6 @@
             }
 
             try {
-                // إزالة تعريف المتغيرات أو علامات التساوي لو وجدت في بداية النص المنسوخ
                 if (rawData.startsWith("const") || rawData.startsWith("let") || rawData.startsWith("var")) {
                     const equalIndex = rawData.indexOf("=");
                     if (equalIndex !== -1) {
@@ -268,7 +264,7 @@
                 });
 
                 saveAll();
-                document.getElementById('arrayInputText').value = ""; // تفريغ المربع بعد النجاح
+                document.getElementById('arrayInputText').value = "";
                 alert(`تم استيراد وتوزيع ${arr.length} سؤالاً بنجاح!`);
             } catch (e) {
                 alert("خطأ في قراءة البيانات، تأكد من أنك نسخت المصفوفة بشكل صحيح وبكامل أقواسها.");
@@ -418,13 +414,6 @@
             }); 
         }
 
-        def clearAll() {
-            if(confirm("هل أنت تأكد من مسح جميع الأسئلة؟")) {
-                document.getElementById('quiz-content').innerHTML = '';
-                localStorage.removeItem('fifi_final_v_secured');
-            }
-        }
-        
         function clearAll() {
             if(confirm("هل أنت متأكد من مسح جميع الأسئلة؟")) {
                 document.getElementById('quiz-content').innerHTML = '';

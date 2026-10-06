@@ -58,7 +58,7 @@
         .correct-ans-box { margin-top: 15px; padding: 10px; background: #f0fdf4; border-radius: 10px; border: 1px solid #bbf7d0; text-align: right; }
         .correct-input { width: 100%; background: transparent; border: none; outline: none; color: #166534; font-weight: bold; text-align: right; font-family: inherit; }
 
-        .controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-wrap: nowrap; gap: 8px; z-index: 1000; background: #1e293b; padding: 10px 15px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); align-items: center; width: max-content; }
+        .controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-wrap: nowrap; gap: 8px; z-index: 1000; background: #1e293b; padding: 10px 15px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); align-items: center; width: max-content; overflow-x: auto; max-width: 95vw; }
         .btn { border: none; padding: 10px 18px; border-radius: 30px; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 8px; transition: 0.3s; font-family: inherit; font-size: 0.9rem; white-space: nowrap; }
         .btn-add { background: #3b82f6; } .btn-save { background: #a855f7; } .btn-load { background: #4f46e5; }
         .btn-link { background: #06b6d4; } .btn-del { background: #f97316; } .btn-pdf { background: #ef4444; }
@@ -120,6 +120,7 @@
         <button class="btn btn-clear" title="مسح الكل" onclick="clearAll()"><i class="fas fa-eraser"></i></button>
         <button class="btn btn-img" onclick="saveAsImages()"><i class="fas fa-image"></i> صور</button>
         <button class="btn btn-pdf" onclick="saveAsPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+        <button class="btn" style="background:#0284c7;" onclick="importArrayQuestions()" title="استيراد مصفوفة أسئلة"><i class="fas fa-file-code"></i> استيراد</button>
         <button class="btn btn-del" onclick="deleteFromCloud()"><i class="fas fa-trash-alt"></i> حذف</button>
         <button class="btn btn-link" onclick="generateStudentLink()"><i class="fas fa-link"></i> رابط الطلاب</button>
         <button class="btn btn-load" style="position:relative;" onclick="loadFromCloud()">
@@ -201,6 +202,31 @@
                 h+=`<div class="opt-pair-row"><span class="opt-label">${labels[i]}</span><input type="text" class="opt-word opt" placeholder="خيار ${labels[i]}" value="${d?.opts?.[i]||(t==='k_true'?(i===0?'صح':'خطأ'):'')}" oninput="saveAll()"></div>`;
             }
             return h + '</div>';
+        }
+
+        function importArrayQuestions() {
+            const rawData = prompt("الصق مصفوفة الأسئلة هنا (بصيغة JSON):");
+            if (!rawData) return;
+
+            try {
+                const questionsArray = JSON.parse(rawData);
+                if (!Array.isArray(questionsArray)) {
+                    alert("الخطأ: النص المدخل ليس مصفوفة (Array) صحيحة!");
+                    return;
+                }
+
+                questionsArray.forEach(qData => {
+                    if(!qData.type) {
+                        qData.type = 'k_multi'; 
+                    }
+                    addQuestion(qData);
+                });
+
+                saveAll();
+                alert(`تم استيراد وتوزيع ${questionsArray.length} سؤالاً على أقسامها بنجاح!`);
+            } catch (e) {
+                alert("خطأ في تنسيق الـ JSON، تأكد من صحة الأقواس وعلامات التنصيص.");
+            }
         }
 
         async function gradeExam() {

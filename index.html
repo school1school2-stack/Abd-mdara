@@ -75,7 +75,6 @@
 
         .estieab-box { background: #fff9c4 !important; border: 2px solid #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 15px; color: #000; font-weight: bold; line-height: 1.8; width: 100%; box-sizing: border-box; text-align: right; min-height: 90px; outline: none; white-space: pre-wrap; font-size: 1.15rem; }
         
-        /* مربع السؤال المتمدد تلقائياً بدون شريط تمرير */
         .q-text-input { 
             width: 100%; min-height: 70px; padding: 15px; border: 2px solid #cbd5e1; border-radius: 12px; 
             color: inherit; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; outline: none; 
@@ -85,7 +84,6 @@
 
         .essay-input { width: 100%; min-height: 70px; padding: 12px; border: 2px inset #e2e8f0; border-radius: 12px; background: rgba(0,0,0,0.02); font-weight: bold; color: inherit; margin-top: 10px; outline: none; text-align: right; font-size: 1.1rem; }
 
-        /* نظام العرض المتجاوب للخيارات: شبكة للكمبيوتر والأيباد، وعمودي للهواتف الذكية */
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         @media (max-width: 600px) {
             .options-grid { display: flex; flex-direction: column; }
@@ -218,7 +216,7 @@
             'k_fill': 'أكمل الفراغ', 'k_irab': 'أعرب ما تحته خط', 'k_sentence': 'مثل في جملة مفيدة',
             'k_extract': 'استخرج من النص', 'k_true': 'صح وخطأ', 'k_multi': 'اختر الإجابة الصحيحة'
         };
-        const labels = ['أ) ', 'ب) ', 'ج) ', 'د) '];
+        const labels = ['أ) ', 'b) ', 'ج) ', 'د) '];
 
         const firebaseConfig = {
             apiKey: "AIzaSyAVrIim7aXjg0hGrMk0qVrXT8geRIpHoBk",
@@ -237,10 +235,17 @@
         const fsDb = secondaryApp.firestore();
         const rtdb = firebase.database();
 
-        // دالة التمدد التلقائي لمربعات النص لمنع ظهور أشرطة التمرير والنزول والصعود
         function autoResizeTextarea(el) {
             el.style.height = 'auto';
             el.style.height = (el.scrollHeight) + 'px';
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
         }
 
         function addQuestion(data = null) {
@@ -270,7 +275,6 @@
             `;
             container.appendChild(card);
             
-            // تفعيل التمدد التلقائي لمربعات النص عند التحميل وأثناء الكتابة
             card.querySelectorAll('textarea').forEach(ta => {
                 autoResizeTextarea(ta);
                 ta.addEventListener('input', function() { autoResizeTextarea(this); saveAll(); });
@@ -308,11 +312,18 @@
                 const contenteditableAttr = isStudent ? 'contenteditable="true" oninput="this.closest(\'.question-card\').classList.remove(\'unanswered-alert\')"' : 'contenteditable="true"';
                 return `<div class="essay-input" ${contenteditableAttr} placeholder="إجابة الطالب هنا..."></div>`;
             }
+
+            let opts = d?.opts ? [...d.opts] : (t === 'k_true' ? ['صح', 'خطأ'] : ['', '', '', '']);
+            
+            // خلط الخيارات في صفحة الطالب فقط عند العرض
+            if (isStudent && opts.length > 0) {
+                opts = shuffleArray(opts);
+            }
+
             let h = '<div class="options-grid">';
-            let count = (t === 'k_true') ? 2 : 4;
-            for(let i=0; i<count; i++) {
+            for(let i=0; i<opts.length; i++) {
                 const readonlyInput = isStudent ? 'readonly style="background:transparent; cursor:pointer;"' : '';
-                h+=`<div class="opt-pair-row"><span class="opt-label">${labels[i]}</span><input type="text" class="opt-word opt" ${readonlyInput} placeholder="خيار ${labels[i]}" value="${d?.opts?.[i]||(t==='k_true'?(i===0?'صح':'خطأ'):'')}" oninput="saveAll()"></div>`;
+                h+=`<div class="opt-pair-row"><span class="opt-label">${labels[i]}</span><input type="text" class="opt-word opt" ${readonlyInput} placeholder="خيار ${labels[i]}" value="${opts[i]||''}" oninput="saveAll()"></div>`;
             }
             return h + '</div>';
         }
@@ -444,11 +455,11 @@
                     pts = studentAns.length > 1 ? 1 : 0;
                     correctKey = "مراجعة المعلم";
                 } else {
-                    const selLabel = c.querySelector('.selected-opt .opt-label')?.innerText.replace(')','').trim() || "";
                     const selWord = c.querySelector('.selected-opt .opt')?.value || "";
-                    const key = c.querySelector('.ans-val').value.trim();
-                    studentAns = selWord || selLabel; correctKey = key; 
-                    if (selWord === key || selLabel.toUpperCase() === key.toUpperCase() || selWord.trim() === key.trim()) pts = 1;
+                    const key = c.querySelector('.ans-val')?.value.trim() || "";
+                    studentAns = selWord; 
+                    correctKey = key; 
+                    if (selWord.trim() === key.trim()) pts = 1;
                 }
                 s += pts;
                 details.push({ q: qTxt, studentAns: studentAns, correctAns: correctKey, isCorrect: pts > 0 });
@@ -509,7 +520,6 @@
                 
                 document.getElementById('quiz-content').innerHTML = "";
                 snap.val().data.forEach(q => addQuestion(q));
-                setTimeout(() => { document.querySelectorAll('textarea').forEach(ta => autoResizeTextarea(ta)); }, 100);
                 
                 closeModals();
             }
@@ -612,7 +622,9 @@
                 rtdb.ref('models/' + id).once('value', s => { 
                     if (s.val() && s.val().data) {
                         loadedExamQuestions = s.val().data;
-                        loadedExamQuestions.forEach(q => addQuestion(q));
+                        // خلط ترتيب الأسئلة في صفحة الطالب عند كل تحديث/فتح للرابط
+                        let shuffledQuestions = shuffleArray([...loadedExamQuestions]);
+                        shuffledQuestions.forEach(q => addQuestion(q));
                         setTimeout(() => { document.querySelectorAll('textarea').forEach(ta => autoResizeTextarea(ta)); }, 100);
                     } else {
                         alert("هذا النموذج غير موجود أو تم حذفه من السحاب.");

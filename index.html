@@ -39,7 +39,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px dashed #0284c7; margin-bottom: 25px; box-sizing: border-box;
         }
         .array-textarea {
-            width: 100%; height: 100px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px;
+            width: 100%; height: 120px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px;
             font-family: monospace; font-size: 0.9rem; direction: ltr; text-align: left; outline: none; box-sizing: border-box; resize: vertical; margin-bottom: 10px;
         }
 
@@ -226,6 +226,9 @@
             }
 
             try {
+                // إزالة مسافات النسخ الخاصة والرموز غير المرغوب فيها وتعديل التعريفات
+                rawData = rawData.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+                
                 if (rawData.startsWith("const") || rawData.startsWith("let") || rawData.startsWith("var")) {
                     const equalIndex = rawData.indexOf("=");
                     if (equalIndex !== -1) {
@@ -236,7 +239,16 @@
                     rawData = rawData.substring(0, rawData.length - 1).trim();
                 }
 
-                const arr = JSON.parse(rawData);
+                // محاولة تحويل النص المنسق إلى JSON سليم
+                let arr;
+                try {
+                    arr = JSON.parse(rawData);
+                } catch (jsonErr) {
+                    // حل إضافي في حال كانت علامات التنصيص غير قياسية
+                    let sanitized = rawData.replace(/'/g, '"');
+                    arr = JSON.parse(sanitized);
+                }
+
                 if (!Array.isArray(arr)) {
                     alert("الخطأ: النص المدخل ليس مصفوفة (Array) صحيحة!");
                     return;
@@ -267,7 +279,7 @@
                 document.getElementById('arrayInputText').value = "";
                 alert(`تم استيراد وتوزيع ${arr.length} سؤالاً بنجاح!`);
             } catch (e) {
-                alert("خطأ في قراءة البيانات، تأكد من أنك نسخت المصفوفة بشكل صحيح وبكامل أقواسها.");
+                alert("خطأ في قراءة البيانات، تأكد من نسخ المصفوفة بأقواسها المربعة الصحيحة [...]");
             }
         }
 

@@ -96,7 +96,6 @@
 
     <div id="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1999;" onclick="closeModals()"></div>
     
-    <!-- نافذة إدارة السحاب المحدثة مع زر رابط المشاركة -->
     <div id="cloud-modal">
         <h2 style="text-align: center; color: var(--royal-blue); margin-top:0;"><i class="fas fa-cloud"></i> النماذج المحفوظة في السحاب</h2>
         <p style="text-align: center; color: #64748b; font-size: 0.9rem;">اختر الإجراء المناسب لكل نموذج:</p>
@@ -162,6 +161,7 @@
         let authenticatedStudentEmail = "";
         let authenticatedStudentName = "";
         let loadedExamQuestions = null;
+        let currentOpenModelName = null; // تتبع اسم النموذج المفتوح حالياً
 
         const typeMap = {
             'k_fill': 'أكمل الفراغ', 'k_irab': 'أعرب ما تحته خط', 'k_sentence': 'مثل في جملة مفيدة',
@@ -410,7 +410,6 @@
             document.getElementById('modal-overlay').style.display = 'block';
         }
 
-        // نافذة إدارة السحاب مع زر (رابط المشاركة) بجانب كل نموذج
         function loadFromCloud() {
             rtdb.ref('models').once('value', snapshot => {
                 const ms = snapshot.val();
@@ -452,6 +451,7 @@
         async function openModel(name) {
             const snap = await rtdb.ref('models/' + name).once('value');
             if (snap.val() && snap.val().data) {
+                currentOpenModelName = name; // حفظ اسم النموذج الحالي لضمان التعديل عليه مباشرة عند الحفظ
                 localStorage.setItem('fifi_final_v_secured', JSON.stringify(snap.val().data));
                 closeModals();
                 location.reload();
@@ -467,6 +467,7 @@
                 const modelData = snap.val();
                 await rtdb.ref('models/' + newName).set(modelData);
                 await rtdb.ref('models/' + oldName).remove();
+                if (currentOpenModelName === oldName) currentOpenModelName = newName;
                 alert("تم تغيير اسم النموذج بنجاح!");
                 loadFromCloud();
             }
@@ -475,9 +476,31 @@
         async function deleteModel(name) {
             if (confirm(`هل أنت متأكد من حذف النموذج "${name}" من السحاب؟`)) {
                 await rtdb.ref('models/' + name).remove();
+                if (currentOpenModelName === name) currentOpenModelName = null;
                 alert("تم حذف النموذج بنجاح.");
                 loadFromCloud();
             }
+        }
+
+        async function saveToCloud() {
+            let modelNameToSave = currentOpenModelName;
+
+            // إذا لم يتم فتح نموذج من السحاب سابقاً، نطلب اسماً جديداً للحفظ
+            if (!modelNameToSave) {
+                modelNameToSave = prompt("أدخل اسم النموذج لحفظه في السحاب:");
+                if (!modelNameToSave || !modelNameToSave.trim()) return;
+                currentOpenModelName = modelNameToSave.trim();
+            }
+
+            const dataToSave = JSON.parse(localStorage.getItem('fifi_final_v_secured') || '[]');
+            
+            await rtdb.ref('models/' + currentOpenModelName).set({
+                teacher: "أ. عبدالعزيز الفيفي",
+                data: dataToSave,
+                date: new Date().toLocaleString()
+            });
+
+            alert(`تم حفظ التعديلات بنجاح في نموذج: "${currentOpenModelName}" 💾`);
         }
 
         function closeModals() { 
@@ -522,18 +545,11 @@
             } 
         }
 
-        async function saveToCloud() { 
-            const n = prompt("اسم النموذج:"); 
-            if(n) { 
-                await rtdb.ref('models/' + n).set({ teacher: "أ. عبدالعزيز الفيفي", data: JSON.parse(localStorage.getItem('fifi_final_v_secured')), date: new Date().toLocaleString() }); 
-                alert("تم الحفظ بنجاح!"); 
-            } 
-        }
-
         function clearAll() {
             if(confirm("هل أنت متأكد من مسح جميع الأسئلة؟")) {
                 document.getElementById('quiz-content').innerHTML = '';
                 localStorage.removeItem('fifi_final_v_secured');
+                currentOpenModelName = null;
             }
         }
 

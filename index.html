@@ -120,7 +120,7 @@
         <button class="btn btn-clear" title="مسح الكل" onclick="clearAll()"><i class="fas fa-eraser"></i></button>
         <button class="btn btn-img" onclick="saveAsImages()"><i class="fas fa-image"></i> صور</button>
         <button class="btn btn-pdf" onclick="saveAsPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-        <button class="btn" style="background:#0284c7;" onclick="importArrayQuestions()" title="استيراد مصفوفة أسئلة"><i class="fas fa-file-code"></i> استيراد</button>
+        <button class="btn" style="background:#0284c7;" onclick="importArrayQuestions()" title="استيراد مصفوفة أسئلة"><i class="fas fa-file-code"></i> استيراد مصفوفة</button>
         <button class="btn btn-del" onclick="deleteFromCloud()"><i class="fas fa-trash-alt"></i> حذف</button>
         <button class="btn btn-link" onclick="generateStudentLink()"><i class="fas fa-link"></i> رابط الطلاب</button>
         <button class="btn btn-load" style="position:relative;" onclick="loadFromCloud()">
@@ -173,7 +173,7 @@
                 <div class="q-area">${renderQArea(type, data)}</div>
                 <div class="ans-grid-area">${renderOptions(type, data)}</div>
                 <div class="correct-ans-box admin-only" style="${needsKey ? '' : 'display:none'}">
-                    <input type="text" placeholder="حرف الإجابة فقط" class="correct-input ans-val" value="${data?data.ans||'':''}" oninput="saveAll()">
+                    <input type="text" placeholder="حرف الإجابة أو نصها" class="correct-input ans-val" value="${data?data.ans||'':''}" oninput="saveAll()">
                 </div>
             `;
             container.appendChild(card);
@@ -195,7 +195,7 @@
         }
 
         function renderOptions(t, d) {
-            if (['k_fill', 'k_irab', 'k_sentence', 'k_extract'].includes(t)) return `<div class="essay-input" contenteditable="true" placeholder="إجابة الطالب هنا..."></div>`;
+            if (['k_fill', 'k_irab', 'k_sentence'].includes(t)) return `<div class="essay-input" contenteditable="true" placeholder="إجابة الطالب هنا..."></div>`;
             let h = '<div class="options-grid">';
             let count = (t === 'k_true') ? 2 : 4;
             for(let i=0; i<count; i++) {
@@ -204,26 +204,42 @@
             return h + '</div>';
         }
 
+        // دالة متوافقة تماماً مع مصفوفَتِك (تترجم t إلى النوع البرمجي الصحيح و q إلى text)
         function importArrayQuestions() {
             const rawData = prompt("الصق مصفوفة الأسئلة هنا (بصيغة JSON):");
             if (!rawData) return;
 
             try {
-                const questionsArray = JSON.parse(rawData);
-                if (!Array.isArray(questionsArray)) {
+                const arr = JSON.parse(rawData);
+                if (!Array.isArray(arr)) {
                     alert("الخطأ: النص المدخل ليس مصفوفة (Array) صحيحة!");
                     return;
                 }
 
-                questionsArray.forEach(qData => {
-                    if(!qData.type) {
-                        qData.type = 'k_multi'; 
-                    }
-                    addQuestion(qData);
+                arr.forEach(item => {
+                    let mappedType = 'k_multi';
+                    let tName = (item.t || "").trim();
+
+                    if (tName === "استخرج") mappedType = 'k_extract';
+                    else if (tName === "إكمال") mappedType = 'k_multi';
+                    else if (tName === "صح وخطأ") mappedType = 'k_true';
+                    else if (tName === "أعرب") mappedType = 'k_multi';
+                    else if (tName === "صحح") mappedType = 'k_multi';
+                    else if (tName === "مثل") mappedType = 'k_multi';
+
+                    // تجهيز كائن السؤال بالتنسيق الذي تفهمه المنصة
+                    let formattedData = {
+                        type: mappedType,
+                        text: item.q || "",
+                        opts: item.opts || [],
+                        ans: item.ans || ""
+                    };
+
+                    addQuestion(formattedData);
                 });
 
                 saveAll();
-                alert(`تم استيراد وتوزيع ${questionsArray.length} سؤالاً على أقسامها بنجاح!`);
+                alert(`تم استيراد وتوزيع ${arr.length} سؤالاً بنجاح!`);
             } catch (e) {
                 alert("خطأ في تنسيق الـ JSON، تأكد من صحة الأقواس وعلامات التنصيص.");
             }
@@ -240,14 +256,24 @@
                 const qTxt = c.querySelector('.q-main')?.value || "سؤال";
                 let studentAns = "", correctKey = "", pts = 0;
 
-                if (['k_fill','k_irab','k_sentence','k_extract'].includes(type)) {
+                if (['k_fill','k_irab','k_sentence'].includes(type)) {
                     studentAns = c.querySelector('.essay-input').innerText;
                     pts = studentAns.length > 1 ? 1 : 0;
                     correctKey = "مراجعة المعلم";
                 } else {
                     const selLabel = c.querySelector('.selected-opt .opt-label')?.innerText.replace(')','').trim() || "";
-                    const key = c.querySelector('.ans-val').value.trim().toUpperCase();
-                    studentAns = selLabel; correctKey = key; pts = (selLabel === key) ? 1 : 0;
+                    const selWord = c.querySelector('.selected-opt .opt')?.value || "";
+                    const key = c.querySelector('.ans-val').value.trim();
+                    
+                    studentAns = selWord || selLabel; 
+                    correctKey = key; 
+                    
+                    // مقارنة الإجابة سواء كتب حرف الخيار أو نص الخيار مباشرة
+                    if (selWord === key || selLabel.toUpperCase() === key.toUpperCase() || selWord.trim() === key.trim()) {
+                        pts = 1;
+                    } else {
+                        pts = 0;
+                    }
                 }
                 s += pts;
                 details.push({ q: qTxt, a: studentAns });

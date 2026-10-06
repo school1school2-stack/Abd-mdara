@@ -121,7 +121,7 @@
 
     <div class="array-import-box admin-only">
         <label style="display: block; font-weight: bold; color: #0284c7; margin-bottom: 8px;"><i class="fas fa-file-code"></i> استيراد مصفوفة أسئلة جماعية (الصق هنا مباشرة):</label>
-        <textarea id="arrayInputText" class="array-textarea" placeholder="الصق مصفوفة الـ JSON هنا (مع أو بدون const rawQuizData = [...])"></textarea>
+        <textarea id="arrayInputText" class="array-textarea" placeholder="الصق مصفوفة الـ JS هنا (مع أو بدون const rawQuizData = [...])"></textarea>
         <button class="btn" style="background:#0284c7;" onclick="importArrayQuestions()"><i class="fas fa-magic"></i> توليد وتوزيع الأسئلة تلقائياً</button>
     </div>
 
@@ -218,6 +218,7 @@
             return h + '</div>';
         }
 
+        // دالة استيراد ذكية تتولى قراءة مصفوفة الجافاسكريبت مباشرة وتنظيفها
         function importArrayQuestions() {
             let rawData = document.getElementById('arrayInputText').value.trim();
             if (!rawData) {
@@ -226,7 +227,6 @@
             }
 
             try {
-                // إزالة مسافات النسخ الخاصة والرموز غير المرغوب فيها وتعديل التعريفات
                 rawData = rawData.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
                 
                 if (rawData.startsWith("const") || rawData.startsWith("let") || rawData.startsWith("var")) {
@@ -239,18 +239,16 @@
                     rawData = rawData.substring(0, rawData.length - 1).trim();
                 }
 
-                // محاولة تحويل النص المنسق إلى JSON سليم
+                // تنفيذ كود الجافاسكريبت بأمان لاستخراج المصفوفة حتى لو كانت المفاتيح بدون علامات تنصيص
                 let arr;
                 try {
+                    arr = Function('"use strict"; return (' + rawData + ');')();
+                } catch (evalErr) {
                     arr = JSON.parse(rawData);
-                } catch (jsonErr) {
-                    // حل إضافي في حال كانت علامات التنصيص غير قياسية
-                    let sanitized = rawData.replace(/'/g, '"');
-                    arr = JSON.parse(sanitized);
                 }
 
                 if (!Array.isArray(arr)) {
-                    alert("الخطأ: النص المدخل ليس مصفوفة (Array) صحيحة!");
+                    alert("الخطأ: النص المدخل ليس مصفوفة صحيحة!");
                     return;
                 }
 
@@ -279,7 +277,7 @@
                 document.getElementById('arrayInputText').value = "";
                 alert(`تم استيراد وتوزيع ${arr.length} سؤالاً بنجاح!`);
             } catch (e) {
-                alert("خطأ في قراءة البيانات، تأكد من نسخ المصفوفة بأقواسها المربعة الصحيحة [...]");
+                alert("حدث خطأ أثناء قراءة المصفوفة. تأكد من نسخها كاملة بأقواسها.");
             }
         }
 

@@ -78,9 +78,10 @@
 
         .essay-input { width: 100%; min-height: 70px; padding: 12px; border: 2px inset #e2e8f0; border-radius: 12px; background: rgba(0,0,0,0.02); font-weight: bold; color: inherit; margin-top: 10px; outline: none; text-align: right; font-size: 1.1rem; }
 
+        /* تنسيق شبكة الخيارات لضمان عرض الحرف والنص معاً بمرونة تامة */
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .opt-pair-row { display: flex; align-items: center; background: var(--card-bg); border: 1.5px solid #d1d5db; border-radius: 10px; padding: 12px; box-sizing: border-box; cursor: pointer; transition: 0.2s, background 0.5s; }
-        .opt-label { font-weight: bold; color: var(--royal-blue); margin-left: 5px; white-space: pre; font-size: 1.05rem; }
+        .opt-label { font-weight: bold; color: var(--royal-blue); margin-left: 8px; white-space: nowrap; font-size: 1.1rem; flex-shrink: 0; }
         .opt-word { width: 100%; border: none; outline: none; font-weight: bold; color: inherit; background: transparent; text-align: right; font-family: inherit; cursor: inherit; font-size: 1.1rem; }
 
         .correct-ans-box { margin-top: 15px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid #bbf7d0; text-align: right; }
@@ -105,25 +106,21 @@
 <body>
 
     <script>
-        // مصفوفة الثيمات المتنوعة الشاملة (تتغير عشوائياً مع كل تحديث)
+        // مصفوفة الثيمات المتنوعة (بدون الثيم الليلي الداكن)
         const themes = [
-            // الثيمات الأصلية
             { bg: "#f8fafc", primary: "#1e3a8a", purple: "#7c3aed", text: "#1e293b", card: "#ffffff", border: "#e2e8f0" },
             { bg: "#fdf4ff", primary: "#86198f", purple: "#c084fc", text: "#1e293b", card: "#ffffff", border: "#f5d0fe" },
             { bg: "#f0fdf4", primary: "#166534", purple: "#059669", text: "#1e293b", card: "#ffffff", border: "#bbf7d0" },
             { bg: "#fffbeb", primary: "#b45309", purple: "#d97706", text: "#1e293b", card: "#ffffff", border: "#fde68a" },
             { bg: "#fdf2f8", primary: "#9d174d", purple: "#db2777", text: "#1e293b", card: "#ffffff", border: "#fbcfe8" },
             { bg: "#f0f9ff", primary: "#0369a1", purple: "#0284c7", text: "#1e293b", card: "#ffffff", border: "#bae6fd" },
-
-            // الثيمات الجديدة الإضافية
             { bg: "#fafaf9", primary: "#292524", purple: "#78716c", text: "#1c1917", card: "#ffffff", border: "#e7e5e4" },
             { bg: "#fff7ed", primary: "#c2410c", purple: "#ea580c", text: "#1e293b", card: "#ffffff", border: "#ffedd5" },
             { bg: "#f0fdfa", primary: "#0f766e", purple: "#0d9488", text: "#1e293b", card: "#ffffff", border: "#ccfbf1" },
             { bg: "#ecfeff", primary: "#155e75", purple: "#0891b2", text: "#1e293b", card: "#ffffff", border: "#cffafe" },
             { bg: "#f5f3ff", primary: "#4c1d95", purple: "#6d28d9", text: "#1e293b", card: "#ffffff", border: "#ede9fe" },
             { bg: "#f4fef1", primary: "#3f6212", purple: "#65a30d", text: "#1e293b", card: "#ffffff", border: "#ecfccb" },
-            { bg: "#fef2f2", primary: "#991b1b", purple: "#dc2626", text: "#1e293b", card: "#ffffff", border: "#fee2e2" },
-            { bg: "#18181b", primary: "#e4e4e7", purple: "#a1a1aa", text: "#f4f4f5", card: "#27272a", border: "#3f3f46" }  // الثيم الداكن
+            { bg: "#fef2f2", primary: "#991b1b", purple: "#dc2626", text: "#1e293b", card: "#ffffff", border: "#fee2e2" }
         ];
 
         const selectedTheme = themes[Math.floor(Math.random() * themes.length)];

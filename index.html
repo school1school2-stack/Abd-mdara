@@ -272,6 +272,8 @@
                 <div class="correct-ans-box admin-only" style="${needsKey ? '' : 'display:none'}">
                     <input type="text" placeholder="حرف الإجابة أو نصها" class="correct-input ans-val" value="${data?data.ans||'':''}" oninput="saveAll()">
                 </div>
+                <!-- تخزين الإجابة الصحيحة مخفية لضمان دقة التصحيح في وضع الطالب -->
+                <input type="hidden" class="hidden-correct-ans" value="${data?data.ans||'':''}">
             `;
             container.appendChild(card);
             
@@ -315,7 +317,6 @@
 
             let opts = d?.opts ? [...d.opts] : (t === 'k_true' ? ['صح', 'خطأ'] : ['', '', '', '']);
             
-            // خلط الخيارات في صفحة الطالب فقط عند العرض
             if (isStudent && opts.length > 0) {
                 opts = shuffleArray(opts);
             }
@@ -447,6 +448,7 @@
 
             cards.forEach((c, i) => {
                 const type = c.querySelector('.type-select').value;
+                // جلب نص السؤال بدقة سواء من وضع المعلم أو الطالب
                 const qTxt = c.querySelector('.q-main')?.value || c.querySelector('.q-text-input')?.innerText || "سؤال";
                 let studentAns = "", correctKey = "", pts = 0;
 
@@ -456,7 +458,7 @@
                     correctKey = "مراجعة المعلم";
                 } else {
                     const selWord = c.querySelector('.selected-opt .opt')?.value || "";
-                    const key = c.querySelector('.ans-val')?.value.trim() || "";
+                    const key = c.querySelector('.hidden-correct-ans')?.value.trim() || c.querySelector('.ans-val')?.value.trim() || "";
                     studentAns = selWord; 
                     correctKey = key; 
                     if (selWord.trim() === key.trim()) pts = 1;
@@ -622,7 +624,6 @@
                 rtdb.ref('models/' + id).once('value', s => { 
                     if (s.val() && s.val().data) {
                         loadedExamQuestions = s.val().data;
-                        // خلط ترتيب الأسئلة في صفحة الطالب عند كل تحديث/فتح للرابط
                         let shuffledQuestions = shuffleArray([...loadedExamQuestions]);
                         shuffledQuestions.forEach(q => addQuestion(q));
                         setTimeout(() => { document.querySelectorAll('textarea').forEach(ta => autoResizeTextarea(ta)); }, 100);

@@ -260,6 +260,9 @@
             const qTextAreaVal = data ? (data.text_area || "") : "";
             const correctAnsVal = data ? (data.ans || "") : "";
 
+            // دمج نص الاستخراج (إن وجد) مع نص السؤال ليظهر كاملاً في التقرير ولدى المعلم
+            const fullQuestionText = (type === 'k_extract' && qTextAreaVal) ? (qTextAreaVal + "\n\n" + qTextVal) : qTextVal;
+
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
                     <div class="card-meta">
@@ -279,7 +282,7 @@
                     <input type="text" placeholder="حرف الإجابة أو نصها" class="correct-input ans-val" value="${correctAnsVal}" oninput="saveAll()">
                 </div>
                 <input type="hidden" class="hidden-correct-ans" value="${correctAnsVal}">
-                <input type="hidden" class="hidden-q-text" value="${qTextVal}">
+                <input type="hidden" class="hidden-q-text" value="${fullQuestionText}">
             `;
             container.appendChild(card);
             
@@ -348,7 +351,7 @@
                     if (tName === "استخرج") mappedType = 'k_extract';
                     else if (tName === "صح وخطأ") mappedType = 'k_true';
                     
-                    addQuestion({ type: mappedType, text: item.q || "", opts: item.opts || [], ans: item.ans || "" });
+                    addQuestion({ type: mappedType, text: item.q || "", text_area: item.text_area || "", opts: item.opts || [], ans: item.ans || "" });
                 });
 
                 saveAll();
@@ -443,6 +446,7 @@
 
             cards.forEach((c, i) => {
                 const type = c.querySelector('.type-select').value;
+                // جلب نص السؤال المخزن بدقة تامة لإرساله للوحة التحكم ولتقرير الطالب
                 const qTxt = c.querySelector('.hidden-q-text')?.value || c.querySelector('.q-text-input')?.innerText || c.querySelector('.q-main')?.value || "سؤال";
                 let studentAns = "", correctKey = "", pts = 0;
 

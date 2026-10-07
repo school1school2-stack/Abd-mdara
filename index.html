@@ -256,6 +256,9 @@
 
             const needsKey = (['k_true','k_multi'].includes(type));
             const isStudent = document.body.classList.contains('student-mode');
+            const qTextVal = data ? (data.text || "") : "";
+            const qTextAreaVal = data ? (data.text_area || "") : "";
+            const correctAnsVal = data ? (data.ans || "") : "";
 
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
@@ -267,13 +270,16 @@
                     </div>
                     <i class="fas fa-times-circle remove-btn" style="color:#cbd5e1; cursor:pointer;" onclick="this.closest('.question-card').remove();updateNumbers();saveAll();"></i>
                 </div>
-                <div class="q-area">${renderQArea(type, data, isStudent)}</div>
+                <div class="q-area">
+                    ${type === 'k_extract' ? `<div class="estieab-box" ${isStudent ? 'contenteditable="false"' : 'contenteditable="true" oninput="saveAll()"'}>${qTextAreaVal}</div>` : ''}
+                    ${isStudent ? `<div class="q-text-input" style="cursor:default; overflow:visible; height:auto;">${qTextVal}</div>` : `<textarea class="q-text-input q-main" placeholder="اكتب السؤال الطويل هنا...">${qTextVal}</textarea>`}
+                </div>
                 <div class="ans-grid-area">${renderOptions(type, data, isStudent)}</div>
                 <div class="correct-ans-box admin-only" style="${needsKey ? '' : 'display:none'}">
-                    <input type="text" placeholder="حرف الإجابة أو نصها" class="correct-input ans-val" value="${data?data.ans||'':''}" oninput="saveAll()">
+                    <input type="text" placeholder="حرف الإجابة أو نصها" class="correct-input ans-val" value="${correctAnsVal}" oninput="saveAll()">
                 </div>
-                <!-- تخزين الإجابة الصحيحة مخفية لضمان دقة التصحيح في وضع الطالب -->
-                <input type="hidden" class="hidden-correct-ans" value="${data?data.ans||'':''}">
+                <input type="hidden" class="hidden-correct-ans" value="${correctAnsVal}">
+                <input type="hidden" class="hidden-q-text" value="${qTextVal}">
             `;
             container.appendChild(card);
             
@@ -296,17 +302,6 @@
 
             updateNumbers();
             if(!isStudent) saveAll();
-        }
-
-        function renderQArea(t, d, isStudent) {
-            const qText = d ? d.text : '';
-            if (isStudent) {
-                if (t === 'k_extract') return `<div class="estieab-box" contenteditable="false">${d?d.text_area||'' : ''}</div><div class="q-text-input" style="cursor:default; overflow:visible; height:auto;">${qText}</div>`;
-                return `<div class="q-text-input" style="cursor:default; overflow:visible; height:auto;">${qText}</div>`;
-            } else {
-                if (t === 'k_extract') return `<div class="estieab-box" contenteditable="true" oninput="saveAll()" placeholder="نص الاستخراج...">${d?d.text_area||'' : ''}</div><textarea class="q-text-input q-main" placeholder="اكتب السؤال الطويل هنا...">${qText}</textarea>`;
-                return `<textarea class="q-text-input q-main" placeholder="اكتب السؤال الطويل هنا...">${qText}</textarea>`;
-            }
         }
 
         function renderOptions(t, d, isStudent) {
@@ -448,8 +443,7 @@
 
             cards.forEach((c, i) => {
                 const type = c.querySelector('.type-select').value;
-                // جلب نص السؤال بدقة سواء من وضع المعلم أو الطالب
-                const qTxt = c.querySelector('.q-main')?.value || c.querySelector('.q-text-input')?.innerText || "سؤال";
+                const qTxt = c.querySelector('.hidden-q-text')?.value || c.querySelector('.q-text-input')?.innerText || c.querySelector('.q-main')?.value || "سؤال";
                 let studentAns = "", correctKey = "", pts = 0;
 
                 if (['k_fill','k_irab','k_sentence'].includes(type)) {

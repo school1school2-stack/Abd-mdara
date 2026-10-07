@@ -150,23 +150,24 @@
         <button class="btn" style="background:#64748b; width:100%; margin-top:20px; justify-content:center;" onclick="closeModals()">إغلاق</button>
     </div>
 
-    <!-- نافذة سجل نتائج الطالب أو الاستعلام -->
+    <!-- نافذة سجل النتائج والاستعراض مع إمكانية تعديل المعلم -->
     <div id="history-modal">
-        <h2 style="text-align: center; color: var(--royal-blue);"><i class="fas fa-history"></i> سجل نتائج الاختبارات 📊</h2>
+        <h2 style="text-align: center; color: var(--royal-blue);"><i class="fas fa-history"></i> سجل نتائج الاختبارات والمراجعة 📊</h2>
         <div id="history-list" style="margin-top: 20px;"></div>
         <button class="btn" style="background:#64748b; width:100%; margin-top:20px; justify-content:center;" onclick="closeModals()">إغلاق السجل</button>
     </div>
 
     <div id="report-modal">
-        <h2 style="text-align: center; color: var(--royal-blue);">تقرير أداء الطالب 🎯</h2>
+        <h2 style="text-align: center; color: var(--royal-blue);">تقرير أداء الطالب ومراجعة المعلم 🎯</h2>
         <div id="score-summary" style="text-align: center; font-size: 1.4rem; font-weight: bold; margin: 20px 0;"></div>
         <table class="report-table">
             <thead>
-                <tr><th>#</th><th>السؤال</th><th>إجابتك</th><th>الصحيحة</th><th>الدرجة</th></tr>
+                <tr><th>#</th><th>السؤال</th><th>إجابتك / إجابة الطالب</th><th>الصحيحة</th><th>الدرجة (قابل للتعديل)</th></tr>
             </thead>
             <tbody id="report-body"></tbody>
         </table>
-        <button class="btn" style="background:#64748b; width:100%; margin-top:20px;" onclick="closeModals()">إغلاق التقرير</button>
+        <div id="save-review-btn-container" style="margin-top: 20px; text-align: center;"></div>
+        <button class="btn" style="background:#64748b; width:100%; margin-top:10px; justify-content:center;" onclick="closeModals()">إغلاق التقرير</button>
     </div>
 
     <div class="user-header" id="main-header">
@@ -206,7 +207,7 @@
 
     <!-- مربع استعلام المعلم عن نتائج طالب معين بالإيميل -->
     <div class="search-result-box admin-only">
-        <label style="display: block; font-weight: bold; color: #0284c7; margin-bottom: 8px;"><i class="fas fa-search"></i> استعلام عن نتائج طالب بإيميله المدرسي:</label>
+        <label style="display: block; font-weight: bold; color: #0284c7; margin-bottom: 8px;"><i class="fas fa-search"></i> استعلام ومراجعة نتائج طالب بإيميله المدرسي:</label>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <input type="email" id="teacherSearchEmail" class="auth-input" style="flex: 1; margin: 0; font-size: 1rem; padding: 10px;" placeholder="أدخل إيميل الطالب هنا sxxxxxxx@rb.moe.gov.sa">
             <button class="btn" style="background: #0284c7; padding: 10px 20px;" onclick="teacherSearchByEmail()"><i class="fas fa-search"></i> بحث عن النتائج</button>
@@ -427,7 +428,6 @@
             }
         }
 
-        // استعلام المعلم عن نتائج طالب معين بإيميله
         async function teacherSearchByEmail() {
             const emailInput = document.getElementById('teacherSearchEmail').value.trim().toLowerCase();
             if (!emailInput || !emailInput.includes('@')) {
@@ -437,7 +437,6 @@
             fetchAndShowHistory(emailInput);
         }
 
-        // فتح سجل الطالب (للطالب نفسه)
         async function openStudentHistory() {
             let emailToCheck = authenticatedStudentEmail;
             if (!emailToCheck) {
@@ -470,11 +469,12 @@
 
                 querySnap.forEach(doc => {
                     const data = doc.data();
+                    const docId = doc.id;
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'cloud-item';
                     itemDiv.innerHTML = `
                         <div style="font-weight:bold; color:var(--royal-blue); text-align:right; flex:1;">طالب: ${data.name || 'مجهول'} | نموذج: ${data.model_id || 'اختبار'} | النتيجة: ${data.score} من ${data.total}</div>
-                        <button class="btn btn-save" style="padding:6px 14px;" onclick='showReportFromHistory(${JSON.stringify(data.answers || []).replace(/'/g, "&#39;")}, ${data.score}, ${data.total})'><i class="fas fa-file-alt"></i> استعراض التقرير</button>
+                        <button class="btn btn-save" style="padding:6px 14px;" onclick='openEditableReport("${docId}", ${JSON.stringify(data.answers || []).replace(/'/g, "&#39;")}, ${data.score}, ${data.total})'><i class="fas fa-edit"></i> مراجعة وتعديل</button>
                     `;
                     containerDiv.appendChild(itemDiv);
                 });
@@ -484,18 +484,69 @@
             }
         }
 
-        function showReportFromHistory(answersArray, score, total) {
+        let currentEditingDocId = null;
+
+        function openEditableReport(docId, answersArray, score, total) {
+            currentEditingDocId = docId;
             closeModals();
             const report = document.getElementById('report-body');
             report.innerHTML = "";
 
             answersArray.forEach((ans, i) => {
-                report.innerHTML += `<tr><td>${i+1}</td><td style="text-align:right">${ans.q}</td><td>${ans.studentAns || '--'}</td><td style="color:var(--success-green); font-weight:bold">${ans.correctAns}</td><td>${ans.isCorrect ? 1 : 0}</td></tr>`;
+                report.innerHTML += `
+                    <tr>
+                        <td>${i+1}</td>
+                        <td style="text-align:right">${ans.q}</td>
+                        <td>${ans.studentAns || '--'}</td>
+                        <td style="color:var(--success-green); font-weight:bold">${ans.correctAns}</td>
+                        <td>
+                            <select class="score-edit-select" data-index="${i}" style="padding:5px; border-radius:8px; font-weight:bold; font-family:inherit;">
+                                <option value="1" ${ans.isCorrect ? 'selected' : ''}>1 (صح)</option>
+                                <option value="0" ${!ans.isCorrect ? 'selected' : ''}>0 (خطأ)</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
             });
 
-            document.getElementById('score-summary').innerText = `النتيجة الإجمالية: ${score} من ${total}`;
+            document.getElementById('score-summary').innerText = `النتيجة الإجمالية الحالية: ${score} من ${total}`;
+            document.getElementById('save-review-btn-container').innerHTML = `
+                <button class="btn" style="background:#10b981; padding:12px 30px; font-size:1.1rem; margin:auto;" onclick="saveGradeChanges('${docId}', ${total})">
+                    <i class="fas fa-save"></i> حفظ وتحديث درجة الطالب 💾
+                </button>
+            `;
+
             document.getElementById('report-modal').style.display = 'block';
             document.getElementById('modal-overlay').style.display = 'block';
+        }
+
+        async function saveGradeChanges(docId, total) {
+            const selects = document.querySelectorAll('.score-edit-select');
+            let newScore = 0;
+            let updatedAnswers = [];
+
+            // نحتاج لجلب بيانات الإجابات الحالية لنقوم بتحديثها
+            const docRef = fsDb.collection("alkfaeat_results").doc(docId);
+            const docSnap = await docRef.get();
+            if (!docSnap.exists) { alert("حدث خطأ، لم يتم العثور على سجل الطالب."); return; }
+
+            let answersArray = docSnap.data().answers || [];
+
+            selects.forEach((sel, idx) => {
+                const val = parseInt(sel.value);
+                if (val === 1) newScore++;
+                if (answersArray[idx]) {
+                    answersArray[idx].isCorrect = (val === 1);
+                }
+            });
+
+            await docRef.update({
+                score: newScore,
+                answers: answersArray
+            });
+
+            alert(`تم حفظ التعديلات بنجاح! النتيجة الجديدة: ${newScore} من ${total}`);
+            closeModals();
         }
 
         async function gradeExam() {
@@ -568,6 +619,7 @@
             }
 
             document.getElementById('score-summary').innerText = `النتيجة الإجمالية: ${s} من ${cards.length}`;
+            document.getElementById('save-review-btn-container').innerHTML = "";
             document.getElementById('report-modal').style.display = 'block'; 
             document.getElementById('modal-overlay').style.display = 'block';
         }

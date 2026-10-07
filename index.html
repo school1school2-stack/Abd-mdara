@@ -47,7 +47,7 @@
         }
         .bar-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-        .array-import-box {
+        .array-import-box, .search-result-box {
             width: 100%; max-width: 850px; background: var(--card-bg); border-radius: 15px; padding: 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px dashed #0284c7; margin-bottom: 25px; box-sizing: border-box; transition: background 0.5s;
         }
@@ -101,7 +101,7 @@
         .btn-link { background: #06b6d4; } .btn-del { background: #ef4444; } .btn-rename { background: #f59e0b; }
         .btn-clear { background: #64748b; padding: 8px; border-radius: 50%; }
 
-        body.student-mode .top-action-bar, body.student-mode .array-import-box, body.student-mode .remove-btn, body.student-mode .type-select, body.student-mode .correct-ans-box, body.student-mode .admin-only { display: none !important; }
+        body.student-mode .top-action-bar, body.student-mode .array-import-box, body.student-mode .search-result-box, body.student-mode .remove-btn, body.student-mode .type-select, body.student-mode .correct-ans-box, body.student-mode .admin-only { display: none !important; }
         body.student-mode .selected-opt { background: rgba(59, 130, 246, 0.2) !important; border: 2px solid var(--royal-blue) !important; }
 
         #report-modal, #cloud-modal, #history-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 700px; max-height: 85%; background: #ffffff; color: #1e293b; z-index: 2000; border-radius: 20px; padding: 25px; overflow-y: auto; box-shadow: 0 0 50px rgba(0,0,0,0.4); }
@@ -150,9 +150,9 @@
         <button class="btn" style="background:#64748b; width:100%; margin-top:20px; justify-content:center;" onclick="closeModals()">إغلاق</button>
     </div>
 
-    <!-- نافذة سجل اختبارات الطالب السابقة -->
+    <!-- نافذة سجل نتائج الطالب أو الاستعلام -->
     <div id="history-modal">
-        <h2 style="text-align: center; color: var(--royal-blue);"><i class="fas fa-history"></i> سجل اختباراتي السابقة 📊</h2>
+        <h2 style="text-align: center; color: var(--royal-blue);"><i class="fas fa-history"></i> سجل نتائج الاختبارات 📊</h2>
         <div id="history-list" style="margin-top: 20px;"></div>
         <button class="btn" style="background:#64748b; width:100%; margin-top:20px; justify-content:center;" onclick="closeModals()">إغلاق السجل</button>
     </div>
@@ -201,6 +201,15 @@
                 <button class="btn" style="background: var(--royal-blue); padding: 12px 20px; font-size: 1rem;" onclick="openStudentHistory()"><i class="fas fa-history"></i> سجل اختباراتي 📊</button>
             </div>
             <p id="auth-status-msg" style="margin-top: 15px; font-weight: bold;"></p>
+        </div>
+    </div>
+
+    <!-- مربع استعلام المعلم عن نتائج طالب معين بالإيميل -->
+    <div class="search-result-box admin-only">
+        <label style="display: block; font-weight: bold; color: #0284c7; margin-bottom: 8px;"><i class="fas fa-search"></i> استعلام عن نتائج طالب بإيميله المدرسي:</label>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <input type="email" id="teacherSearchEmail" class="auth-input" style="flex: 1; margin: 0; font-size: 1rem; padding: 10px;" placeholder="أدخل إيميل الطالب هنا sxxxxxxx@rb.moe.gov.sa">
+            <button class="btn" style="background: #0284c7; padding: 10px 20px;" onclick="teacherSearchByEmail()"><i class="fas fa-search"></i> بحث عن النتائج</button>
         </div>
     </div>
 
@@ -418,7 +427,17 @@
             }
         }
 
-        // عرض سجل اختبارات الطالب السابقة واستعراض تقاريرها
+        // استعلام المعلم عن نتائج طالب معين بإيميله
+        async function teacherSearchByEmail() {
+            const emailInput = document.getElementById('teacherSearchEmail').value.trim().toLowerCase();
+            if (!emailInput || !emailInput.includes('@')) {
+                alert("الرجاء إدخال إيميل صحيح للبحث!");
+                return;
+            }
+            fetchAndShowHistory(emailInput);
+        }
+
+        // فتح سجل الطالب (للطالب نفسه)
         async function openStudentHistory() {
             let emailToCheck = authenticatedStudentEmail;
             if (!emailToCheck) {
@@ -428,9 +447,12 @@
                 alert("الرجاء إدخال إيميلك أولاً لعرض سجلك!");
                 return;
             }
+            fetchAndShowHistory(emailToCheck);
+        }
 
+        async function fetchAndShowHistory(emailToCheck) {
             const listEl = document.getElementById('history-list');
-            listEl.innerHTML = "<p style='text-align:center; color:#64748b;'>جاري جلب سجل اختباراتك... ⏳</p>";
+            listEl.innerHTML = "<p style='text-align:center; color:#64748b;'>جاري جلب النتائج... ⏳</p>";
             document.getElementById('history-modal').style.display = 'block';
             document.getElementById('modal-overlay').style.display = 'block';
 
@@ -439,7 +461,7 @@
                     .where("email", "==", emailToCheck).get();
 
                 if (querySnap.empty) {
-                    listEl.innerHTML = "<p style='text-align:center; padding:20px; color:#64748b;'>لا توجد أي اختبارات مسجلة باسمك حتى الآن.</p>";
+                    listEl.innerHTML = `<p style='text-align:center; padding:20px; color:#64748b;'>لا توجد أي اختبارات مسجلة لهذا الإيميل (${emailToCheck}).</p>`;
                     return;
                 }
 
@@ -451,14 +473,14 @@
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'cloud-item';
                     itemDiv.innerHTML = `
-                        <div style="font-weight:bold; color:var(--royal-blue); text-align:right; flex:1;">نموذج: ${data.model_id || 'اختبار'} | النتيجة: ${data.score} من ${data.total}</div>
+                        <div style="font-weight:bold; color:var(--royal-blue); text-align:right; flex:1;">طالب: ${data.name || 'مجهول'} | نموذج: ${data.model_id || 'اختبار'} | النتيجة: ${data.score} من ${data.total}</div>
                         <button class="btn btn-save" style="padding:6px 14px;" onclick='showReportFromHistory(${JSON.stringify(data.answers || []).replace(/'/g, "&#39;")}, ${data.score}, ${data.total})'><i class="fas fa-file-alt"></i> استعراض التقرير</button>
                     `;
                     containerDiv.appendChild(itemDiv);
                 });
             } catch (err) {
                 console.error(err);
-                listEl.innerHTML = "<p style='text-align:center; color:var(--q-red);'>حدث خطأ أثناء جلب السجل.</p>";
+                listEl.innerHTML = "<p style='text-align:center; color:var(--q-red);'>حدث خطأ أثناء جلب النتائج من قاعدة البيانات.</p>";
             }
         }
 

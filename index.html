@@ -288,11 +288,16 @@
             const qScore = data ? (data.score !== undefined ? data.score : 1) : 1;
             card.className = `question-card`;
 
-            const needsKey = (['k_true','k_multi','k_custom_opts'].includes(type));
+            const needsKey = (['k_true','k_multi','k_custom_opts','k_matching'].includes(type));
             const isStudent = document.body.classList.contains('student-mode');
             const qTextVal = data ? (data.text || "") : "";
             const qTextAreaVal = data ? (data.text_area || "") : "";
-            const correctAnsVal = data ? (data.ans || "") : "";
+            
+            let correctAnsVal = data ? (data.ans || "") : "";
+            if (type === 'k_matching' && !correctAnsVal && data?.matchAns) {
+                correctAnsVal = Array.isArray(data.matchAns) ? data.matchAns.join(' ') : data.matchAns;
+            }
+
             const fullQuestionText = (type === 'k_extract' && qTextAreaVal) ? (qTextAreaVal + "\n\n" + qTextVal) : qTextVal;
 
             card.innerHTML = `
@@ -315,7 +320,7 @@
                 </div>
                 <div class="ans-grid-area">${renderOptions(type, data, isStudent)}</div>
                 <div class="correct-ans-box admin-only" style="${needsKey ? '' : 'display:none'}">
-                    <input type="text" placeholder="حرف الإجابة أو نصها الصحيح" class="correct-input ans-val" value="${correctAnsVal}" oninput="saveAll()">
+                    <input type="text" placeholder="${type === 'k_matching' ? 'أدخل مفتاح الإجابة مفصولة بمسافات (مثال: 1 4 3 5)' : 'حرف الإجابة أو نصها الصحيح'}" class="correct-input ans-val" value="${correctAnsVal}" oninput="${type === 'k_matching' ? 'syncMatchingKeyToInputs(this)' : 'saveAll()'}">
                 </div>
                 <input type="hidden" class="hidden-correct-ans" value="${correctAnsVal}">
                 <input type="hidden" class="hidden-q-text" value="${fullQuestionText}">
@@ -341,6 +346,26 @@
 
             updateNumbers();
             if(!isStudent) saveAll();
+        }
+
+        function syncMatchingKeyToInputs(inputEl) {
+            const card = inputEl.closest('.question-card');
+            const rawVal = inputEl.value.trim();
+            const keys = rawVal ? rawVal.split(/\s+/) : [];
+            const matchKeyInputs = card.querySelectorAll('.match-ans-key');
+
+            matchKeyInputs.forEach((inp, idx) => {
+                inp.value = keys[idx] !== undefined ? keys[idx] : '';
+            });
+            saveAll();
+        }
+
+        function syncMatchingInputsToKey(card) {
+            const matchKeyInputs = Array.from(card.querySelectorAll('.match-ans-key')).map(i => i.value.trim());
+            const keyBox = card.querySelector('.ans-val');
+            if (keyBox) {
+                keyBox.value = matchKeyInputs.join(' ');
+            }
         }
 
         function renderOptions(t, d, isStudent) {
@@ -381,7 +406,7 @@
             if (t === 'k_matching') {
                 let colA = d?.matchA || ['', '', ''];
                 let colB = d?.matchB || ['', '', '', ''];
-                let answers = d?.matchAns || Array(colA.length).fill('');
+                let answers = d?.matchAns || d?.ans?.split(/\s+/) || Array(colA.length).fill('');
                 let itemScores = d?.matchScores || Array(colA.length).fill(1);
 
                 let adminControls = '';
@@ -425,7 +450,7 @@
                             }
                             html += `<td><select class="student-match-select match-student-ans" onchange="this.closest('.question-card').classList.remove('unanswered-alert')">${selectOpts}</select></td>`;
                         } else {
-                            html += `<td><input type="number" min="1" max="${colB.length}" class="matching-input match-ans-key" placeholder="الرقم" value="${correctNum}" oninput="saveAll()"></td>`;
+                            html += `<td><input type="number" min="1" max="${colB.length}" class="matching-input match-ans-key" placeholder="الرقم" value="${correctNum}" oninput="syncMatchingInputsToKey(this.closest('.question-card')); saveAll();"></td>`;
                         }
                         html += `<td>${isStudent ? `<div>${textA}</div>` : `<input type="text" class="matching-input match-a-text" value="${textA}" placeholder="فقرة ${i+1}" oninput="saveAll()">`}</td>`;
                     } else {
@@ -484,6 +509,7 @@
             }
 
             card.querySelector('.ans-grid-area').innerHTML = renderOptions('k_matching', { matchA: colA, matchB: colB, matchAns: ans, matchScores: scores }, false);
+            syncMatchingInputsToKey(card);
             saveAll();
         }
 
@@ -785,15 +811,15 @@
                     let correctMatches = [];
 
                     studentSelects.forEach((sel, idx) => {
-                        let sVal = sel.value;
-                        let keyVal = ansKeys[idx] ? ansKeys[idx].value : '';
+                        let sVal = sel.value.trim();
+                        let keyVal = ansKeys[idx] ? ansKeys[idx].value.trim() : '';
                         let iScore = itemScores[idx] !== undefined ? itemScores[idx] : 1;
                         
                         qMaxScore += iScore;
                         studentMatches.push(`فقرة ${idx+1}: (${sVal})`);
                         correctMatches.push(`فقرة ${idx+1}: (${keyVal})`);
                         
-                        if (sVal === keyVal) pts += iScore;
+                        if (sVal === keyVal && sVal !== "") pts += iScore;
                     });
 
                     studentAns = studentMatches.join(', ');
@@ -971,7 +997,19 @@
                 ? `<div class="estieab-box" contenteditable="true" oninput="saveAll()">أدخل نص النص هنا...</div><textarea class="q-text-input q-main" placeholder="اكتب السؤال هنا..."></textarea>`
                 : `<textarea class="q-text-input q-main" placeholder="اكتب السؤال هنا..."></textarea>`; 
             c.querySelector('.ans-grid-area').innerHTML = renderOptions(val, null, false); 
-            c.querySelector('.correct-ans-box').style.display = (['k_true','k_multi','k_custom_opts'].includes(val)) ? '' : 'none'; 
+            
+            const needsKey = (['k_true','k_multi','k_custom_opts','k_matching'].includes(val));
+            c.querySelector('.correct-ans-box').style.display = needsKey ? '' : 'none'; 
+            
+            const keyInput = c.querySelector('.ans-val');
+            if (keyInput && val === 'k_matching') {
+                keyInput.placeholder = 'أدخل مفتاح الإجابة مفصولة بمسافات (مثال: 1 4 3 5)';
+                keyInput.setAttribute('oninput', 'syncMatchingKeyToInputs(this)');
+            } else if (keyInput) {
+                keyInput.placeholder = 'حرف الإجابة أو نصها الصحيح';
+                keyInput.setAttribute('oninput', 'saveAll()');
+            }
+
             c.querySelector('.score-setting-box').style.display = (['k_matching','k_custom_opts'].includes(val)) ? 'none' : 'inline-flex';
             saveAll(); 
         }
@@ -985,7 +1023,7 @@
                 let d = { 
                     type: t, 
                     score: parseFloat(c.querySelector('.score-input-q')?.value) || 1,
-                    ans: c.querySelector('.ans-val')?.value || '' 
+                    ans: c.querySelector('.ans-val')?.value.trim() || '' 
                 }; 
                 d.text = c.querySelector('.q-main')?.value || ""; 
                 if(t==='k_extract') d.text_area = c.querySelector('.estieab-box')?.innerText || ""; 

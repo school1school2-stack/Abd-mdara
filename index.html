@@ -778,7 +778,7 @@
                     if (selWord.trim() === key.trim()) pts = qMaxScore;
                 } else if (type === 'k_matching') {
                     const studentSelects = c.querySelectorAll('.match-student-ans');
-                    const ansKeys = c.querySelectorAll('.hidden-correct-ans');
+                    const ansKeys = c.querySelectorAll('.match-ans-key');
                     const itemScores = Array.from(c.querySelectorAll('.match-item-score')).map(s => parseFloat(s.value) || 1);
 
                     let studentMatches = [];

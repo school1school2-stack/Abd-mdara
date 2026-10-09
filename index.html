@@ -42,19 +42,133 @@
         .logo-box { background: var(--royal-blue); width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.4rem; transition: background 0.5s; }
 
         .top-action-bar {
-            width: 100%; max-width: 850px; background: #1e293b; border-radius: 15px; padding: 12px 20px;
+            width: 100%; max-width: 850px; background: #1e293b; border-radius: 15px; padding: 14px 20px;
             display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin-bottom: 25px; box-sizing: border-box; gap: 10px; flex-wrap: wrap; z-index: 999;
+            margin-bottom: 25px; box-sizing: border-box; gap: 12px; flex-wrap: wrap; z-index: 999;
         }
-        .bar-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .bar-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+        .styled-dropdown-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-toggle-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            transition: 0.3s;
+        }
+        .dropdown-toggle-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .dropdown-toggle-btn i:first-child { font-size: 1.15rem; }
+        .dropdown-toggle-btn .fa-chevron-down { font-size: 0.75rem; transition: transform 0.3s; margin-right: 4px; }
+        
+        .styled-dropdown-wrapper.active .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 8px);
+            background: #1e293b;
+            min-width: 200px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            border-radius: 12px;
+            z-index: 1000;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            animation: fadeInMenu 0.2s ease;
+        }
+
+        @keyframes fadeInMenu {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-menu-content button {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 11px 16px;
+            text-align: right;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .dropdown-menu-content button i {
+            font-size: 1.15rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .dropdown-menu-content button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-menu-content button.menu-item-new { color: #10b981; }
+        .dropdown-menu-content button.menu-item-save { color: #a855f7; }
+        .dropdown-menu-content button.menu-item-link { color: #06b6d4; }
+        .dropdown-menu-content button.menu-item-rename { color: #f59e0b; }
+        .dropdown-menu-content button.menu-item-del { color: #ef4444; }
+
+        .styled-dropdown-wrapper.active .dropdown-menu-content {
+            display: block;
+        }
+
+        .btn i {
+            font-size: 1.15rem;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+        .btn-clear i {
+            font-size: 1.25rem;
+            margin-left: 0;
+        }
+        .btn { border: none; padding: 10px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; font-family: inherit; font-size: 0.9rem; white-space: nowrap; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-clear { background: #64748b; padding: 10px; border-radius: 50%; width: 40px; height: 40px; }
 
         .array-import-box, .search-result-box {
             width: 100%; max-width: 850px; background: var(--card-bg); border-radius: 15px; padding: 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px dashed #0284c7; margin-bottom: 25px; box-sizing: border-box; transition: background 0.5s;
         }
         .array-textarea {
-            width: 100%; height: 140px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px;
-            font-family: monospace; font-size: 0.85rem; direction: ltr; text-align: left; outline: none; box-sizing: border-box; resize: vertical; margin-bottom: 10px;
+            width: 100% !important;
+            height: 180px !important;
+            max-height: 180px !important;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            direction: ltr;
+            text-align: left;
+            outline: none;
+            box-sizing: border-box;
+            resize: none !important;
+            overflow-y: auto !important;
+            margin-bottom: 10px;
         }
 
         .auth-card {
@@ -96,6 +210,16 @@
         .matching-row input[type="number"], .enum-row input[type="number"] { width: 50px; text-align: center; padding: 6px; border: 1px solid #10b981; border-radius: 6px; font-weight: bold; color: #166534; }
         .enum-row input[type="text"] { flex: 1; min-width: 150px; }
 
+        .matching-error-msg {
+            width: 100%;
+            color: var(--q-red);
+            font-size: 0.82rem;
+            font-weight: bold;
+            margin-top: -4px;
+            margin-bottom: 6px;
+            display: none;
+        }
+
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         @media (max-width: 600px) { .options-grid { display: flex; flex-direction: column; } }
 
@@ -106,12 +230,6 @@
         .correct-ans-box { margin-top: 15px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 1px solid #bbf7d0; text-align: right; box-sizing: border-box; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
         .correct-input { flex: 1; background: transparent; border: none; outline: none; color: #166534; font-weight: bold; text-align: right; font-family: inherit; box-sizing: border-box; min-width: 200px; }
         .q-score-input { width: 65px; padding: 5px; border: 1px solid #10b981; border-radius: 6px; text-align: center; font-weight: bold; color: #166534; font-family: inherit; }
-
-        .btn { border: none; padding: 8px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; gap: 6px; transition: 0.3s; font-family: inherit; font-size: 0.85rem; white-space: nowrap; }
-        .btn-add { background: #3b82f6; } .btn-save { background: #a855f7; } .btn-load { background: #4f46e5; }
-        .btn-link { background: #06b6d4; } .btn-del { background: #ef4444; } .btn-rename { background: #f59e0b; }
-        .btn-new { background: #10b981; }
-        .btn-clear { background: #64748b; padding: 8px; border-radius: 50%; }
 
         body.student-mode .top-action-bar, body.student-mode .array-import-box, body.student-mode .search-result-box, body.student-mode .remove-btn, body.student-mode .type-select, body.student-mode .correct-ans-box, body.student-mode .admin-only, body.student-mode .matching-controls, body.student-mode .enum-controls { display: none !important; }
         body.student-mode .selected-opt { background: rgba(59, 130, 246, 0.2) !important; border: 2px solid var(--royal-blue) !important; }
@@ -152,14 +270,13 @@
         <h2 style="text-align: center; color: var(--royal-blue); margin-top:0; font-size:1.3rem;"><i class="fas fa-cloud"></i> النماذج المحفوظة في السحاب</h2>
         <p style="text-align: center; color: #64748b; font-size: 0.9rem;">اختر النموذج لفتحه أو حذفه:</p>
         <div id="cloud-models-list" style="margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;"></div>
-        <button class="btn" style="background:#64748b; width:100%; margin-top:20px; justify-content:center;" onclick="closeModals()">إغلاق</button>
+        <button class="btn" style="background:#64748b; width:100%; margin-top:20px; justify-content:center;" onclick="closeModals()"><i class="fas fa-times"></i> إغلاق</button>
     </div>
 
-    <!-- نافذة سجل النتائج -->
     <div id="history-modal">
         <h2 style="text-align: center; color: var(--royal-blue); font-size:1.3rem;"><i class="fas fa-history"></i> سجل نتائج الاختبارات 📊</h2>
         <div id="history-list" style="margin-top: 20px;"></div>
-        <button class="btn" style="background:#64748b; width:100%; margin-top:20px; justify-content:center;" onclick="closeModals()">إغلاق السجل</button>
+        <button class="btn" style="background:#64748b; width:100%; margin-top:20px; justify-content:center;" onclick="closeModals()"><i class="fas fa-times"></i> إغلاق السجل</button>
     </div>
 
     <div id="report-modal">
@@ -172,7 +289,7 @@
             <tbody id="report-body"></tbody>
         </table>
         <div id="save-review-btn-container" style="margin-top: 20px; text-align: center; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;"></div>
-        <button class="btn" style="background:#64748b; width:100%; margin-top:10px; justify-content:center;" onclick="closeModals()">إغلاق التقرير</button>
+        <button class="btn" style="background:#64748b; width:100%; margin-top:10px; justify-content:center;" onclick="closeModals()"><i class="fas fa-times"></i> إغلاق التقرير</button>
     </div>
 
     <div class="user-header" id="main-header">
@@ -184,27 +301,35 @@
     <div class="top-action-bar admin-only" id="admin-top-bar">
         <div class="bar-group">
             <span id="current-model-label" style="color: #38bdf8; font-weight: bold; font-size: 0.95rem; margin-left: 5px;">📁 نموذج جديد</span>
-            <button class="btn btn-new" onclick="startNewModel()"><i class="fas fa-plus-circle"></i> قبل أبدأ (جديد)</button>
-            <button class="btn btn-save" onclick="saveToCloud()"><i class="fas fa-save"></i> حفظ</button>
-            <button class="btn btn-link" onclick="copyCurrentModelLink()"><i class="fas fa-link"></i> رابط الطلاب</button>
-            <button class="btn btn-rename" onclick="renameCurrentModel()"><i class="fas fa-signature"></i> إعادة تسمية</button>
-            <button class="btn btn-del" onclick="deleteCurrentModel()"><i class="fas fa-trash"></i> حذف</button>
+            
+            <div class="styled-dropdown-wrapper" id="mainActionsDropdown">
+                <button type="button" class="dropdown-toggle-btn" onclick="toggleDropdown(event)">
+                    <i class="fas fa-bars"></i> خيارات النماذج <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-menu-content">
+                    <button type="button" class="menu-item-new" onclick="startNewModel()"><i class="fas fa-plus-circle"></i> قبل أبدأ (جديد)</button>
+                    <button type="button" class="menu-item-save" onclick="saveToCloud()"><i class="fas fa-save"></i> حفظ النموذج</button>
+                    <button type="button" class="menu-item-link" onclick="copyCurrentModelLink()"><i class="fas fa-link"></i> رابط الطلاب</button>
+                    <button type="button" class="menu-item-rename" onclick="renameCurrentModel()"><i class="fas fa-signature"></i> إعادة تسمية</button>
+                    <button type="button" class="menu-item-del" onclick="deleteCurrentModel()"><i class="fas fa-trash"></i> حذف النموذج</button>
+                </div>
+            </div>
         </div>
         <div class="bar-group">
-            <button class="btn btn-load" onclick="loadFromCloud()"><i class="fas fa-folder-open"></i> فتح نموذج</button>
-            <button class="btn btn-add" onclick="addQuestion()"><i class="fas fa-plus"></i> سؤال</button>
+            <button class="btn" style="background: #4f46e5;" onclick="loadFromCloud()"><i class="fas fa-folder-open"></i> فتح نموذج</button>
+            <button class="btn" style="background: #3b82f6;" onclick="addQuestion()"><i class="fas fa-plus"></i> سؤال</button>
             <button class="btn btn-clear" title="مسح الكل" onclick="clearAll()"><i class="fas fa-eraser"></i></button>
         </div>
     </div>
 
     <div id="student-auth-container" style="display:none;">
         <div class="auth-card">
-            <h2 style="color: var(--royal-blue); margin-top: 0; font-size:1.4rem;">تسجيل دخول الطالب 🎓</h2>
+            <h2 style="color: var(--royal-blue); margin-top: 0; font-size:1.4rem;"><i class="fas fa-user-graduate"></i> تسجيل دخول الطالب 🎓</h2>
             <p style="color: #64748b; margin-bottom: 20px; font-size:0.95rem;">الرجاء إدخال إيميل منصة مدرستي المعتمد لبدء الاختبار:</p>
             <input type="email" id="studentEmailInput" class="auth-input" placeholder="sxxxxxxx@rb.moe.gov.sa">
             <br>
             <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button class="btn" style="background: var(--success-green); padding: 12px 30px; font-size: 1.1rem;" onclick="verifyStudentEmail()">دخول المنصة 🚀</button>
+                <button class="btn" style="background: var(--success-green); padding: 12px 30px; font-size: 1.1rem;" onclick="verifyStudentEmail()"><i class="fas fa-rocket"></i> دخول المنصة 🚀</button>
                 <button class="btn" style="background: var(--royal-blue); padding: 12px 20px; font-size: 1rem;" onclick="openStudentHistory()"><i class="fas fa-history"></i> سجل اختباراتي 📊</button>
             </div>
             <p id="auth-status-msg" style="margin-top: 15px; font-weight: bold; font-size:0.95rem;"></p>
@@ -222,7 +347,7 @@
     <div class="array-import-box admin-only">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <label style="font-weight: bold; color: #0284c7; font-size:0.95rem;"><i class="fas fa-file-code"></i> مصفوفة الأسئلة البرمجية (تتحدث وتُحفظ تلقائياً):</label>
-            <button class="btn" style="background:#10b981; padding:4px 10px; font-size:0.75rem;" onclick="copyArrayCode()"><i class="fas fa-copy"></i> نسخ المصفوفة</button>
+            <button class="btn" style="background:#10b981; padding:6px 12px; font-size:0.8rem;" onclick="copyArrayCode()"><i class="fas fa-copy"></i> نسخ المصفوفة</button>
         </div>
         <textarea id="arrayInputText" class="array-textarea" placeholder="[ { t: '...', q: '...', ... } ]"></textarea>
         <button class="btn" style="background:#0284c7; width:100%; justify-content:center;" onclick="importArrayQuestions()"><i class="fas fa-magic"></i> توليد وتوزيع الأسئلة تلقائياً</button>
@@ -258,6 +383,17 @@
         const fsDb = secondaryApp.firestore();
         const rtdb = firebase.database();
 
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const wrapper = document.getElementById('mainActionsDropdown');
+            wrapper.classList.toggle('active');
+        }
+
+        window.addEventListener('click', function() {
+            const wrapper = document.getElementById('mainActionsDropdown');
+            if (wrapper) wrapper.classList.remove('active');
+        });
+
         function autoResizeTextarea(el) {
             el.style.height = 'auto';
             el.style.height = (el.scrollHeight) + 'px';
@@ -271,8 +407,18 @@
             return array;
         }
 
-        function formatStudentAnswerDisplay(ansVal) {
+        function formatStudentAnswerDisplay(ansVal, qType) {
             if (!ansVal) return '--';
+            if (qType && (qType.includes('مزاوجة') || qType.includes('عددّد'))) {
+                if (typeof ansVal === 'object') {
+                    let parts = [];
+                    Object.keys(ansVal).sort((a,b)=>a-b).forEach(k => {
+                        parts.push(ansVal[k]);
+                    });
+                    return parts.join(' | ');
+                }
+                return ansVal;
+            }
             if (typeof ansVal === 'object') {
                 let parts = [];
                 Object.keys(ansVal).sort((a,b)=>a-b).forEach(k => {
@@ -282,6 +428,54 @@
                 return parts.join(' | ');
             }
             return ansVal;
+        }
+
+        function getColoredMatchingHtml(studentAns, correctAns) {
+            let studentArr = [];
+            if (typeof studentAns === 'object' && studentAns !== null) {
+                let keys = Object.keys(studentAns).sort((a,b)=>a-b);
+                keys.forEach(k => studentArr.push(studentAns[k] || ''));
+            } else if (typeof studentAns === 'string') {
+                studentArr = studentAns.trim().split(/\s+/);
+            }
+            let correctArr = (correctAns || '').trim().split(/\s+/);
+            
+            let htmlParts = [];
+            for (let i = 0; i < studentArr.length; i++) {
+                let sVal = studentArr[i] || '';
+                let cVal = correctArr[i] || '';
+                let color = (sVal !== '' && sVal === cVal) ? 'var(--success-green)' : 'var(--q-red)';
+                htmlParts.push(`<span style="color: ${color}; font-weight: bold;">${sVal || '--'}</span>`);
+            }
+            return htmlParts.join(' ');
+        }
+
+        function getColoredEnumHtml(studentAns, optLabels) {
+            let studentArr = [];
+            if (typeof studentAns === 'object' && studentAns !== null) {
+                let keys = Object.keys(studentAns).sort((a,b)=>a-b);
+                keys.forEach(k => studentArr.push(studentAns[k] || ''));
+            } else if (typeof studentAns === 'string') {
+                studentArr = studentAns.trim().split(/\s+/);
+            }
+            
+            let htmlParts = [];
+            for (let i = 0; i < studentArr.length; i++) {
+                let sVal = studentArr[i] || '';
+                let targetKey = (optLabels && optLabels[i] ? optLabels[i] : '').trim().toLowerCase();
+                let studentValLower = sVal.trim().toLowerCase();
+
+                let isMatch = false;
+                if (studentValLower !== '') {
+                    if (targetKey !== '' && (studentValLower.includes(targetKey) || targetKey.includes(studentValLower))) {
+                        isMatch = true;
+                    }
+                }
+
+                let color = isMatch ? 'var(--success-green)' : 'var(--q-red)';
+                htmlParts.push(`<span style="color: ${color}; font-weight: bold;">${sVal || '--'}</span>`);
+            }
+            return htmlParts.join(' | ');
         }
 
         function startNewModel() {
@@ -323,7 +517,7 @@
                         <option value="اذكر" ${selectedType === 'اذكر' ? 'selected' : ''}>اذكر</option>
                         <option value="صحح الخطأ" ${selectedType === 'صحح الخطأ' ? 'selected' : ''}>صحح الخطأ</option>
                     </select>
-                    <i class="fas fa-times-circle remove-btn" style="color:#cbd5e1; cursor:pointer; font-size:1.2rem;" onclick="this.closest('.question-card').remove();updateNumbers();saveAll();"></i>
+                    <i class="fas fa-times-circle remove-btn" style="color:#cbd5e1; cursor:pointer; font-size:1.3rem;" onclick="this.closest('.question-card').remove();updateNumbers();saveAll();"></i>
                 </div>
                 <div class="q-area">
                     ${selectedType === 'استخرج من النص' ? `<div class="estieab-box" ${isStudent ? 'contenteditable="false"' : 'contenteditable="true" oninput="saveAll()"'}>${qTextAreaVal || "أدخل النص المراد الاستخراج منه هنا..."}</div>` : ''}
@@ -405,20 +599,21 @@
                     let sVal = studentAns[idx] || '';
                     let subScoreVal = subScores[idx] !== undefined ? subScores[idx] : 1;
                     leftHtml += `<div class="matching-row" data-subscore="${subScoreVal}">
-                        ${!isStudent ? `<input type="text" class="opt opt-left" value="${item}" placeholder="فقرة ${idx+1}" oninput="saveAll()" style="padding:6px; border:1px solid #cbd5e1; border-radius:6px; text-align:right;">` : `<span style="flex:1;">${idx+1}) ${item}</span>`}
+                        ${!isStudent ? `<input type="text" class="opt opt-left" value="${item}" placeholder="فقرة ${idx+1}" oninput="saveAll()" style="padding:6px; border:1px solid #cbd5e1; border-radius:6px; text-align:right;">` : `<span style="flex:1;">${idx+1})${item}</span>`}
                         ${!isStudent ? `<input type="number" min="0.5" step="0.5" class="sub-score-input" value="${subScoreVal}" oninput="saveAll()" title="درجة هذه الفقرة">` : ``}
-                        <input type="text" class="matching-ans-input" data-left-idx="${idx}" ${isStudent ? 'oninput="this.closest(\'.question-card\').classList.remove(\'unanswered-alert\')"' : 'disabled placeholder="رقم الإجابة"'} value="${sVal}" style="width:50px; text-align:center; padding:6px; border:1px solid #cbd5e1; border-radius:6px; font-weight:bold;">
+                        <input type="text" class="matching-ans-input" data-left-idx="${idx}" ${isStudent ? `oninput="validateMatchingInput(this, ${rightOpts.length})"` : 'disabled placeholder="رقم الإجابة"'} value="${sVal}" style="width:50px; text-align:center; padding:6px; border:1px solid #cbd5e1; border-radius:6px; font-weight:bold;" maxlength="2">
                     </div>`;
                 });
+                leftHtml += `<div class="matching-error-msg"></div>`;
                 if(!isStudent) {
                     leftHtml += `<div class="matching-controls" style="margin-top:10px; display:flex; gap:8px;">
-                        <button type="button" class="btn" style="background:#3b82f6; padding:4px 10px; font-size:0.8rem;" onclick="adjustMatchingRows(this, 'left', 1)">+ إضافة فقرة</button>
-                        <button type="button" class="btn" style="background:#ef4444; padding:4px 10px; font-size:0.8rem;" onclick="adjustMatchingRows(this, 'left', -1)">- حذف فقرة</button>
+                        <button type="button" class="btn" style="background:#3b82f6; padding:6px 12px; font-size:0.85rem;" onclick="adjustMatchingRows(this, 'left', 1)"><i class="fas fa-plus"></i> إضافة فقرة</button>
+                        <button type="button" class="btn" style="background:#ef4444; padding:6px 12px; font-size:0.85rem;" onclick="adjustMatchingRows(this, 'left', -1)"><i class="fas fa-minus"></i> حذف فقرة</button>
                     </div>`;
                 }
                 leftHtml += '</div>';
 
-                let rightHtml = `<div class="matching-box"><h4 style="margin:0 0 10px; color:var(--royal-blue); font-size:1rem;">الإجابات (العمود الثاني):</h4>`;
+                let rightHtml = `<div class="matching-box"><h4 style="margin:0 0 10px; color:var(--royal-blue); font-size:1rem;">الإجابات (العمود الثاني): مدعمة بـ (${rightOpts.length} إجابات متاحة)</h4>`;
                 rightOpts.forEach((item, idx) => {
                     rightHtml += `<div class="matching-row">
                         <span style="font-weight:bold; color:#0284c7; width:20px;">${idx+1}.</span>
@@ -427,8 +622,8 @@
                 });
                 if(!isStudent) {
                     rightHtml += `<div class="matching-controls" style="margin-top:10px; display:flex; gap:8px;">
-                        <button type="button" class="btn" style="background:#3b82f6; padding:4px 10px; font-size:0.8rem;" onclick="adjustMatchingRows(this, 'right', 1)">+ إضافة إجابة</button>
-                        <button type="button" class="btn" style="background:#ef4444; padding:4px 10px; font-size:0.8rem;" onclick="adjustMatchingRows(this, 'right', -1)">- حذف إجابة</button>
+                        <button type="button" class="btn" style="background:#3b82f6; padding:6px 12px; font-size:0.85rem;" onclick="adjustMatchingRows(this, 'right', 1)"><i class="fas fa-plus"></i> إضافة إجابة</button>
+                        <button type="button" class="btn" style="background:#ef4444; padding:6px 12px; font-size:0.85rem;" onclick="adjustMatchingRows(this, 'right', -1)"><i class="fas fa-minus"></i> حذف إجابة</button>
                     </div>`;
                 }
                 rightHtml += '</div>';
@@ -455,8 +650,8 @@
 
                 if(!isStudent) {
                     html += `<div class="enum-controls" style="margin-top:10px; display:flex; gap:8px;">
-                        <button type="button" class="btn" style="background:#3b82f6; padding:4px 10px; font-size:0.8rem;" onclick="adjustEnumRows(this, 1)">+ إضافة عنصر تعداد</button>
-                        <button type="button" class="btn" style="background:#ef4444; padding:4px 10px; font-size:0.8rem;" onclick="adjustEnumRows(this, -1)">- حذف عنصر</button>
+                        <button type="button" class="btn" style="background:#3b82f6; padding:6px 12px; font-size:0.85rem;" onclick="adjustEnumRows(this, 1)"><i class="fas fa-plus"></i> إضافة عنصر تعداد</button>
+                        <button type="button" class="btn" style="background:#ef4444; padding:6px 12px; font-size:0.85rem;" onclick="adjustEnumRows(this, -1)"><i class="fas fa-minus"></i> حذف عنصر</button>
                     </div>`;
                 }
                 html += `</div>`;
@@ -479,6 +674,50 @@
                 }
                 return h + '</div>';
             }
+        }
+
+        function validateMatchingInput(inputEl, maxOptionsCount) {
+            const card = inputEl.closest('.question-card');
+            card.classList.remove('unanswered-alert');
+            const errorMsgEl = card.querySelector('.matching-error-msg');
+
+            let val = inputEl.value.replace(/[^0-9]/g, '');
+            inputEl.value = val;
+
+            if (val === '') {
+                if (errorMsgEl) errorMsgEl.style.display = 'none';
+                return;
+            }
+
+            let num = parseInt(val, 10);
+
+            if (num < 1 || num > maxOptionsCount) {
+                if (errorMsgEl) {
+                    errorMsgEl.innerText = `⚠️ عذراً، الرقم يجب أن يكون بين 1 و ${maxOptionsCount} فقط.`;
+                    errorMsgEl.style.display = 'block';
+                }
+                inputEl.value = '';
+                return;
+            }
+
+            let allInputs = card.querySelectorAll('.matching-ans-input');
+            let isDuplicate = false;
+            allInputs.forEach(inp => {
+                if (inp !== inputEl && inp.value.trim() === val) {
+                    isDuplicate = true;
+                }
+            });
+
+            if (isDuplicate) {
+                if (errorMsgEl) {
+                    errorMsgEl.innerText = `⚠️ الرقم (${val}) تم إدخاله مسبقاً في فقرة أخرى، لا يُسمح بالتكرار.`;
+                    errorMsgEl.style.display = 'block';
+                }
+                inputEl.value = '';
+                return;
+            }
+
+            if (errorMsgEl) errorMsgEl.style.display = 'none';
         }
 
         function adjustMatchingRows(btn, side, change) {
@@ -698,7 +937,7 @@
 
                     itemDiv.innerHTML = `
                         <div style="font-weight:bold; color:var(--royal-blue); text-align:right; flex:1; font-size:0.95rem;">طالب: ${data.name || 'مجهول'} | نموذج: ${data.model_id || 'اختبار'} | النتيجة: ${data.score} من ${data.total}</div>
-                        <button class="btn btn-save" style="padding:6px 12px;" onclick='${actionFunc}'>${btnText}</button>
+                        <button class="btn" style="background:#a855f7; padding:6px 12px;" onclick='${actionFunc}'>${btnText}</button>
                     `;
                     containerDiv.appendChild(itemDiv);
                 });
@@ -717,18 +956,31 @@
             report.innerHTML = "";
 
             answersArray.forEach((ans, i) => {
-                let formattedAns = (ans.qType?.includes('مزاوجة') || ans.qType?.includes('عددّد')) ? formatStudentAnswerDisplay(ans.studentAns) : (ans.studentAns || '--');
                 let earned = ans.earnedScore !== undefined ? ans.earnedScore : (ans.gotScore !== undefined ? ans.gotScore : (ans.isCorrect ? ans.maxScore : 0));
                 
+                let studentAnswerHtml = '';
                 let correctDisplay = ans.correctAns || 'إجابة تحريرية';
-                if (ans.qType?.includes('مزاوجة')) correctDisplay = `مفتاح الترتيب: ${ans.correctAns}`;
+
+                if (ans.qType?.includes('مزاوجة')) {
+                    correctDisplay = ans.correctAns ? ans.correctAns.replace(/\s+/g, ' ').trim() : '';
+                    studentAnswerHtml = getColoredMatchingHtml(ans.studentAns, ans.correctAns);
+                } else if (ans.qType?.includes('عددّد')) {
+                    correctDisplay = 'عناصر التعداد المحددة';
+                    studentAnswerHtml = getColoredEnumHtml(ans.studentAns, ans.opts);
+                } else {
+                    let formattedAns = formatStudentAnswerDisplay(ans.studentAns, ans.qType);
+                    let cleanFormattedAns = formattedAns.replace(/\s+/g, ' ').trim();
+                    let isMatchCorrect = (cleanFormattedAns === correctDisplay);
+                    let ansColorStyle = isMatchCorrect ? "color: var(--success-green); font-weight: bold;" : "color: var(--q-red); font-weight: bold;";
+                    studentAnswerHtml = `<span style="${ansColorStyle}">${formattedAns}</span>`;
+                }
 
                 report.innerHTML += `<tr>
                     <td>${i+1}</td>
                     <td style="text-align:right">${ans.qText || ans.q || ''}</td>
                     <td><span style="background:#e0f2fe; color:#0284c7; padding:2px 6px; border-radius:4px; font-size:0.8rem;">${ans.qType || 'سؤال'}</span></td>
-                    <td style="text-align:right">${formattedAns}</td>
-                    <td style="color:var(--success-green); font-weight:bold">${correctDisplay}</td>
+                    <td style="direction:ltr;">${studentAnswerHtml}</td>
+                    <td style="color:var(--success-green); font-weight:bold; direction:ltr;">${correctDisplay}</td>
                     <td>${earned} من ${ans.maxScore}</td>
                 </tr>`;
             });
@@ -750,18 +1002,31 @@
             answersArray.forEach((ans, i) => {
                 const maxS = ans.maxScore || 1;
                 const earnedS = ans.earnedScore !== undefined ? ans.earnedScore : (ans.gotScore !== undefined ? ans.gotScore : (ans.isCorrect ? maxS : 0));
-                let formattedAns = (ans.qType?.includes('مزاوجة') || ans.qType?.includes('عددّد')) ? formatStudentAnswerDisplay(ans.studentAns) : (ans.studentAns || '--');
                 
+                let studentAnswerHtml = '';
                 let correctDisplay = ans.correctAns || 'تعديل يدوي';
-                if (ans.qType?.includes('مزاوجة')) correctDisplay = `مفتاح الترتيب: ${ans.correctAns}`;
+
+                if (ans.qType?.includes('مزاوجة')) {
+                    correctDisplay = ans.correctAns ? ans.correctAns.replace(/\s+/g, ' ').trim() : '';
+                    studentAnswerHtml = getColoredMatchingHtml(ans.studentAns, ans.correctAns);
+                } else if (ans.qType?.includes('عددّد')) {
+                    correctDisplay = 'عناصر التعداد المحددة';
+                    studentAnswerHtml = getColoredEnumHtml(ans.studentAns, ans.opts);
+                } else {
+                    let formattedAns = formatStudentAnswerDisplay(ans.studentAns, ans.qType);
+                    let cleanFormattedAns = formattedAns.replace(/\s+/g, ' ').trim();
+                    let isMatchCorrect = (cleanFormattedAns === correctDisplay);
+                    let ansColorStyle = isMatchCorrect ? "color: var(--success-green); font-weight: bold;" : "color: var(--q-red); font-weight: bold;";
+                    studentAnswerHtml = `<span style="${ansColorStyle}">${formattedAns}</span>`;
+                }
 
                 report.innerHTML += `
                     <tr>
                         <td>${i+1}</td>
                         <td style="text-align:right">${ans.qText || ans.q || ''}</td>
                         <td><span style="background:#e0f2fe; color:#0284c7; padding:2px 6px; border-radius:4px; font-size:0.8rem;">${ans.qType || 'سؤال'}</span></td>
-                        <td style="text-align:right">${formattedAns}</td>
-                        <td style="color:var(--success-green); font-weight:bold">${correctDisplay}</td>
+                        <td style="direction:ltr;">${studentAnswerHtml}</td>
+                        <td style="color:var(--success-green); font-weight:bold; direction:ltr;">${correctDisplay}</td>
                         <td>
                             <input type="number" step="0.5" min="0" max="${maxS}" class="score-edit-input" data-index="${i}" value="${earnedS}" style="width:55px; text-align:center; padding:4px; border-radius:6px; font-weight:bold; font-family:inherit;"> (من ${maxS})
                         </td>
@@ -1018,8 +1283,8 @@
                         itemDiv.innerHTML = `
                             <div style="font-weight:bold; color:var(--royal-blue); text-align:right; flex:1; min-width:120px;">${name}</div>
                             <div style="display:flex; gap:6px;">
-                                <button class="btn btn-save" style="padding:6px 12px;" onclick="openModel('${name}')"><i class="fas fa-folder-open"></i> فتح</button>
-                                <button class="btn btn-del" style="padding:6px 12px;" onclick="deleteSpecificModel('${name}')"><i class="fas fa-trash"></i> حذف</button>
+                                <button class="btn" style="background:#a855f7; padding:6px 12px;" onclick="openModel('${name}')"><i class="fas fa-folder-open"></i> فتح</button>
+                                <button class="btn" style="background:#ef4444; padding:6px 12px;" onclick="deleteSpecificModel('${name}')"><i class="fas fa-trash"></i> حذف</button>
                             </div>
                         `;
                         listContainer.appendChild(itemDiv);

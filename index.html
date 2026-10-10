@@ -960,27 +960,34 @@
                 
                 let studentAnswerHtml = '';
                 let correctDisplay = ans.correctAns || 'إجابة تحريرية';
+                let isRowWrong = false;
 
                 if (ans.qType?.includes('مزاوجة')) {
                     correctDisplay = ans.correctAns ? ans.correctAns.replace(/\s+/g, ' ').trim() : '';
                     studentAnswerHtml = getColoredMatchingHtml(ans.studentAns, ans.correctAns);
+                    if (earned < ans.maxScore) isRowWrong = true;
                 } else if (ans.qType?.includes('عددّد')) {
                     correctDisplay = 'عناصر التعداد المحددة';
                     studentAnswerHtml = getColoredEnumHtml(ans.studentAns, ans.opts);
+                    if (earned < ans.maxScore) isRowWrong = true;
                 } else {
                     let formattedAns = formatStudentAnswerDisplay(ans.studentAns, ans.qType);
                     let cleanFormattedAns = formattedAns.replace(/\s+/g, ' ').trim();
                     let isMatchCorrect = (cleanFormattedAns === correctDisplay);
+                    if (!isMatchCorrect) isRowWrong = true;
                     let ansColorStyle = isMatchCorrect ? "color: var(--success-green); font-weight: bold;" : "color: var(--q-red); font-weight: bold;";
                     studentAnswerHtml = `<span style="${ansColorStyle}">${formattedAns}</span>`;
                 }
 
-                report.innerHTML += `<tr>
+                // تلوين الصف كاملاً بالأحمر الخفيف في حال الخطأ لتمييزه بسرعة
+                let rowStyle = isRowWrong ? 'style="background-color: #fee2e2; color: #991b1b;"' : '';
+
+                report.innerHTML += `<tr ${rowStyle}>
                     <td>${i+1}</td>
                     <td style="text-align:right">${ans.qText || ans.q || ''}</td>
-                    <td><span style="background:#e0f2fe; color:#0284c7; padding:2px 6px; border-radius:4px; font-size:0.8rem;">${ans.qType || 'سؤال'}</span></td>
+                    <td><span style="background:${isRowWrong ? '#fca5a5' : '#e0f2fe'}; color:${isRowWrong ? '#7f1d1d' : '#0284c7'}; padding:2px 6px; border-radius:4px; font-size:0.8rem;">${ans.qType || 'سؤال'}</span></td>
                     <td style="direction:ltr;">${studentAnswerHtml}</td>
-                    <td style="color:var(--success-green); font-weight:bold; direction:ltr;">${correctDisplay}</td>
+                    <td style="color:${isRowWrong ? '#b91c1c' : 'var(--success-green)'}; font-weight:bold; direction:ltr;">${correctDisplay}</td>
                     <td>${earned} من ${ans.maxScore}</td>
                 </tr>`;
             });
@@ -1005,28 +1012,34 @@
                 
                 let studentAnswerHtml = '';
                 let correctDisplay = ans.correctAns || 'تعديل يدوي';
+                let isRowWrong = false;
 
                 if (ans.qType?.includes('مزاوجة')) {
                     correctDisplay = ans.correctAns ? ans.correctAns.replace(/\s+/g, ' ').trim() : '';
                     studentAnswerHtml = getColoredMatchingHtml(ans.studentAns, ans.correctAns);
+                    if (earnedS < maxS) isRowWrong = true;
                 } else if (ans.qType?.includes('عددّد')) {
                     correctDisplay = 'عناصر التعداد المحددة';
                     studentAnswerHtml = getColoredEnumHtml(ans.studentAns, ans.opts);
+                    if (earnedS < maxS) isRowWrong = true;
                 } else {
                     let formattedAns = formatStudentAnswerDisplay(ans.studentAns, ans.qType);
                     let cleanFormattedAns = formattedAns.replace(/\s+/g, ' ').trim();
                     let isMatchCorrect = (cleanFormattedAns === correctDisplay);
+                    if (!isMatchCorrect) isRowWrong = true;
                     let ansColorStyle = isMatchCorrect ? "color: var(--success-green); font-weight: bold;" : "color: var(--q-red); font-weight: bold;";
                     studentAnswerHtml = `<span style="${ansColorStyle}">${formattedAns}</span>`;
                 }
 
+                let rowStyle = isRowWrong ? 'style="background-color: #fee2e2; color: #991b1b;"' : '';
+
                 report.innerHTML += `
-                    <tr>
+                    <tr ${rowStyle}>
                         <td>${i+1}</td>
                         <td style="text-align:right">${ans.qText || ans.q || ''}</td>
-                        <td><span style="background:#e0f2fe; color:#0284c7; padding:2px 6px; border-radius:4px; font-size:0.8rem;">${ans.qType || 'سؤال'}</span></td>
+                        <td><span style="background:${isRowWrong ? '#fca5a5' : '#e0f2fe'}; color:${isRowWrong ? '#7f1d1d' : '#0284c7'}; padding:2px 6px; border-radius:4px; font-size:0.8rem;">${ans.qType || 'سؤال'}</span></td>
                         <td style="direction:ltr;">${studentAnswerHtml}</td>
-                        <td style="color:var(--success-green); font-weight:bold; direction:ltr;">${correctDisplay}</td>
+                        <td style="color:${isRowWrong ? '#b91c1c' : 'var(--success-green)'}; font-weight:bold; direction:ltr;">${correctDisplay}</td>
                         <td>
                             <input type="number" step="0.5" min="0" max="${maxS}" class="score-edit-input" data-index="${i}" value="${earnedS}" style="width:55px; text-align:center; padding:4px; border-radius:6px; font-weight:bold; font-family:inherit;"> (من ${maxS})
                         </td>

@@ -176,11 +176,10 @@
             background: var(--card-bg); width: 100%; max-width: 850px; border-radius: 20px; padding: 40px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; box-sizing: border-box; margin-bottom: 25px; transition: background 0.5s;
         }
-        .auth-input { width: 80%; max-width: 400px; padding: 15px; border-radius: 10px; border: 2px solid #cbd5e1; margin-bottom: 15px; text-align: center; font-size: 1.1rem; outline: none; box-sizing: border-box; }
+        .auth-input, .styled-select-input { width: 80%; max-width: 400px; padding: 15px; border-radius: 10px; border: 2px solid #cbd5e1; margin-bottom: 15px; text-align: center; font-size: 1.1rem; outline: none; box-sizing: border-box; font-family: inherit; background: #fff; }
 
         .container { width: 100%; max-width: 850px; padding-bottom: 120px; display: none; box-sizing: border-box; }
         
-        /* شريط الوقت التنازلي للطالب داخل الاختبار */
         .exam-timer-banner {
             width: 100%; max-width: 850px; background: #1e293b; color: #38bdf8; border-radius: 12px;
             padding: 12px 20px; margin-bottom: 20px; display: none; justify-content: space-between; align-items: center;
@@ -370,10 +369,12 @@
     </div>
 
     <div class="search-result-box admin-only">
-        <label style="display: block; font-weight: bold; color: #0284c7; margin-bottom: 8px; font-size:0.95rem;"><i class="fas fa-search"></i> استعلام ومراجعة درجات طالب بإيميله المدرسي (خاص بالمعلم):</label>
+        <label style="display: block; font-weight: bold; color: #0284c7; margin-bottom: 8px; font-size:0.95rem;"><i class="fas fa-search"></i> استعلام ومراجعة درجات الطلاب حسب النموذج (خاص بالمعلم):</label>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <input type="email" id="teacherSearchEmail" class="auth-input" style="flex: 1; margin: 0; font-size: 1rem; padding: 10px;" placeholder="أدخل إيميل الطالب هنا sxxxxxxx@rb.moe.gov.sa">
-            <button class="btn" style="background: #0284c7; padding: 10px 20px;" onclick="teacherSearchByEmail()"><i class="fas fa-search"></i> بحث ومراجعة</button>
+            <select id="teacherModelSelect" class="styled-select-input" style="flex: 1; margin: 0; font-size: 1rem; padding: 10px;">
+                <option value="">-- اختر النموذج المطلوب استعراضه --</option>
+            </select>
+            <button class="btn" style="background: #0284c7; padding: 10px 20px;" onclick="teacherSearchByModel()"><i class="fas fa-search"></i> استعراض النتائج</button>
         </div>
     </div>
 
@@ -447,6 +448,39 @@
                 [array[i], array[j]] = [array[j], array[i]];
             }
             return array;
+        }
+
+        async function populateTeacherModelDropdown() {
+            const selectEl = document.getElementById('teacherModelSelect');
+            if (!selectEl) return;
+
+            selectEl.innerHTML = '<option value="">-- جاري تحميل النماذج المتاحة... --</option>';
+
+            let savedModels = JSON.parse(localStorage.getItem('fifi_all_saved_models') || '{}');
+            let modelNamesSet = new Set(Object.keys(savedModels));
+
+            try {
+                const snap = await rtdb.ref('models').once('value');
+                if (snap.exists()) {
+                    Object.keys(snap.val()).forEach(name => modelNamesSet.add(name));
+                }
+            } catch(e) {}
+
+            try {
+                const fsSnap = await fsDb.collection("alkfaeat_results").get();
+                fsSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.model_id) modelNamesSet.add(data.model_id);
+                });
+            } catch(e) {}
+
+            selectEl.innerHTML = '<option value="">-- اختر النموذج المطلوب استعراضه --</option>';
+            Array.from(modelNamesSet).sort().forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                selectEl.appendChild(opt);
+            });
         }
 
         function openTimeModal() {
@@ -1001,7 +1035,6 @@
                 document.querySelector('.container').style.display = 'block';
                 document.getElementById('student-actions').style.display = 'flex';
 
-                // إظهار شريط الوقت والتاريخ المتبقي للطالب
                 const timerBanner = document.getElementById('examTimerBanner');
                 if (timerBanner) {
                     document.getElementById('bannerExamTitle').innerHTML = `<i class="fas fa-file-alt"></i> الاختبار: ${examId}`;
@@ -1017,13 +1050,14 @@
             }
         }
 
-        async function teacherSearchByEmail() {
-            const emailInput = document.getElementById('teacherSearchEmail').value.trim().toLowerCase();
-            if (!emailInput || !emailInput.includes('@')) {
-                alert("الرجاء إدخال إيميل صحيح للبحث!");
+        async function teacherSearchByModel() {
+            const selectEl = document.getElementById('teacherModelSelect');
+            const selectedModel = selectEl ? selectEl.value.trim() : "";
+            if (!selectedModel) {
+                alert("الرجاء اختيار النموذج المطلوب استعراضه من القائمة!");
                 return;
             }
-            fetchAndShowHistory(emailInput, true);
+            fetchAndShowHistoryByModel(selectedModel);
         }
 
         async function openStudentHistory() {
@@ -1032,10 +1066,10 @@
                 alert("الرجاء إدخال إيميلك أولاً لعرض سجلك!");
                 return;
             }
-            fetchAndShowHistory(emailToCheck, false);
+            fetchAndShowHistoryByStudent(emailToCheck);
         }
 
-        async function fetchAndShowHistory(emailToCheck, isTeacherMode) {
+        async function fetchAndShowHistoryByStudent(emailToCheck) {
             const listEl = document.getElementById('history-list');
             listEl.innerHTML = "<p style='text-align:center; color:#64748b;'>جاري جلب النتائج... ⏳</p>";
             document.getElementById('history-modal').style.display = 'block';
@@ -1059,21 +1093,57 @@
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'cloud-item';
                     
-                    const btnText = isTeacherMode ? '<i class="fas fa-edit"></i> مراجعة وتعديل' : '<i class="fas fa-file-alt"></i> التقرير';
                     const encodedAnswers = encodeURIComponent(JSON.stringify(data.answers || []));
-                    const actionFunc = isTeacherMode 
-                        ? `openEditableReport("${docId}", "${encodedAnswers}", ${data.score}, ${data.total})`
-                        : `showNormalReport("${encodedAnswers}", ${data.score}, ${data.total})`;
+                    const actionFunc = `showNormalReport("${encodedAnswers}", ${data.score}, ${data.total})`;
 
                     itemDiv.innerHTML = `
-                        <div style="font-weight:bold; color:var(--royal-blue); text-align:right; flex:1; font-size:0.95rem;">طالب: ${data.name || 'مجهول'} | نموذج: ${data.model_id || 'اختبار'} | النتيجة: ${data.score} من ${data.total}</div>
-                        <button class="btn" style="background:#a855f7; padding:6px 12px;" onclick='${actionFunc}'>${btnText}</button>
+                        <div style="font-weight:bold; color:var(--royal-blue); text-align:right; flex:1; font-size:0.95rem;">نموذج: ${data.model_id || 'اختبار'} | النتيجة: ${data.score} من ${data.total}</div>
+                        <button class="btn" style="background:#a855f7; padding:6px 12px;" onclick='${actionFunc}'><i class="fas fa-file-alt"></i> التقرير</button>
                     `;
                     containerDiv.appendChild(itemDiv);
                 });
             } catch (err) {
                 console.error(err);
                 listEl.innerHTML = "<p style='text-align:center; color:var(--q-red);'>حدث خطأ أثناء جلب النتائج.</p>";
+            }
+        }
+
+        async function fetchAndShowHistoryByModel(modelName) {
+            const listEl = document.getElementById('history-list');
+            listEl.innerHTML = `<p style='text-align:center; color:#64748b;'>جاري جلب نتائج الطلاب لنموذج (${modelName})... ⏳</p>`;
+            document.getElementById('history-modal').style.display = 'block';
+            document.getElementById('modal-overlay').style.display = 'block';
+
+            try {
+                const querySnap = await fsDb.collection("alkfaeat_results")
+                    .where("model_id", "==", modelName).get();
+
+                if (querySnap.empty) {
+                    listEl.innerHTML = `<p style='text-align:center; padding:20px; color:#64748b;'>لا توجد أي نتائج مسجلة لهذا النموذج (${modelName}) حتى الآن.</p>`;
+                    return;
+                }
+
+                listEl.innerHTML = '<div style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;"></div>';
+                const containerDiv = listEl.querySelector('div');
+
+                querySnap.forEach(doc => {
+                    const data = doc.data();
+                    const docId = doc.id;
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'cloud-item';
+                    
+                    const encodedAnswers = encodeURIComponent(JSON.stringify(data.answers || []));
+                    const actionFunc = `openEditableReport("${docId}", "${encodedAnswers}", ${data.score}, ${data.total})`;
+
+                    itemDiv.innerHTML = `
+                        <div style="font-weight:bold; color:var(--royal-blue); text-align:right; flex:1; font-size:0.95rem;">طالب: ${data.name || 'مجهول'} (${data.email || ''}) | النتيجة: ${data.score} من ${data.total}</div>
+                        <button class="btn" style="background:#a855f7; padding:6px 12px;" onclick='${actionFunc}'><i class="fas fa-edit"></i> مراجعة وتعديل</button>
+                    `;
+                    containerDiv.appendChild(itemDiv);
+                });
+            } catch (err) {
+                console.error(err);
+                listEl.innerHTML = "<p style='text-align:center; color:var(--q-red);'>حدث خطأ أثناء جلب نتائج النموذج.</p>";
             }
         }
 
@@ -1482,6 +1552,7 @@
                     document.getElementById('current-model-label').innerText = "📁 نموذج جديد";
                 }
                 loadFromCloud();
+                populateTeacherModelDropdown();
             }
         }
 
@@ -1563,6 +1634,7 @@
             currentOpenModelName = newName.trim();
             document.getElementById('current-model-label').innerText = `📁 ${currentOpenModelName}`;
             alert("تم تغيير اسم النموذج بنجاح!");
+            populateTeacherModelDropdown();
         }
 
         async function deleteCurrentModel() {
@@ -1583,6 +1655,7 @@
                 currentExamEndTime = "";
                 document.getElementById('current-model-label').innerText = "📁 نموذج جديد";
                 clearAll();
+                populateTeacherModelDropdown();
             }
         }
 
@@ -1615,6 +1688,7 @@
             } catch(e) {}
 
             alert(`تم حفظ نموذج "${currentOpenModelName}" بنجاح وتثبيته في النظام! 💾`);
+            populateTeacherModelDropdown();
         }
 
         function closeModals() { 
@@ -1705,6 +1779,7 @@
         }
 
         function loadQuestions() { 
+            populateTeacherModelDropdown();
             const id = new URLSearchParams(window.location.search).get('exam'); 
             if (id) { 
                 document.body.classList.add('student-mode'); 

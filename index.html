@@ -254,7 +254,7 @@
 <body>
 
     <script>
-        // مجموعة ثيمات متنوعة وعصرية تتغير تلقائياً مع كل تحديث للصفحة دون تكرار الثيم السابق
+        // ثيمات العرض (تعمل تلقائياً عند فتح الصفحة سواء للمعلم أو للطالب)
         const themes = [
             { name: "الأزرق الملكي", bg: "#f1f5f9", subBg: "#f8fafc", primary: "#1e3a8a", purple: "#4f46e5", text: "#1e293b", card: "#ffffff", border: "#cbd5e1" },
             { name: "الأخضر الزمردي", bg: "#ecfdf5", subBg: "#f0fdf4", primary: "#065f46", purple: "#059669", text: "#064e3b", card: "#ffffff", border: "#a7f3d0" },
@@ -270,7 +270,6 @@
             { name: "البرتقالي المشرق", bg: "#fff7ed", subBg: "#ffedd5", primary: "#9a3412", purple: "#ea580c", text: "#431407", card: "#ffffff", border: "#fed7aa" }
         ];
 
-        // اختيار ثيم عشوائي مختلف عن الثيم السابق عند كل تحديث للصفحة
         let lastThemeIdx = sessionStorage.getItem('fifi_last_theme_idx');
         let randomIdx = Math.floor(Math.random() * themes.length);
         if (lastThemeIdx !== null && themes.length > 1) {

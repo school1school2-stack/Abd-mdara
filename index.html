@@ -652,14 +652,21 @@
 
     <script>
         /* ==========================================
-           نظام تتبع وتسجيل محاولات خروج الطالب / الإيقاف / التحديث (سحابي + محلي)
+           نظام تتبع وتسجيل محاولات خروج الطالب / الإيقاف / التحديث (سحابي لحظي تحت إيميل الطالب)
            ========================================== */
         let cachedCloudExitData = { count: 0, logs: [] };
+        let integrityUnsubscribe = null;
 
         function getExitTrackerKey(examId, email) {
             const safeExam = (examId || 'general').replace(/[^a-zA-Z0-9\u0600-\u06FF_-]/g, '_');
             const safeEmail = (email || 'unknown').toLowerCase().trim();
             return `exam_exit_tracker_${safeExam}_${safeEmail}`;
+        }
+
+        function getIntegrityDocId(examId, email) {
+            const safeExam = (examId || 'general').trim().replace(/[\/\\.#$\[\]]/g, '_');
+            const safeEmail = (email || 'unknown').toLowerCase().trim().replace(/[\/\\.#$\[\]]/g, '_');
+            return `${safeExam}__${safeEmail}`;
         }
 
         function getActiveExamStorageKey(examId) {
@@ -675,8 +682,8 @@
                 if (raw) localData = JSON.parse(raw);
             } catch (e) {}
 
-            // دمج السجل المحلي مع السجل السحابي المسترجع من الجهاز الآخر لضمان عدم التصفير أبداً
-            if (cachedCloudExitData && (cachedCloudExitData.count || 0) > (localData.count || 0)) {
+            // دمج السجل المحلي مع السجل السحابي المسترجع من المتصفح الآخر لضمان عدم التصفير أبداً
+            if (cachedCloudExitData && (cachedCloudExitData.count || 0) >= (localData.count || 0)) {
                 return {
                     count: cachedCloudExitData.count,
                     logs: cachedCloudExitData.logs && cachedCloudExitData.logs.length > 0 ? cachedCloudExitData.logs : (localData.logs || [])
@@ -685,84 +692,156 @@
             return localData;
         }
 
+        // الاستماع اللحظي لسجل محاولات الطالب في Firestore تحت إيميله
+        function startRealtimeIntegrityListener(examId, email) {
+            if (integrityUnsubscribe) {
+                integrityUnsubscribe();
+                integrityUnsubscribe = null;
+            }
+            if (!examId || !email) return;
+
+            const cleanEmail = email.toLowerCase().trim();
+            const docId = getIntegrityDocId(examId, cleanEmail);
+
+            integrityUnsubscribe = fsDb.collection("exam_integrity_logs").doc(docId).onSnapshot((docSnap) => {
+                if (docSnap.exists) {
+                    const data = docSnap.data();
+                    const cloudCount = data.exitCount || 0;
+                    const cloudLogs = Array.isArray(data.logs) ? data.logs : [];
+                    if (cloudCount >= (cachedCloudExitData.count || 0)) {
+                        cachedCloudExitData = { count: cloudCount, logs: cloudLogs };
+                        localStorage.setItem(getExitTrackerKey(examId, cleanEmail), JSON.stringify(cachedCloudExitData));
+                        updateHudExitCounterDisplay();
+                    }
+                }
+            }, (err) => console.warn("Integrity listener:", err));
+        }
+
         async function syncStudentExitDataFromCloud(examId, email) {
             if (!examId || !email) return { count: 0, logs: [] };
+            const cleanEmail = email.toLowerCase().trim();
+            const docId = getIntegrityDocId(examId, cleanEmail);
             const safeExamPath = examId.replace(/[.#$\[\]]/g, '_');
-            const safeEmailPath = email.toLowerCase().trim().replace(/[.#$\[\]]/g, '_');
-            const localData = getStudentExitData(examId, email);
-            let cloudCount = localData.count || 0;
-            let cloudLogs = localData.logs || [];
+            const safeEmailPath = cleanEmail.replace(/[.#$\[\]]/g, '_');
 
+            const localData = getStudentExitData(examId, cleanEmail);
+            let maxCount = localData.count || 0;
+            let bestLogs = localData.logs || [];
+
+            // 1. الجلب اللحظي من Firestore تحت إيميل الطالب
             try {
-                const snap = await rtdb.ref(`exam_integrity/${safeExamPath}/${safeEmailPath}`).once('value');
-                if (snap.exists()) {
-                    const val = snap.val();
-                    if ((val.exitCount || 0) >= cloudCount) {
-                        cloudCount = val.exitCount || 0;
-                        if (Array.isArray(val.logs) && val.logs.length > 0) {
-                            cloudLogs = val.logs;
+                const fsSnap = await fsDb.collection("exam_integrity_logs").doc(docId).get({ source: 'server' });
+                if (fsSnap.exists) {
+                    const val = fsSnap.data();
+                    if ((val.exitCount || 0) >= maxCount) {
+                        maxCount = val.exitCount || 0;
+                        if (Array.isArray(val.logs) && val.logs.length > 0) bestLogs = val.logs;
+                    }
+                }
+            } catch (e) {
+                try {
+                    const fsFallback = await fsDb.collection("exam_integrity_logs").doc(docId).get();
+                    if (fsFallback.exists) {
+                        const val = fsFallback.data();
+                        if ((val.exitCount || 0) >= maxCount) {
+                            maxCount = val.exitCount || 0;
+                            if (Array.isArray(val.logs) && val.logs.length > 0) bestLogs = val.logs;
                         }
+                    }
+                } catch (err) {}
+            }
+
+            // 2. التحقق أيضاً من Realtime Database الاحتياطي
+            try {
+                const rtSnap = await rtdb.ref(`exam_integrity/${safeExamPath}/${safeEmailPath}`).once('value');
+                if (rtSnap.exists()) {
+                    const val = rtSnap.val();
+                    if ((val.exitCount || 0) > maxCount) {
+                        maxCount = val.exitCount || 0;
+                        if (Array.isArray(val.logs) && val.logs.length > 0) bestLogs = val.logs;
                     }
                 }
             } catch (e) {}
 
-            cachedCloudExitData = { count: cloudCount, logs: cloudLogs };
-            localStorage.setItem(getExitTrackerKey(examId, email), JSON.stringify(cachedCloudExitData));
+            cachedCloudExitData = { count: maxCount, logs: bestLogs };
+            localStorage.setItem(getExitTrackerKey(examId, cleanEmail), JSON.stringify(cachedCloudExitData));
             updateHudExitCounterDisplay();
             return cachedCloudExitData;
         }
 
-        function recordStudentExitAttempt(examId, email, reason) {
+        async function recordStudentExitAttempt(examId, email, reason) {
             if (!examId || !email) return 0;
             const cleanEmail = email.toLowerCase().trim();
             const key = getExitTrackerKey(examId, cleanEmail);
             const data = getStudentExitData(examId, cleanEmail);
-            const newCount = (data.count || 0) + 1;
+            const optimisticNewCount = (data.count || 0) + 1;
             const newLogEntry = {
                 reason: reason,
                 time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
             };
             const updatedLogs = [...(data.logs || []), newLogEntry];
 
-            cachedCloudExitData = { count: newCount, logs: updatedLogs };
+            cachedCloudExitData = { count: optimisticNewCount, logs: updatedLogs };
             localStorage.setItem(key, JSON.stringify(cachedCloudExitData));
             updateHudExitCounterDisplay();
 
-            // مزامنة فورية في Realtime Database مع استخدام transaction لضمان التراكم عبر جميع الأجهزة
-            try {
-                const safeExamPath = examId.replace(/[.#$\[\]]/g, '_');
-                const safeEmailPath = cleanEmail.replace(/[.#$\[\]]/g, '_');
-                const integrityRef = rtdb.ref(`exam_integrity/${safeExamPath}/${safeEmailPath}`);
+            const docId = getIntegrityDocId(examId, cleanEmail);
+            const safeExamPath = examId.replace(/[.#$\[\]]/g, '_');
+            const safeEmailPath = cleanEmail.replace(/[.#$\[\]]/g, '_');
+            const studentDisplayName = authenticatedStudentName || cleanEmail;
 
-                integrityRef.transaction((currentCloud) => {
-                    const prevCloudCount = (currentCloud && currentCloud.exitCount) ? currentCloud.exitCount : 0;
-                    const finalCount = Math.max(prevCloudCount + 1, newCount);
-                    const prevCloudLogs = (currentCloud && Array.isArray(currentCloud.logs)) ? currentCloud.logs : [];
-                    const mergedLogs = prevCloudLogs.length >= updatedLogs.length
-                        ? [...prevCloudLogs, newLogEntry]
-                        : updatedLogs;
+            // 1. الحفظ اللحظي المضمون في Firestore (Transaction) تحت إيميل الطالب
+            const firestorePromise = fsDb.runTransaction(async (transaction) => {
+                const docRef = fsDb.collection("exam_integrity_logs").doc(docId);
+                const docSnap = await transaction.get(docRef);
+                let prevCount = 0;
+                let prevLogs = [];
+                if (docSnap.exists) {
+                    const d = docSnap.data();
+                    prevCount = d.exitCount || 0;
+                    prevLogs = Array.isArray(d.logs) ? d.logs : [];
+                }
+                const finalCount = Math.max(prevCount + 1, optimisticNewCount);
+                const finalLogs = [...prevLogs, newLogEntry];
 
-                    return {
-                        name: authenticatedStudentName || (currentCloud && currentCloud.name) || cleanEmail,
-                        email: cleanEmail,
-                        exitCount: finalCount,
-                        logs: mergedLogs,
-                        lastUpdated: new Date().toLocaleString('ar-SA')
-                    };
-                }, (error, committed, snapshot) => {
-                    if (!error && committed && snapshot && snapshot.exists()) {
-                        const syncedVal = snapshot.val();
-                        cachedCloudExitData = {
-                            count: syncedVal.exitCount || newCount,
-                            logs: syncedVal.logs || updatedLogs
-                        };
-                        localStorage.setItem(key, JSON.stringify(cachedCloudExitData));
-                        updateHudExitCounterDisplay();
-                    }
-                });
-            } catch (e) {}
+                transaction.set(docRef, {
+                    name: studentDisplayName,
+                    email: cleanEmail,
+                    model_id: examId,
+                    exitCount: finalCount,
+                    logs: finalLogs,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
 
-            return newCount;
+                return { count: finalCount, logs: finalLogs };
+            }).then((res) => {
+                if (res) {
+                    cachedCloudExitData = res;
+                    localStorage.setItem(key, JSON.stringify(cachedCloudExitData));
+                    updateHudExitCounterDisplay();
+                }
+                return res ? res.count : optimisticNewCount;
+            }).catch((err) => {
+                console.error("Firestore exit log error:", err);
+                return optimisticNewCount;
+            });
+
+            // 2. الحفظ اللحظي الموازي في Realtime Database
+            const rtdbPromise = rtdb.ref(`exam_integrity/${safeExamPath}/${safeEmailPath}`).transaction((currentCloud) => {
+                const prevCloudCount = (currentCloud && currentCloud.exitCount) ? currentCloud.exitCount : 0;
+                const finalCount = Math.max(prevCloudCount + 1, optimisticNewCount);
+                const prevCloudLogs = (currentCloud && Array.isArray(currentCloud.logs)) ? currentCloud.logs : [];
+                return {
+                    name: studentDisplayName,
+                    email: cleanEmail,
+                    exitCount: finalCount,
+                    logs: [...prevCloudLogs, newLogEntry],
+                    lastUpdated: new Date().toLocaleString('ar-SA')
+                };
+            }).catch(() => {});
+
+            const [finalSyncedCount] = await Promise.all([firestorePromise, rtdbPromise]);
+            return finalSyncedCount || optimisticNewCount;
         }
 
         function showCustomConfirm(title, message, onConfirm, confirmText = "نعم، متأكد", confirmColor = "var(--royal-blue)") {
@@ -998,55 +1077,6 @@
         /* ==========================================
            نظام تتبع وتسجيل محاولات خروج الطالب / الإيقاف / التحديث
            ========================================== */
-        function getExitTrackerKey(examId, email) {
-            const safeExam = (examId || 'general').replace(/[^a-zA-Z0-9\u0600-\u06FF_-]/g, '_');
-            const safeEmail = (email || 'unknown').toLowerCase().trim();
-            return `exam_exit_tracker_${safeExam}_${safeEmail}`;
-        }
-
-        function getActiveExamStorageKey(examId) {
-            const safeExam = (examId || 'general').replace(/[^a-zA-Z0-9\u0600-\u06FF_-]/g, '_');
-            return `fifi_active_exam_lock_${safeExam}`;
-        }
-
-        function getStudentExitData(examId, email) {
-            if (!examId || !email) return { count: 0, logs: [] };
-            try {
-                const raw = localStorage.getItem(getExitTrackerKey(examId, email));
-                if (raw) return JSON.parse(raw);
-            } catch (e) {}
-            return { count: 0, logs: [] };
-        }
-
-        function recordStudentExitAttempt(examId, email, reason) {
-            if (!examId || !email) return 0;
-            const key = getExitTrackerKey(examId, email);
-            const data = getStudentExitData(examId, email);
-            data.count = (data.count || 0) + 1;
-            data.logs = data.logs || [];
-            data.logs.push({
-                reason: reason,
-                time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-            });
-            localStorage.setItem(key, JSON.stringify(data));
-            updateHudExitCounterDisplay();
-
-            // مزامنة فورية في Realtime Database لكي يراها المعلم حتى لو لم يعتمد الطالب
-            try {
-                const safeExamPath = examId.replace(/[.#$\[\]]/g, '_');
-                const safeEmailPath = email.replace(/[.#$\[\]]/g, '_');
-                rtdb.ref(`exam_integrity/${safeExamPath}/${safeEmailPath}`).set({
-                    name: authenticatedStudentName || email,
-                    email: email,
-                    exitCount: data.count,
-                    logs: data.logs,
-                    lastUpdated: new Date().toLocaleString('ar-SA')
-                });
-            } catch (e) {}
-
-            return data.count;
-        }
-
         function updateHudExitCounterDisplay() {
             const examId = new URLSearchParams(window.location.search).get('exam');
             const badge = document.getElementById('hudExitCountBadge');
@@ -1356,8 +1386,9 @@
             showCustomConfirm(
                 "⚠️ تحذير: إيقاف والخروج من الاختبار",
                 `تنبيه هام: في حال إيقاف الاختبار والخروج منه الآن، سيصل تنبيه فوري للمعلم بعدد مرات خروجك (المسجل حالياً: ${currentExits} مرة، وسيصبح ${currentExits + 1}).\n\nهل تريد فعلاً إيقاف الاختبار والخروج؟`,
-                () => {
-                    recordStudentExitAttempt(examId, authenticatedStudentEmail, 'ضغط الطالب على زر (إيقاف وخروج)');
+                async () => {
+                    showToast("جاري تسجيل المحاولة سحابياً تحت إيميلك...", "info");
+                    await recordStudentExitAttempt(examId, authenticatedStudentEmail, 'ضغط الطالب على زر (إيقاف وخروج)');
                     exitStudentExamToLogin(true);
                 },
                 "نعم، إيقاف وخروج (مع إبلاغ المعلم)",
@@ -1367,6 +1398,10 @@
 
         function exitStudentExamToLogin(showNotice = true) {
             isExamActivelyRunning = false;
+            if (integrityUnsubscribe) {
+                integrityUnsubscribe();
+                integrityUnsubscribe = null;
+            }
             if (examTimerInterval) clearInterval(examTimerInterval);
             const examId = new URLSearchParams(window.location.search).get('exam') || '';
             if (examId) {
@@ -2008,8 +2043,10 @@
                     return;
                 }
 
-                // جلب سجل محاولات الخروج السابقة من السحابة حتى لو انتقل الطالب لجهاز آخر أو نسخ الرابط
+                // جلب سجل محاولات الخروج السابقة من السحابة تحت إيميل الطالب (حتى لو انتقل لمتصفح أو جهاز آخر)
+                cachedCloudExitData = { count: 0, logs: [] };
                 const syncedExitData = await syncStudentExitDataFromCloud(examId, authenticatedStudentEmail);
+                startRealtimeIntegrityListener(examId, authenticatedStudentEmail);
 
                 localStorage.removeItem('submitted_' + examId);
                 const sessionPayload = JSON.stringify({
@@ -2135,7 +2172,17 @@
                     return;
                 }
 
-                // جلب بيانات النزاهة الاحتياطية من Realtime Database لضمان ظهورها دائماً
+                // جلب بيانات النزاهة اللحظية من Firestore و Realtime Database لضمان ظهورها دائماً
+                let fsIntegrityMap = {};
+                try {
+                    const fsIntSnap = await fsDb.collection("exam_integrity_logs")
+                        .where("model_id", "==", modelName).get();
+                    fsIntSnap.forEach(d => {
+                        const val = d.data();
+                        if (val.email) fsIntegrityMap[val.email.toLowerCase().trim()] = val;
+                    });
+                } catch(e) {}
+
                 let rtdbIntegrityMap = {};
                 try {
                     const safeExamPath = modelName.replace(/[.#$\[\]]/g, '_');
@@ -2152,10 +2199,14 @@
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'cloud-item';
 
-                    const safeEmailKey = (data.email || '').toLowerCase().trim().replace(/[.#$\[\]]/g, '_');
+                    const cleanEmail = (data.email || '').toLowerCase().trim();
+                    const safeEmailKey = cleanEmail.replace(/[.#$\[\]]/g, '_');
+                    const fsRecord = fsIntegrityMap[cleanEmail] || {};
                     const rtdbRecord = rtdbIntegrityMap[safeEmailKey] || {};
-                    const exitCount = Math.max(data.exitCount || 0, rtdbRecord.exitCount || 0);
-                    const exitLogs = (data.exitLogs && data.exitLogs.length > 0) ? data.exitLogs : (rtdbRecord.logs || []);
+                    const exitCount = Math.max(data.exitCount || 0, fsRecord.exitCount || 0, rtdbRecord.exitCount || 0);
+                    const exitLogs = (fsRecord.logs && fsRecord.logs.length >= (data.exitLogs?.length || 0))
+                        ? fsRecord.logs
+                        : ((rtdbRecord.logs && rtdbRecord.logs.length > 0) ? rtdbRecord.logs : (data.exitLogs || []));
                     const encodedLogs = encodeURIComponent(JSON.stringify(exitLogs));
                     const studentName = data.name || 'مجهول';
                     const encodedName = encodeURIComponent(studentName);
@@ -2442,6 +2493,10 @@
 
         async function executeFinalSubmission() {
             isExamActivelyRunning = false;
+            if (integrityUnsubscribe) {
+                integrityUnsubscribe();
+                integrityUnsubscribe = null;
+            }
             if (examTimerInterval) clearInterval(examTimerInterval);
             const currentExamParam = new URLSearchParams(window.location.search).get('exam');
             if (currentExamParam) {

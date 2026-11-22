@@ -16,7 +16,7 @@
         :root { 
             --royal-blue: #1e3a8a; --q-red: #ef4444; --bg-page: #f8fafc; 
             --success-green: #10b981; --k-purple: #7c3aed; --card-border: #e2e8f0;
-            --text-color: #1e293b; --card-bg: #ffffff; --sub-bg: #f8fafc;
+            --text-color: #1e293b; --card-bg: #ffffff;
         }
         
         body { 
@@ -152,7 +152,7 @@
 
         .array-import-box, .search-result-box {
             width: 100%; max-width: 850px; background: var(--card-bg); border-radius: 15px; padding: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px dashed var(--royal-blue); margin-bottom: 25px; box-sizing: border-box; transition: background 0.5s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px dashed #0284c7; margin-bottom: 25px; box-sizing: border-box; transition: background 0.5s;
         }
         .array-textarea {
             width: 100% !important;
@@ -175,7 +175,6 @@
         .auth-card {
             background: var(--card-bg); width: 100%; max-width: 850px; border-radius: 20px; padding: 40px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; box-sizing: border-box; margin-bottom: 25px; transition: background 0.5s;
-            border: 2px solid var(--card-border);
         }
         .auth-input, .styled-select-input { width: 80%; max-width: 400px; padding: 15px; border-radius: 10px; border: 2px solid #cbd5e1; margin-bottom: 15px; text-align: center; font-size: 1.1rem; outline: none; box-sizing: border-box; font-family: inherit; background: #fff; }
 
@@ -187,7 +186,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-weight: bold; box-sizing: border-box; flex-wrap: wrap; gap: 10px;
         }
 
-        .question-card { background: var(--card-bg); border-radius: 20px; padding: 25px; margin-bottom: 25px; border: 2px solid var(--card-border); position: relative; text-align: right; box-sizing: border-box; transition: 0.3s, background 0.5s; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .question-card { background: var(--card-bg); border-radius: 20px; padding: 25px; margin-bottom: 25px; border: 2px solid var(--card-border); position: relative; text-align: right; box-sizing: border-box; transition: 0.3s, background 0.5s; }
         .question-card::before { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 8px; background: var(--k-purple); border-radius: 0 10px 10px 0; transition: background 0.5s; }
         
         .question-card.unanswered-alert { border: 2px solid var(--q-red) !important; background-color: #fff5f5; }
@@ -200,10 +199,10 @@
         .estieab-box { background: #fff9c4 !important; border: 2px solid #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 15px; color: #000; font-weight: bold; line-height: 1.8; width: 100%; box-sizing: border-box; text-align: right; min-height: 90px; outline: none; white-space: pre-wrap; font-size: 1.15rem; }
         
         .q-text-input { 
-            width: 100%; min-height: 60px; padding: 12px; border: 2px solid var(--card-border); border-radius: 12px; 
+            width: 100%; min-height: 60px; padding: 12px; border: 2px solid #cbd5e1; border-radius: 12px; 
             color: inherit; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; outline: none; 
             text-align: right; box-sizing: border-box; word-wrap: break-word; font-family: inherit; 
-            background: var(--sub-bg); line-height: 1.7; resize: none; 
+            background: rgba(0,0,0,0.02); line-height: 1.7; resize: none; 
         }
 
         .student-answer-textarea {
@@ -213,8 +212,8 @@
 
         .matching-container, .enumeration-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
         @media (max-width: 768px) { .matching-container, .enumeration-container { grid-template-columns: 1fr; } }
-        .matching-box, .enumeration-box { background: var(--sub-bg); border: 1px solid var(--card-border); padding: 14px; border-radius: 12px; box-sizing: border-box; }
-        .matching-row, .enum-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; flex-wrap: wrap; }
+        .matching-box, .enumeration-box { background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 12px; box-sizing: border-box; }
+        .matching-row, .enum-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
         .matching-row input[type="text"] { flex: 1; min-width: 100px; }
         .matching-row input[type="number"], .enum-row input[type="number"] { width: 50px; text-align: center; padding: 6px; border: 1px solid #10b981; border-radius: 6px; font-weight: bold; color: #166534; }
         .enum-row input[type="text"] { flex: 1; min-width: 150px; }
@@ -241,7 +240,7 @@
         .q-score-input { width: 65px; padding: 5px; border: 1px solid #10b981; border-radius: 6px; text-align: center; font-weight: bold; color: #166534; font-family: inherit; }
 
         body.student-mode .top-action-bar, body.student-mode .array-import-box, body.student-mode .search-result-box, body.student-mode .remove-btn, body.student-mode .type-select, body.student-mode .correct-ans-box, body.student-mode .admin-only, body.student-mode .matching-controls, body.student-mode .enum-controls { display: none !important; }
-        body.student-mode .selected-opt { background: rgba(59, 130, 246, 0.15) !important; border: 2px solid var(--royal-blue) !important; }
+        body.student-mode .selected-opt { background: rgba(59, 130, 246, 0.2) !important; border: 2px solid var(--royal-blue) !important; }
 
         #report-modal, #cloud-modal, #history-modal, #time-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 700px; max-height: 85%; background: #ffffff; color: #1e293b; z-index: 2000; border-radius: 20px; padding: 20px; overflow-y: auto; box-shadow: 0 0 50px rgba(0,0,0,0.4); box-sizing: border-box; }
         .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; overflow-x: auto; display: block; }
@@ -254,37 +253,20 @@
 <body>
 
     <script>
-        // ثيمات العرض (تعمل تلقائياً عند فتح الصفحة سواء للمعلم أو للطالب)
         const themes = [
-            { name: "الأزرق الملكي", bg: "#f1f5f9", subBg: "#f8fafc", primary: "#1e3a8a", purple: "#4f46e5", text: "#1e293b", card: "#ffffff", border: "#cbd5e1" },
-            { name: "الأخضر الزمردي", bg: "#ecfdf5", subBg: "#f0fdf4", primary: "#065f46", purple: "#059669", text: "#064e3b", card: "#ffffff", border: "#a7f3d0" },
-            { name: "البنفسجي الملكي", bg: "#f5f3ff", subBg: "#faf5ff", primary: "#5b21b6", purple: "#7c3aed", text: "#2e1065", card: "#ffffff", border: "#ddd6fe" },
-            { name: "الأزرق السماوي", bg: "#f0f9ff", subBg: "#e0f2fe", primary: "#0369a1", purple: "#0284c7", text: "#0c4a6e", card: "#ffffff", border: "#bae6fd" },
-            { name: "الذهبي الدافئ", bg: "#fffbeb", subBg: "#fef3c7", primary: "#92400e", purple: "#d97706", text: "#451a03", card: "#ffffff", border: "#fde68a" },
-            { name: "الوردي الهادئ", bg: "#fdf2f8", subBg: "#fce7f3", primary: "#9d174d", purple: "#db2777", text: "#500724", card: "#ffffff", border: "#fbcfe8" },
-            { name: "الفيروزي المنعش", bg: "#f0fdfa", subBg: "#ccfbf1", primary: "#115e59", purple: "#0d9488", text: "#134e4a", card: "#ffffff", border: "#99f6e4" },
-            { name: "المرجاني الحيوي", bg: "#fff1f2", subBg: "#ffe4e6", primary: "#9f1239", purple: "#e11d48", text: "#4c0519", card: "#ffffff", border: "#fecdd3" },
-            { name: "النيلي العميق", bg: "#eef2ff", subBg: "#e0e7ff", primary: "#3730a3", purple: "#4338ca", text: "#1e1b4b", card: "#ffffff", border: "#c7d2fe" },
-            { name: "الأرجواني الناعم", bg: "#fdf4ff", subBg: "#fae8ff", primary: "#86198f", purple: "#c026d3", text: "#4a044e", card: "#ffffff", border: "#f5d0fe" },
-            { name: "الرمادي العصري", bg: "#f4f4f5", subBg: "#e4e4e7", primary: "#27272a", purple: "#52525b", text: "#18181b", card: "#ffffff", border: "#d4d4d8" },
-            { name: "البرتقالي المشرق", bg: "#fff7ed", subBg: "#ffedd5", primary: "#9a3412", purple: "#ea580c", text: "#431407", card: "#ffffff", border: "#fed7aa" }
+            { bg: "#f8fafc", primary: "#1e3a8a", purple: "#7c3aed", text: "#1e293b", card: "#ffffff", border: "#e2e8f0" },
+            { bg: "#fdf4ff", primary: "#86198f", purple: "#c084fc", text: "#1e293b", card: "#ffffff", border: "#f5d0fe" },
+            { bg: "#f0fdf4", primary: "#166534", purple: "#059669", text: "#1e293b", card: "#ffffff", border: "#bbf7d0" },
+            { bg: "#fffbeb", primary: "#b45309", purple: "#d97706", text: "#1e293b", card: "#ffffff", border: "#fde68a" },
+            { bg: "#fdf2f8", primary: "#9d174d", purple: "#db2777", text: "#1e293b", card: "#ffffff", border: "#fbcfe8" },
+            { bg: "#f0f9ff", primary: "#0369a1", purple: "#0284c7", text: "#1e293b", card: "#ffffff", border: "#bae6fd" }
         ];
 
-        let lastThemeIdx = sessionStorage.getItem('fifi_last_theme_idx');
-        let randomIdx = Math.floor(Math.random() * themes.length);
-        if (lastThemeIdx !== null && themes.length > 1) {
-            while (randomIdx === parseInt(lastThemeIdx)) {
-                randomIdx = Math.floor(Math.random() * themes.length);
-            }
-        }
-        sessionStorage.setItem('fifi_last_theme_idx', randomIdx);
-
-        const selectedTheme = themes[randomIdx];
+        const selectedTheme = themes[Math.floor(Math.random() * themes.length)];
         const root = document.documentElement;
         root.style.setProperty('--royal-blue', selectedTheme.primary);
         root.style.setProperty('--k-purple', selectedTheme.purple);
         root.style.setProperty('--bg-page', selectedTheme.bg);
-        root.style.setProperty('--sub-bg', selectedTheme.subBg);
         root.style.setProperty('--text-color', selectedTheme.text);
         root.style.setProperty('--card-bg', selectedTheme.card);
         root.style.setProperty('--card-border', selectedTheme.border);
@@ -374,7 +356,7 @@
     <div id="student-auth-container" style="display:none;">
         <div class="auth-card">
             <h2 style="color: var(--royal-blue); margin-top: 0; font-size:1.4rem;"><i class="fas fa-user-graduate"></i> تسجيل دخول الطالب 🎓</h2>
-            <div id="student-exam-title-badge" style="background: var(--sub-bg); color: var(--royal-blue); padding: 10px 15px; border-radius: 10px; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; border: 1px solid var(--card-border); display: none;"></div>
+            <div id="student-exam-title-badge" style="background: #e0f2fe; color: #0369a1; padding: 10px 15px; border-radius: 10px; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; border: 1px solid #bae6fd; display: none;"></div>
             <p style="color: #64748b; margin-bottom: 20px; font-size:0.95rem;">الرجاء إدخال إيميل منصة مدرستي المعتمد لبدء الاختبار:</p>
             <input type="email" id="studentEmailInput" class="auth-input" placeholder="sxxxxxxx@rb.moe.gov.sa">
             <br>
@@ -387,22 +369,22 @@
     </div>
 
     <div class="search-result-box admin-only">
-        <label style="display: block; font-weight: bold; color: var(--royal-blue); margin-bottom: 8px; font-size:0.95rem;"><i class="fas fa-search"></i> استعلام ومراجعة درجات الطلاب حسب النموذج (خاص بالمعلم):</label>
+        <label style="display: block; font-weight: bold; color: #0284c7; margin-bottom: 8px; font-size:0.95rem;"><i class="fas fa-search"></i> استعلام ومراجعة درجات الطلاب حسب النموذج (خاص بالمعلم):</label>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <select id="teacherModelSelect" class="styled-select-input" style="flex: 1; margin: 0; font-size: 1rem; padding: 10px;">
                 <option value="">-- اختر النموذج المطلوب استعراضه --</option>
             </select>
-            <button class="btn" style="background: var(--royal-blue); padding: 10px 20px;" onclick="teacherSearchByModel()"><i class="fas fa-search"></i> استعراض النتائج</button>
+            <button class="btn" style="background: #0284c7; padding: 10px 20px;" onclick="teacherSearchByModel()"><i class="fas fa-search"></i> استعراض النتائج</button>
         </div>
     </div>
 
     <div class="array-import-box admin-only">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <label style="font-weight: bold; color: var(--royal-blue); font-size:0.95rem;"><i class="fas fa-file-code"></i> مصفوفة الأسئلة البرمجية (تتحدث وتُحفظ تلقائياً):</label>
+            <label style="font-weight: bold; color: #0284c7; font-size:0.95rem;"><i class="fas fa-file-code"></i> مصفوفة الأسئلة البرمجية (تتحدث وتُحفظ تلقائياً):</label>
             <button class="btn" style="background:#10b981; padding:6px 12px; font-size:0.8rem;" onclick="copyArrayCode()"><i class="fas fa-copy"></i> نسخ المصفوفة</button>
         </div>
         <textarea id="arrayInputText" class="array-textarea" placeholder="[ { t: '...', q: '...', ... } ]"></textarea>
-        <button class="btn" style="background: var(--royal-blue); width:100%; justify-content:center;" onclick="importArrayQuestions()"><i class="fas fa-magic"></i> توليد وتوزيع الأسئلة تلقائياً</button>
+        <button class="btn" style="background:#0284c7; width:100%; justify-content:center;" onclick="importArrayQuestions()"><i class="fas fa-magic"></i> توليد وتوزيع الأسئلة تلقائياً</button>
     </div>
 
     <!-- شريط الوقت التنازلي داخل الاختبار للطالب -->
@@ -756,15 +738,14 @@
                 let studentAns = data?.studentAns || {};
                 let subScores = data?.subScores || data?.matchScores || leftOpts.map(() => 1);
 
-                let leftHtml = `<div class="matching-box"><h4 style="margin:0 0 10px; color:var(--royal-blue); font-size:1rem;">${isStudent ? 'الفقرات (العمود الأول):' : 'الفقرات (العمود الأول مع درجة كل فقرة):'}</h4>`;
+                let leftHtml = `<div class="matching-box"><h4 style="margin:0 0 10px; color:var(--royal-blue); font-size:1rem;">الفقرات (العمود الأول مع درجة كل فقرة):</h4>`;
                 leftOpts.forEach((item, idx) => {
                     let sVal = studentAns[idx] || '';
                     let subScoreVal = subScores[idx] !== undefined ? subScores[idx] : 1;
-                    // تم إزالة الترقيم من العمود الأول هنا ليظهر النص مباشرة بدون أرقام للطالب
                     leftHtml += `<div class="matching-row" data-subscore="${subScoreVal}">
-                        ${!isStudent ? `<input type="text" class="opt opt-left" value="${item}" placeholder="فقرة ${idx+1}" oninput="saveAll()" style="padding:6px; border:1px solid #cbd5e1; border-radius:6px; text-align:right;">` : `<span style="flex:1; font-weight:bold;">${item}</span>`}
+                        ${!isStudent ? `<input type="text" class="opt opt-left" value="${item}" placeholder="فقرة ${idx+1}" oninput="saveAll()" style="padding:6px; border:1px solid #cbd5e1; border-radius:6px; text-align:right;">` : `<span style="flex:1;">${idx+1})${item}</span>`}
                         ${!isStudent ? `<input type="number" min="0.5" step="0.5" class="sub-score-input" value="${subScoreVal}" oninput="saveAll()" title="درجة هذه الفقرة">` : ``}
-                        <input type="text" class="matching-ans-input" data-left-idx="${idx}" ${isStudent ? `oninput="validateMatchingInput(this, ${rightOpts.length})"` : 'disabled placeholder="رقم الإجابة"'} value="${sVal}" style="width:55px; text-align:center; padding:6px; border:2px solid var(--royal-blue); border-radius:8px; font-weight:bold; background:#fff;" maxlength="2">
+                        <input type="text" class="matching-ans-input" data-left-idx="${idx}" ${isStudent ? `oninput="validateMatchingInput(this, ${rightOpts.length})"` : 'disabled placeholder="رقم الإجابة"'} value="${sVal}" style="width:50px; text-align:center; padding:6px; border:1px solid #cbd5e1; border-radius:6px; font-weight:bold;" maxlength="2">
                     </div>`;
                 });
                 leftHtml += `<div class="matching-error-msg"></div>`;
@@ -776,10 +757,10 @@
                 }
                 leftHtml += '</div>';
 
-                let rightHtml = `<div class="matching-box"><h4 style="margin:0 0 10px; color:var(--royal-blue); font-size:1rem;">الإجابات (العمود الثاني):</h4>`;
+                let rightHtml = `<div class="matching-box"><h4 style="margin:0 0 10px; color:var(--royal-blue); font-size:1rem;">الإجابات (العمود الثاني): مدعمة بـ (${rightOpts.length} إجابات متاحة)</h4>`;
                 rightOpts.forEach((item, idx) => {
                     rightHtml += `<div class="matching-row">
-                        <span style="font-weight:bold; color:var(--royal-blue); width:24px;">${idx+1}.</span>
+                        <span style="font-weight:bold; color:#0284c7; width:20px;">${idx+1}.</span>
                         ${!isStudent ? `<input type="text" class="opt opt-right" value="${item}" placeholder="إجابة ${idx+1}" oninput="saveAll()" style="padding:6px; border:1px solid #cbd5e1; border-radius:6px; text-align:right;">` : `<span style="flex:1;">${item}</span>`}
                     </div>`;
                 });
@@ -797,14 +778,14 @@
                 let subScores = data?.subScores || enumItems.map(() => 1);
                 let studentAns = data?.studentAns || {};
 
-                let html = `<div style="width:100%; background:var(--sub-bg); border:1px solid var(--card-border); padding:15px; border-radius:12px; box-sizing:border-box;">
-                    <h4 style="margin:0 0 10px; color:var(--royal-blue); font-size:1rem;">عناصر التعداد المطلوب من الطالب إجابتها:</h4>`;
+                let html = `<div style="width:100%; background:#f8fafc; border:1px solid #cbd5e1; padding:15px; border-radius:12px; box-sizing:border-box;">
+                    <h4 style="margin:0 0 10px; color:var(--royal-blue); font-size:1rem;">عناصر التعداد المطلوب من الطالب إجابتها مع درجاتها:</h4>`;
                 
                 enumItems.forEach((item, idx) => {
                     let sVal = studentAns[idx] || '';
                     let subScoreVal = subScores[idx] !== undefined ? subScores[idx] : 1;
                     html += `<div class="enum-row" data-subscore="${subScoreVal}" data-enum-target="${item.replace(/"/g, '&quot;')}" style="margin-bottom:10px;">
-                        <span style="font-weight:bold; color:var(--royal-blue); width:20px;">${idx+1}.</span>
+                        <span style="font-weight:bold; color:#0284c7; width:20px;">${idx+1}.</span>
                         ${!isStudent ? `<input type="text" class="enum-label-input" value="${item}" placeholder="مفتاح الإجابة لهذا العنصر" oninput="saveAll()" style="padding:6px; border:1px solid #cbd5e1; border-radius:6px; text-align:right;">` : `<span style="flex:1;">عنصر ${idx+1}</span>`}
                         ${!isStudent ? `<input type="number" min="0.5" step="0.5" class="sub-score-input" value="${subScoreVal}" oninput="saveAll()" title="درجة هذا العنصر">` : ``}
                         <input type="text" class="enum-ans-input" data-enum-idx="${idx}" ${isStudent ? 'oninput="this.closest(\'.question-card\').classList.remove(\'unanswered-alert\')"' : 'disabled placeholder="مربع إجابة الطالب للعنصر"'} value="${sVal}" style="flex:2; padding:6px; border:1px solid #cbd5e1; border-radius:6px; font-weight:bold;">
@@ -823,7 +804,7 @@
                 const studentVal = (isStudent && data?.studentAns) ? data.studentAns : '';
                 const readonlyAttr = isStudent ? 'oninput="this.closest(\'.question-card\').classList.remove(\'unanswered-alert\')"' : 'disabled placeholder="مربع إجابة الطالب (سيظهر للطالب أثناء الاختبار هنا)..."';
                 return `<div>
-                    <label style="display:block; font-weight:bold; color:var(--royal-blue); margin-bottom:5px; font-size:0.9rem;">إجابة الطالب التحريرية:</label>
+                    <label style="display:block; font-weight:bold; color:#0284c7; margin-bottom:5px; font-size:0.9rem;">إجابة الطالب التحريرية:</label>
                     <textarea class="student-answer-textarea" ${readonlyAttr}>${studentVal}</textarea>
                 </div>`;
             } else {

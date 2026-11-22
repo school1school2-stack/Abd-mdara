@@ -213,6 +213,15 @@
             50% { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
         }
 
+        /* شريط تنبيه الخروج المباشر الظاهر أعلى المنصة عند وجود محاولات */
+        .live-exit-alert-banner {
+            width: 100%; max-width: 850px; background: #fef2f2; border: 2px solid #f87171;
+            color: #991b1b; border-radius: 15px; padding: 12px 18px; margin-bottom: 18px;
+            display: none; justify-content: space-between; align-items: center; gap: 12px;
+            flex-wrap: wrap; box-sizing: border-box; font-weight: bold; font-size: 0.92rem;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.12);
+        }
+
         /* ========================================================
            بطاقة السؤال وعرض سؤال واحد في كل مرة للطالب
            ======================================================== */
@@ -452,6 +461,17 @@
 
     <!-- إشعار عائم -->
     <div id="toastBanner" class="toast-banner"></div>
+
+    <!-- شريط تنبيه مباشر لعدد مرات الخروج أو الإيقاف -->
+    <div id="liveExitAlertBanner" class="live-exit-alert-banner">
+        <div id="liveExitAlertText">
+            <i class="fas fa-exclamation-triangle" style="color:#dc2626;"></i>
+            <span>تنبيه: تم إيقاف الاختبار أو الخروج منه.</span>
+        </div>
+        <button type="button" class="btn" style="background:#dc2626; padding:6px 14px; font-size:0.82rem;" onclick="teacherSearchByModel()">
+            <i class="fas fa-eye"></i> عرض سجل الخروج
+        </button>
+    </div>
 
     <!-- خلفية النوافذ المنبثقة -->
     <div id="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1999;" onclick="closeModals()"></div>
@@ -947,6 +967,54 @@
             if (!badge || !examId || !authenticatedStudentEmail) return;
             const data = getStudentExitData(examId, authenticatedStudentEmail);
             badge.innerText = `${data.count} ⚠️`;
+            refreshLiveExitBanner();
+        }
+
+        async function refreshLiveExitBanner() {
+            const banner = document.getElementById('liveExitAlertBanner');
+            const textEl = document.getElementById('liveExitAlertText');
+            if (!banner || !textEl) return;
+
+            // إذا كان المعلم في وضع الإدارة، نتحقق من وجود محاولات خروج مسجلة في Realtime Database
+            if (!document.body.classList.contains('student-mode')) {
+                try {
+                    const snap = await rtdb.ref('exam_integrity').once('value');
+                    if (snap.exists()) {
+                        let totalAlerts = 0;
+                        let summaryParts = [];
+                        const examsObj = snap.val();
+                        Object.keys(examsObj).forEach(exKey => {
+                            const studentsObj = examsObj[exKey] || {};
+                            Object.keys(studentsObj).forEach(stKey => {
+                                const rec = studentsObj[stKey];
+                                if (rec && (rec.exitCount || 0) > 0) {
+                                    totalAlerts += rec.exitCount;
+                                    summaryParts.push(`${rec.name || rec.email}: تم إيقاف الاختبار ${rec.exitCount} مرة`);
+                                }
+                            });
+                        });
+                        if (totalAlerts > 0) {
+                            textEl.innerHTML = `<i class="fas fa-exclamation-triangle" style="color:#dc2626;"></i> <span>تنبيه للمعلم (${totalAlerts} محاولة خروج): ${summaryParts.slice(0, 3).join(' | ')}</span>`;
+                            banner.style.display = 'flex';
+                            return;
+                        }
+                    }
+                } catch (e) {}
+                banner.style.display = 'none';
+                return;
+            }
+
+            // في وضع الطالب: نعرض له تنبيهاً واضحاً إذا سبق أن خرج أو أوقف الاختبار
+            const examId = new URLSearchParams(window.location.search).get('exam');
+            if (examId && authenticatedStudentEmail) {
+                const data = getStudentExitData(examId, authenticatedStudentEmail);
+                if (data.count > 0) {
+                    textEl.innerHTML = `<i class="fas fa-exclamation-triangle" style="color:#dc2626;"></i> <span>تنبيه للطالب (${authenticatedStudentName}): تم إيقاف الاختبار (${data.count}) مرة وسيصل ذلك للمعلم.</span>`;
+                    banner.style.display = 'flex';
+                    return;
+                }
+            }
+            banner.style.display = 'none';
         }
 
         // 1. رصد تحديث الصفحة أو إغلاق التبويب أثناء أداء الطالب للاختبار
@@ -2767,6 +2835,7 @@
         function loadQuestions() { 
             updateSoundButtonUI();
             populateTeacherModelDropdown();
+            refreshLiveExitBanner();
             const id = new URLSearchParams(window.location.search).get('exam'); 
             if (id) { 
                 document.body.classList.add('student-mode'); 

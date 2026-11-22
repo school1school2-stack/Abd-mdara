@@ -652,21 +652,117 @@
 
     <script>
         /* ==========================================
-           نظام النوافذ المخصصة والإشعارات (بديل alert/confirm)
+           نظام تتبع وتسجيل محاولات خروج الطالب / الإيقاف / التحديث (سحابي + محلي)
            ========================================== */
-        let toastTimeout = null;
-        function showToast(msg, type = 'info') {
-            const toast = document.getElementById('toastBanner');
-            if (!toast) return;
-            let icon = '<i class="fas fa-info-circle" style="color:#38bdf8;"></i>';
-            if (type === 'success') icon = '<i class="fas fa-check-circle" style="color:#10b981;"></i>';
-            if (type === 'error') icon = '<i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i>';
-            toast.innerHTML = `${icon} <span>${msg}</span>`;
-            toast.classList.add('show');
-            if (toastTimeout) clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3800);
+        let cachedCloudExitData = { count: 0, logs: [] };
+
+        function getExitTrackerKey(examId, email) {
+            const safeExam = (examId || 'general').replace(/[^a-zA-Z0-9\u0600-\u06FF_-]/g, '_');
+            const safeEmail = (email || 'unknown').toLowerCase().trim();
+            return `exam_exit_tracker_${safeExam}_${safeEmail}`;
+        }
+
+        function getActiveExamStorageKey(examId) {
+            const safeExam = (examId || 'general').replace(/[^a-zA-Z0-9\u0600-\u06FF_-]/g, '_');
+            return `fifi_active_exam_lock_${safeExam}`;
+        }
+
+        function getStudentExitData(examId, email) {
+            if (!examId || !email) return { count: 0, logs: [] };
+            let localData = { count: 0, logs: [] };
+            try {
+                const raw = localStorage.getItem(getExitTrackerKey(examId, email));
+                if (raw) localData = JSON.parse(raw);
+            } catch (e) {}
+
+            // دمج السجل المحلي مع السجل السحابي المسترجع من الجهاز الآخر لضمان عدم التصفير أبداً
+            if (cachedCloudExitData && (cachedCloudExitData.count || 0) > (localData.count || 0)) {
+                return {
+                    count: cachedCloudExitData.count,
+                    logs: cachedCloudExitData.logs && cachedCloudExitData.logs.length > 0 ? cachedCloudExitData.logs : (localData.logs || [])
+                };
+            }
+            return localData;
+        }
+
+        async function syncStudentExitDataFromCloud(examId, email) {
+            if (!examId || !email) return { count: 0, logs: [] };
+            const safeExamPath = examId.replace(/[.#$\[\]]/g, '_');
+            const safeEmailPath = email.toLowerCase().trim().replace(/[.#$\[\]]/g, '_');
+            const localData = getStudentExitData(examId, email);
+            let cloudCount = localData.count || 0;
+            let cloudLogs = localData.logs || [];
+
+            try {
+                const snap = await rtdb.ref(`exam_integrity/${safeExamPath}/${safeEmailPath}`).once('value');
+                if (snap.exists()) {
+                    const val = snap.val();
+                    if ((val.exitCount || 0) >= cloudCount) {
+                        cloudCount = val.exitCount || 0;
+                        if (Array.isArray(val.logs) && val.logs.length > 0) {
+                            cloudLogs = val.logs;
+                        }
+                    }
+                }
+            } catch (e) {}
+
+            cachedCloudExitData = { count: cloudCount, logs: cloudLogs };
+            localStorage.setItem(getExitTrackerKey(examId, email), JSON.stringify(cachedCloudExitData));
+            updateHudExitCounterDisplay();
+            return cachedCloudExitData;
+        }
+
+        function recordStudentExitAttempt(examId, email, reason) {
+            if (!examId || !email) return 0;
+            const cleanEmail = email.toLowerCase().trim();
+            const key = getExitTrackerKey(examId, cleanEmail);
+            const data = getStudentExitData(examId, cleanEmail);
+            const newCount = (data.count || 0) + 1;
+            const newLogEntry = {
+                reason: reason,
+                time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            };
+            const updatedLogs = [...(data.logs || []), newLogEntry];
+
+            cachedCloudExitData = { count: newCount, logs: updatedLogs };
+            localStorage.setItem(key, JSON.stringify(cachedCloudExitData));
+            updateHudExitCounterDisplay();
+
+            // مزامنة فورية في Realtime Database مع استخدام transaction لضمان التراكم عبر جميع الأجهزة
+            try {
+                const safeExamPath = examId.replace(/[.#$\[\]]/g, '_');
+                const safeEmailPath = cleanEmail.replace(/[.#$\[\]]/g, '_');
+                const integrityRef = rtdb.ref(`exam_integrity/${safeExamPath}/${safeEmailPath}`);
+
+                integrityRef.transaction((currentCloud) => {
+                    const prevCloudCount = (currentCloud && currentCloud.exitCount) ? currentCloud.exitCount : 0;
+                    const finalCount = Math.max(prevCloudCount + 1, newCount);
+                    const prevCloudLogs = (currentCloud && Array.isArray(currentCloud.logs)) ? currentCloud.logs : [];
+                    const mergedLogs = prevCloudLogs.length >= updatedLogs.length
+                        ? [...prevCloudLogs, newLogEntry]
+                        : updatedLogs;
+
+                    return {
+                        name: authenticatedStudentName || (currentCloud && currentCloud.name) || cleanEmail,
+                        email: cleanEmail,
+                        exitCount: finalCount,
+                        logs: mergedLogs,
+                        lastUpdated: new Date().toLocaleString('ar-SA')
+                    };
+                }, (error, committed, snapshot) => {
+                    if (!error && committed && snapshot && snapshot.exists()) {
+                        const syncedVal = snapshot.val();
+                        cachedCloudExitData = {
+                            count: syncedVal.exitCount || newCount,
+                            logs: syncedVal.logs || updatedLogs
+                        };
+                        localStorage.setItem(key, JSON.stringify(cachedCloudExitData));
+                        updateHudExitCounterDisplay();
+                    }
+                });
+            } catch (e) {}
+
+            return newCount;
         }
 
         function showCustomConfirm(title, message, onConfirm, confirmText = "نعم، متأكد", confirmColor = "var(--royal-blue)") {
@@ -1912,6 +2008,9 @@
                     return;
                 }
 
+                // جلب سجل محاولات الخروج السابقة من السحابة حتى لو انتقل الطالب لجهاز آخر أو نسخ الرابط
+                const syncedExitData = await syncStudentExitDataFromCloud(examId, authenticatedStudentEmail);
+
                 localStorage.removeItem('submitted_' + examId);
                 const sessionPayload = JSON.stringify({
                     email: authenticatedStudentEmail,
@@ -1943,10 +2042,10 @@
                     startStudentCountdownTimer();
                 }
 
-                const existingExits = getStudentExitData(examId, authenticatedStudentEmail).count;
+                const existingExits = syncedExitData.count || 0;
                 playSound('success');
                 if (existingExits > 0) {
-                    showToast(`أهلاً يا ${authenticatedStudentName}، تنبيه: مسجل عليك (${existingExits}) محاولة خروج سابقة ستظهر للمعلم!`, "error");
+                    showToast(`أهلاً يا ${authenticatedStudentName}، تنبيه: مسجل عليك (${existingExits}) محاولة خروج سابقة (من هذا الجهاز أو جهاز آخر) ستظهر للمعلم!`, "error");
                 } else {
                     showToast(`أهلاً بك يا ${authenticatedStudentName} 🌟، بدأ المؤقت التنازلي والمراقبة نشطة!`, "success");
                 }
@@ -2452,6 +2551,8 @@
             });
 
             const examId = new URLSearchParams(window.location.search).get('exam') || "اختبار عام";
+            // مزامنة نهائية من السحابة قبل حفظ النتيجة لضمان دمج أي محاولات مسجلة من جهاز آخر
+            await syncStudentExitDataFromCloud(examId, authenticatedStudentEmail);
             const exitTrackerData = getStudentExitData(examId, authenticatedStudentEmail);
             const exitCountVal = exitTrackerData.count || 0;
             const exitSummaryText = `تم إيقاف الاختبار ${exitCountVal} مرة`;

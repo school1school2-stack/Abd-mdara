@@ -151,9 +151,11 @@
             padding: 6px 14px; text-align: center; min-width: 75px;
         }
         .hud-stat-pill.streak { background: #fffbeb; border-color: #fde68a; }
+        .hud-stat-pill.exits { background: #fef2f2; border-color: #fecaca; }
         .hud-stat-label { font-size: 0.72rem; color: #64748b; font-weight: bold; display: block; }
         .hud-stat-value { font-size: 1rem; font-weight: 800; color: #0369a1; }
         .hud-stat-pill.streak .hud-stat-value { color: #d97706; }
+        .hud-stat-pill.exits .hud-stat-value { color: #dc2626; }
 
         .hud-timer-group {
             display: flex; align-items: center; gap: 10px;
@@ -193,6 +195,23 @@
             background: #ffe4e6; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(225, 29, 72, 0.15);
         }
         .btn-stop-exit:active { transform: scale(0.95); }
+
+        /* شارات التنبيه للمعلم بعدد مرات الخروج */
+        .exit-badge-clean {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #dcfce7; color: #166534; border: 1px solid #86efac;
+            padding: 3px 10px; border-radius: 50px; font-size: 0.82rem; font-weight: bold;
+        }
+        .exit-badge-alert {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;
+            padding: 3px 10px; border-radius: 50px; font-size: 0.82rem; font-weight: bold;
+            animation: pulseBadge 2s infinite;
+        }
+        @keyframes pulseBadge {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+            50% { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+        }
 
         /* ========================================================
            بطاقة السؤال وعرض سؤال واحد في كل مرة للطالب
@@ -363,11 +382,11 @@
 
         #report-modal, #cloud-modal, #history-modal, #time-modal, #custom-dialog-modal { 
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 95%; max-width: 700px; max-height: 85%; background: #ffffff; color: #1e293b; 
+            width: 95%; max-width: 750px; max-height: 85%; background: #ffffff; color: #1e293b; 
             z-index: 2000; border-radius: 20px; padding: 24px; overflow-y: auto; 
             box-shadow: 0 0 50px rgba(0,0,0,0.4); box-sizing: border-box; 
         }
-        #custom-dialog-modal { max-width: 450px; z-index: 2100; text-align: center; }
+        #custom-dialog-modal { max-width: 470px; z-index: 2100; text-align: center; }
 
         .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; overflow-x: auto; display: block; }
         .report-table th, .report-table td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-size: 0.9rem; }
@@ -441,7 +460,7 @@
     <div id="custom-dialog-modal">
         <div id="customDialogIcon" style="font-size: 2.5rem; margin-bottom: 10px; color: var(--royal-blue);"></div>
         <h3 id="customDialogTitle" style="margin: 0 0 10px; color: var(--royal-blue); font-size: 1.25rem;"></h3>
-        <p id="customDialogMessage" style="color: #475569; font-size: 1rem; margin-bottom: 20px; line-height: 1.6;"></p>
+        <p id="customDialogMessage" style="color: #475569; font-size: 1rem; margin-bottom: 20px; line-height: 1.6; white-space: pre-line;"></p>
         <input type="text" id="customDialogInput" style="display:none; width:100%; padding:12px; border:2px solid #cbd5e1; border-radius:10px; margin-bottom:18px; font-family:inherit; font-size:1rem; text-align:center; box-sizing:border-box;">
         <div id="customDialogButtons" style="display: flex; gap: 10px; justify-content: center;"></div>
     </div>
@@ -489,6 +508,7 @@
     <div id="report-modal">
         <h2 style="text-align: center; color: var(--royal-blue); font-size:1.3rem;" id="report-modal-title">تقرير أداء الطالب 🎯</h2>
         <div id="score-summary" style="text-align: center; font-size: 1.2rem; font-weight: bold; margin: 15px 0;"></div>
+        <div id="report-integrity-box" style="margin-bottom: 15px;"></div>
         <table class="report-table">
             <thead>
                 <tr id="report-table-header"><th>#</th><th>السؤال</th><th>نوعه</th><th>إجابتك</th><th>الصحيحة</th><th>الدرجة</th></tr>
@@ -539,6 +559,12 @@
         <div class="auth-card">
             <h2 style="color: var(--royal-blue); margin-top: 0; font-size:1.4rem;"><i class="fas fa-user-graduate"></i> تسجيل دخول الطالب 🎓</h2>
             <div id="student-exam-title-badge" style="background: #e0f2fe; color: #0369a1; padding: 10px 15px; border-radius: 10px; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; border: 1px solid #bae6fd; display: none;"></div>
+            
+            <!-- تنبيه نظام المراقبة الاستباقي للطالب -->
+            <div style="background: #fffbeb; border: 1.5px solid #fcd34d; color: #92400e; padding: 12px 16px; border-radius: 12px; font-size: 0.92rem; font-weight: bold; margin-bottom: 18px; line-height: 1.6;">
+                <i class="fas fa-shield-alt" style="color: #d97706;"></i> تنبيه هام: نظام المراقبة الذكي مفعّل؛ أي محاولة للخروج من الاختبار أو إيقافه أو تحديث الصفحة أو مغادرة الشاشة سيتم رصدها وإرسال تنبيه فوري للمعلم بعدد المرات.
+            </div>
+
             <p style="color: #64748b; margin-bottom: 20px; font-size:0.95rem;">الرجاء إدخال إيميل منصة مدرستي المعتمد لبدء الاختبار:</p>
             <input type="email" id="studentEmailInput" class="auth-input" placeholder="sxxxxxxx@rb.moe.gov.sa">
             <br>
@@ -547,8 +573,8 @@
                 <button class="btn" style="background: var(--royal-blue); padding: 12px 20px; font-size: 1rem;" onclick="openStudentHistory()"><i class="fas fa-history"></i> سجل اختباراتي 📊</button>
             </div>
             <p id="auth-status-msg" style="margin-top: 15px; font-weight: bold; font-size:0.95rem;"></p>
-            <div id="student-reload-notice" style="display:none; margin-top: 14px; color: #d97706; font-weight: bold; font-size: 0.95rem;">
-                ⏸️ تم إيقاف الاختبار والخروج منه.
+            <div id="student-reload-notice" style="display:none; margin-top: 16px; background: #fef2f2; border: 1.5px solid #fecaca; color: #b91c1c; padding: 12px 16px; border-radius: 12px; font-weight: bold; font-size: 0.95rem;">
+                ⚠️ تنبيه: تم إيقاف الاختبار والخروج منه أو تحديث الصفحة! تم تسجيل هذه المحاولة وإرسال إشعار للمعلم.
             </div>
         </div>
     </div>
@@ -587,6 +613,10 @@
             <div class="hud-stat-pill streak">
                 <span class="hud-stat-label">المُجابة</span>
                 <span class="hud-stat-value" id="hudAnsweredCount">0 🔥</span>
+            </div>
+            <div class="hud-stat-pill exits" title="عدد مرات الخروج أو إيقاف الاختبار المرصودة">
+                <span class="hud-stat-label">مرات الخروج</span>
+                <span class="hud-stat-value" id="hudExitCountBadge">0 ⚠️</span>
             </div>
         </div>
 
@@ -633,13 +663,13 @@
             if (toastTimeout) clearTimeout(toastTimeout);
             toastTimeout = setTimeout(() => {
                 toast.classList.remove('show');
-            }, 3400);
+            }, 3800);
         }
 
         function showCustomConfirm(title, message, onConfirm, confirmText = "نعم، متأكد", confirmColor = "var(--royal-blue)") {
             const modal = document.getElementById('custom-dialog-modal');
             const overlay = document.getElementById('modal-overlay');
-            document.getElementById('customDialogIcon').innerHTML = '<i class="fas fa-question-circle"></i>';
+            document.getElementById('customDialogIcon').innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#e11d48;"></i>';
             document.getElementById('customDialogTitle').innerText = title;
             document.getElementById('customDialogMessage').innerText = message;
             const inputEl = document.getElementById('customDialogInput');
@@ -648,7 +678,7 @@
             const btnsEl = document.getElementById('customDialogButtons');
             btnsEl.innerHTML = `
                 <button type="button" class="btn" style="background:${confirmColor}; flex:1; justify-content:center;" id="dialogConfirmBtn">${confirmText}</button>
-                <button type="button" class="btn" style="background:#64748b; flex:1; justify-content:center;" onclick="closeModals()">إلغاء</button>
+                <button type="button" class="btn" style="background:#64748b; flex:1; justify-content:center;" onclick="closeModals()">تراجع وإكمال الاختبار</button>
             `;
             modal.style.display = 'block';
             overlay.style.display = 'block';
@@ -708,7 +738,6 @@
                 const now = ctx.currentTime;
 
                 if (type === 'tick') {
-                    // صوت تكتكة ساعة ناعمة للعداد التنازلي
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     osc.type = 'sine';
@@ -722,7 +751,6 @@
                     osc.stop(now + 0.03);
 
                 } else if (type === 'tick_urgent') {
-                    // صوت تنبيه أسرع في آخر دقيقة
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     osc.type = 'triangle';
@@ -834,7 +862,7 @@
         });
 
         /* ==========================================
-           متغيرات المنصة ونظام التنقل والوقت التنازلي
+           متغيرات المنصة ونظام التنقل والوقت التنازلي ومراقبة الغش
            ========================================== */
         let authenticatedStudentEmail = "";
         let authenticatedStudentName = "";
@@ -842,10 +870,12 @@
         let currentOpenModelName = null;
         let currentExamStartTime = "";
         let currentExamEndTime = "";
-        let currentExamDurationMinutes = 0; // مدة الاختبار بالدقائق
+        let currentExamDurationMinutes = 0;
         let examTimerInterval = null;
         let remainingSeconds = 0;
         let currentStudentQuestionIndex = 0;
+        let isExamActivelyRunning = false; // هل الطالب داخل الاختبار الآن؟
+        let lastBlurTimestamp = 0; // لمنع تكرار احتساب الخروج في نفس اللحظة
 
         const firebaseConfig = {
             apiKey: "AIzaSyAVrIim7aXjg0hGrMk0qVrXT8geRIpHoBk",
@@ -863,6 +893,94 @@
         const secondaryApp = firebase.apps.length > 1 ? firebase.apps[1] : firebase.initializeApp(firestoreConfig, "secondary");
         const fsDb = secondaryApp.firestore();
         const rtdb = firebase.database();
+
+        /* ==========================================
+           نظام تتبع وتسجيل محاولات خروج الطالب / الإيقاف / التحديث
+           ========================================== */
+        function getExitTrackerKey(examId, email) {
+            const safeExam = (examId || 'general').replace(/[^a-zA-Z0-9\u0600-\u06FF_-]/g, '_');
+            const safeEmail = (email || 'unknown').toLowerCase().trim();
+            return `exam_exit_tracker_${safeExam}_${safeEmail}`;
+        }
+
+        function getStudentExitData(examId, email) {
+            if (!examId || !email) return { count: 0, logs: [] };
+            try {
+                const raw = localStorage.getItem(getExitTrackerKey(examId, email));
+                if (raw) return JSON.parse(raw);
+            } catch (e) {}
+            return { count: 0, logs: [] };
+        }
+
+        function recordStudentExitAttempt(examId, email, reason) {
+            if (!examId || !email) return 0;
+            const key = getExitTrackerKey(examId, email);
+            const data = getStudentExitData(examId, email);
+            data.count = (data.count || 0) + 1;
+            data.logs = data.logs || [];
+            data.logs.push({
+                reason: reason,
+                time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            });
+            localStorage.setItem(key, JSON.stringify(data));
+            updateHudExitCounterDisplay();
+
+            // مزامنة فورية في Realtime Database لكي يراها المعلم حتى لو لم يعتمد الطالب
+            try {
+                const safeExamPath = examId.replace(/[.#$\[\]]/g, '_');
+                const safeEmailPath = email.replace(/[.#$\[\]]/g, '_');
+                rtdb.ref(`exam_integrity/${safeExamPath}/${safeEmailPath}`).set({
+                    name: authenticatedStudentName || email,
+                    email: email,
+                    exitCount: data.count,
+                    logs: data.logs,
+                    lastUpdated: new Date().toLocaleString('ar-SA')
+                });
+            } catch (e) {}
+
+            return data.count;
+        }
+
+        function updateHudExitCounterDisplay() {
+            const examId = new URLSearchParams(window.location.search).get('exam');
+            const badge = document.getElementById('hudExitCountBadge');
+            if (!badge || !examId || !authenticatedStudentEmail) return;
+            const data = getStudentExitData(examId, authenticatedStudentEmail);
+            badge.innerText = `${data.count} ⚠️`;
+        }
+
+        // 1. رصد تحديث الصفحة أو إغلاق التبويب أثناء أداء الطالب للاختبار
+        window.addEventListener('beforeunload', function (e) {
+            if (isExamActivelyRunning && authenticatedStudentEmail) {
+                const examId = new URLSearchParams(window.location.search).get('exam');
+                if (examId && localStorage.getItem('submitted_' + examId) !== 'true') {
+                    // تسجيل محاولة تحديث الصفحة أو إغلاقها فوراً
+                    recordStudentExitAttempt(examId, authenticatedStudentEmail, 'تحديث الصفحة أو إغلاق النافذة أثناء الاختبار');
+                    sessionStorage.setItem('reload_counted_' + examId, 'true');
+
+                    const warningMsg = "⚠️ تحذير: تحديث الصفحة أو إغلاقها سيُحتسب كمحاولة خروج ويصل تنبيه فوري للمعلم!";
+                    e.preventDefault();
+                    e.returnValue = warningMsg;
+                    return warningMsg;
+                }
+            }
+        });
+
+        // 2. رصد تبديل التبويب أو تصغير المتصفح (مغادرة شاشة الاختبار للبحث أو الغش)
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden && isExamActivelyRunning && authenticatedStudentEmail) {
+                const now = Date.now();
+                if (now - lastBlurTimestamp < 2500) return; // تجنب التكرار المزدوج
+                lastBlurTimestamp = now;
+
+                const examId = new URLSearchParams(window.location.search).get('exam');
+                if (examId && localStorage.getItem('submitted_' + examId) !== 'true') {
+                    const newCount = recordStudentExitAttempt(examId, authenticatedStudentEmail, 'مغادرة شاشة الاختبار / فتح نافذة أخرى');
+                    playSound('error');
+                    showToast(`⚠️ تنبيه: تم رصد خروجك من شاشة الاختبار (${newCount} مرة)! سيصل تنبيه بذلك للمعلم.`, "error");
+                }
+            }
+        });
 
         function toggleDropdown(event) {
             event.stopPropagation();
@@ -899,7 +1017,6 @@
 
             if (!loadedExamQuestions || loadedExamQuestions.length === 0) return;
 
-            // خلط ترتيب الأسئلة عشوائياً
             const shuffledQuestions = shuffleArray(loadedExamQuestions);
             shuffledQuestions.forEach(q => {
                 addQuestion(q);
@@ -928,13 +1045,11 @@
                 }
             });
 
-            // تحديث عداد شريط التحدي العلوي
             const progressText = document.getElementById('hudProgressText');
             if (progressText) {
                 progressText.innerText = `${currentStudentQuestionIndex + 1} / ${total}`;
             }
 
-            // تحديث أزرار السابق / التالي / الاعتماد
             const prevBtn = document.getElementById('btnPrevQuestion');
             const nextBtn = document.getElementById('btnNextQuestion');
             const submitBtn = document.getElementById('main-grade-btn');
@@ -989,7 +1104,6 @@
             const circleEl = document.getElementById('hudCircularTimer');
             const statusTextEl = document.getElementById('hudTimerStatusText');
 
-            // حساب المدة بالثواني: إما من مدة الاختبار المحددة بالدقائق أو من وقت الإغلاق
             let durationSec = 0;
             if (currentExamDurationMinutes && parseInt(currentExamDurationMinutes) > 0) {
                 durationSec = parseInt(currentExamDurationMinutes) * 60;
@@ -1039,11 +1153,10 @@
                     circleEl.innerText = "00:00";
                     playSound('error');
                     showToast("⌛ انتهى وقت الاختبار! جاري اعتماد إجاباتك تلقائياً...", "error");
-                    gradeExam(true); // تسليم تلقائي عند انتهاء الوقت
+                    gradeExam(true);
                     return;
                 }
 
-                // تشغيل صوت التكتكة مع كل ثانية تناقصية
                 if (remainingSeconds <= 60) {
                     playSound('tick_urgent');
                 } else {
@@ -1055,19 +1168,24 @@
         }
 
         function confirmStopAndExitExam() {
-            playSound('click');
+            playSound('error');
+            const examId = new URLSearchParams(window.location.search).get('exam') || '';
+            const currentExits = getStudentExitData(examId, authenticatedStudentEmail).count;
+
             showCustomConfirm(
-                "إيقاف والخروج من الاختبار ⚠️",
-                "هل تم إيقاف الاختبار والخروج منه؟",
+                "⚠️ تحذير: إيقاف والخروج من الاختبار",
+                `تنبيه هام: في حال إيقاف الاختبار والخروج منه الآن، سيصل تنبيه فوري للمعلم بعدد مرات خروجك (المسجل حالياً: ${currentExits} مرة، وسيصبح ${currentExits + 1}).\n\nهل تريد فعلاً إيقاف الاختبار والخروج؟`,
                 () => {
+                    recordStudentExitAttempt(examId, authenticatedStudentEmail, 'ضغط الطالب على زر (إيقاف وخروج)');
                     exitStudentExamToLogin(true);
                 },
-                "نعم، إيقاف وخروج",
+                "نعم، إيقاف وخروج (مع إبلاغ المعلم)",
                 "#e11d48"
             );
         }
 
         function exitStudentExamToLogin(showNotice = true) {
+            isExamActivelyRunning = false;
             if (examTimerInterval) clearInterval(examTimerInterval);
             const examId = new URLSearchParams(window.location.search).get('exam') || '';
             if (examId) {
@@ -1079,7 +1197,6 @@
             document.getElementById('student-nav-controls').style.display = 'none';
             document.getElementById('quiz-content').innerHTML = '';
 
-            // إعادة خلط الأسئلة والخيارات في الذاكرة استعداداً لعودته من الصفر
             if (loadedExamQuestions && loadedExamQuestions.length > 0) {
                 loadedExamQuestions = shuffleArray(loadedExamQuestions).map(q => {
                     if (q.opts && Array.isArray(q.opts) && !q.qType?.includes('مزاوجة') && !q.qType?.includes('عددّد')) {
@@ -1097,7 +1214,7 @@
             document.getElementById('student-auth-container').style.display = 'block';
             document.getElementById('auth-status-msg').innerText = "";
             if (showNotice) {
-                showToast("تم إيقاف الاختبار والخروج منه.", "info");
+                showToast("⚠️ تم إيقاف الاختبار والخروج منه، وتم تسجيل المحاولة لإبلاغ المعلم.", "error");
             }
         }
 
@@ -1460,7 +1577,6 @@
             } else {
                 let opts = data?.opts ? [...data.opts] : ['', '', '', ''];
                 const letters = ['أ', 'ب', 'ج', 'د', 'هـ', 'و'];
-                // خلط خيارات الإجابة عشوائياً في وضع الطالب لمنع الغش
                 if (isStudent && opts.length > 0) opts = shuffleArray(opts);
                 let h = '<div class="options-grid">';
                 for(let i=0; i<opts.length; i++) {
@@ -1714,20 +1830,22 @@
                     email: authenticatedStudentEmail,
                     name: authenticatedStudentName
                 }));
+                sessionStorage.removeItem('reload_counted_' + examId);
 
                 const noticeEl = document.getElementById('student-reload-notice');
                 if (noticeEl) noticeEl.style.display = 'none';
 
                 document.getElementById('student-auth-container').style.display = 'none';
                 
-                // بناء وخلط الأسئلة والخيارات عشوائياً في كل مرة يفتح فيها الطالب الاختبار من الصفر
                 renderShuffledStudentExam();
 
                 document.querySelector('.container').style.display = 'block';
                 document.getElementById('student-nav-controls').style.display = 'flex';
                 document.getElementById('student-actions').style.display = 'none';
 
-                // إظهار شريط التحدي والوقت التنازلي الصوتي
+                isExamActivelyRunning = true;
+                updateHudExitCounterDisplay();
+
                 const hudBar = document.getElementById('challengeHudBar');
                 if (hudBar) {
                     document.getElementById('hudStudentName').innerText = authenticatedStudentName;
@@ -1735,8 +1853,13 @@
                     startStudentCountdownTimer();
                 }
 
+                const existingExits = getStudentExitData(examId, authenticatedStudentEmail).count;
                 playSound('success');
-                showToast(`أهلاً بك يا ${authenticatedStudentName} 🌟، بدأ المؤقت التنازلي!`, "success");
+                if (existingExits > 0) {
+                    showToast(`أهلاً يا ${authenticatedStudentName}، تنبيه: مسجل عليك (${existingExits}) محاولة خروج سابقة ستظهر للمعلم!`, "error");
+                } else {
+                    showToast(`أهلاً بك يا ${authenticatedStudentName} 🌟، بدأ المؤقت التنازلي والمراقبة نشطة!`, "success");
+                }
             } catch (err) {
                 console.error(err);
                 playSound('error');
@@ -1827,12 +1950,28 @@
                     const docId = doc.id;
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'cloud-item';
+
+                    const exitCount = data.exitCount !== undefined ? data.exitCount : 0;
+                    const exitLogs = data.exitLogs || [];
+                    const encodedLogs = encodeURIComponent(JSON.stringify(exitLogs));
                     
+                    const exitBadgeHtml = exitCount > 0 
+                        ? `<span class="exit-badge-alert"><i class="fas fa-exclamation-triangle"></i> مرات الخروج/الإيقاف: ${exitCount}</span>`
+                        : `<span class="exit-badge-clean"><i class="fas fa-check-circle"></i> منضبط (0 خروج)</span>`;
+
                     const encodedAnswers = encodeURIComponent(JSON.stringify(data.answers || []));
-                    const actionFunc = `openEditableReport("${docId}", "${encodedAnswers}", ${data.score}, ${data.total})`;
+                    const actionFunc = `openEditableReport("${docId}", "${encodedAnswers}", ${data.score}, ${data.total}, ${exitCount}, "${encodedLogs}")`;
 
                     itemDiv.innerHTML = `
-                        <div style="font-weight:bold; color:var(--royal-blue); text-align:right; flex:1; font-size:0.95rem;">طالب: ${data.name || 'مجهول'} (${data.email || ''}) | النتيجة: ${data.score} من ${data.total}</div>
+                        <div style="text-align:right; flex:1; font-size:0.95rem; display:flex; flex-direction:column; gap:5px;">
+                            <div style="font-weight:bold; color:var(--royal-blue);">
+                                طالب: ${data.name || 'مجهول'} <span style="color:#64748b; font-size:0.85rem;">(${data.email || ''})</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                <span style="font-weight:bold; color:#0f172a;">النتيجة: ${data.score} من ${data.total}</span>
+                                ${exitBadgeHtml}
+                            </div>
+                        </div>
                         <button class="btn" style="background:#a855f7; padding:6px 12px;" onclick='${actionFunc}'><i class="fas fa-edit"></i> مراجعة وتعديل</button>
                     `;
                     containerDiv.appendChild(itemDiv);
@@ -1847,6 +1986,7 @@
             closeModals();
             const answersArray = JSON.parse(decodeURIComponent(encodedAnswers));
             document.getElementById('report-modal-title').innerText = "تقرير أداء الطالب 🎯";
+            document.getElementById('report-integrity-box').innerHTML = "";
             document.getElementById('report-table-header').innerHTML = "<th>#</th><th>السؤال</th><th>نوعه</th><th>إجابتك</th><th>الصحيحة</th><th>الدرجة</th>";
             const report = document.getElementById('report-body');
             report.innerHTML = "";
@@ -1893,10 +2033,33 @@
             document.getElementById('modal-overlay').style.display = 'block';
         }
 
-        function openEditableReport(docId, encodedAnswers, score, total) {
+        function openEditableReport(docId, encodedAnswers, score, total, exitCount = 0, encodedLogs = "%5B%5D") {
             closeModals();
             const answersArray = JSON.parse(decodeURIComponent(encodedAnswers));
+            const exitLogs = JSON.parse(decodeURIComponent(encodedLogs || "%5B%5D"));
+
             document.getElementById('report-modal-title').innerText = "مراجعة وتعديل درجات الطالب (خاص بالمعلم) 🎯";
+
+            // عرض تقرير النزاهة ومرات الخروج للمعلم داخل التقرير التفصيلي
+            const integrityBox = document.getElementById('report-integrity-box');
+            if (exitCount > 0) {
+                let logsHtml = exitLogs.map((l, idx) => `<li>${idx + 1}. <strong>${l.reason}</strong> (الساعة: ${l.time})</li>`).join('');
+                integrityBox.innerHTML = `
+                    <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 12px; padding: 14px; text-align: right; color: #991b1b;">
+                        <div style="font-weight: bold; font-size: 1.05rem; margin-bottom: 6px;">
+                            <i class="fas fa-exclamation-triangle"></i> تنبيه نزاهة الاختبار: خرج الطالب أو أوقف الاختبار (${exitCount}) مرة!
+                        </div>
+                        ${logsHtml ? `<ul style="margin: 6px 0 0; padding-right: 20px; font-size: 0.88rem;">${logsHtml}</ul>` : ''}
+                    </div>
+                `;
+            } else {
+                integrityBox.innerHTML = `
+                    <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 10px 14px; text-align: center; color: #166534; font-weight: bold; font-size: 0.95rem;">
+                        <i class="fas fa-shield-alt"></i> سجل النزاهة: الطالب منضبط ولم يخرج أو يوقف الاختبار نهائياً (0 مرات).
+                    </div>
+                `;
+            }
+
             document.getElementById('report-table-header').innerHTML = "<th>#</th><th>السؤال</th><th>نوعه</th><th>إجابة الطالب</th><th>الصحيحة</th><th>الدرجة</th>";
             const report = document.getElementById('report-body');
             report.innerHTML = "";
@@ -2058,6 +2221,7 @@
         }
 
         async function executeFinalSubmission() {
+            isExamActivelyRunning = false;
             if (examTimerInterval) clearInterval(examTimerInterval);
             const currentExamParam = new URLSearchParams(window.location.search).get('exam');
             if (currentExamParam) {
@@ -2166,6 +2330,7 @@
             });
 
             const examId = new URLSearchParams(window.location.search).get('exam') || "اختبار عام";
+            const exitTrackerData = getStudentExitData(examId, authenticatedStudentEmail);
 
             try {
                 await fsDb.collection("alkfaeat_results").add({
@@ -2175,6 +2340,8 @@
                     total: totalPossibleScore,
                     model_id: examId,
                     answers: details,
+                    exitCount: exitTrackerData.count,
+                    exitLogs: exitTrackerData.logs,
                     time: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
@@ -2556,9 +2723,22 @@
                     titleBadge.style.display = 'block';
                 }
 
-                const wasInActiveSession = !!sessionStorage.getItem('active_exam_session_' + id);
-                if (wasInActiveSession || isPageReloaded()) {
+                // التحقق مما إذا كان الطالب قد قام بتحديث الصفحة أثناء جلسة اختبار نشطة
+                const activeSessionRaw = sessionStorage.getItem('active_exam_session_' + id);
+                if (activeSessionRaw) {
+                    try {
+                        const prevSess = JSON.parse(activeSessionRaw);
+                        if (prevSess.email && sessionStorage.getItem('reload_counted_' + id) !== 'true') {
+                            authenticatedStudentName = prevSess.name || '';
+                            recordStudentExitAttempt(id, prevSess.email, 'تحديث الصفحة أثناء الاختبار');
+                        }
+                    } catch (e) {}
                     sessionStorage.removeItem('active_exam_session_' + id);
+                    sessionStorage.removeItem('reload_counted_' + id);
+
+                    const noticeEl = document.getElementById('student-reload-notice');
+                    if (noticeEl) noticeEl.style.display = 'block';
+                } else if (isPageReloaded()) {
                     const noticeEl = document.getElementById('student-reload-notice');
                     if (noticeEl) noticeEl.style.display = 'block';
                 }

@@ -1055,7 +1055,7 @@
             playSound('click');
             showCustomConfirm(
                 "إيقاف والخروج من الاختبار ⚠️",
-                "هل ترغب في إيقاف الاختبار والخروج الآن؟ تنبيه: عند عودتك لاحقاً سيتم خلط الأسئلة والخيارات عشوائياً من جديد لمنع الغش.",
+                "هل ترغب في إيقاف الاختبار والخروج الآن؟",
                 () => {
                     if (examTimerInterval) clearInterval(examTimerInterval);
                     // تفريغ الواجهة والعودة لشاشة الدخول
@@ -1064,7 +1064,7 @@
                     document.getElementById('student-nav-controls').style.display = 'none';
                     document.getElementById('quiz-content').innerHTML = '';
                     
-                    // إعادة خلط الأسئلة والخيارات في الذاكرة استعداداً لعودته
+                    // إعادة خلط الأسئلة والخيارات في الذاكرة استعداداً لعودته بصمت
                     if (loadedExamQuestions && loadedExamQuestions.length > 0) {
                         loadedExamQuestions = shuffleArray(loadedExamQuestions).map(q => {
                             if (q.opts && Array.isArray(q.opts) && !q.qType?.includes('مزاوجة') && !q.qType?.includes('عددّد')) {
@@ -1075,8 +1075,7 @@
                     }
 
                     document.getElementById('student-auth-container').style.display = 'block';
-                    document.getElementById('auth-status-msg').style.color = "#d97706";
-                    document.getElementById('auth-status-msg').innerText = "⏸️ تم إيقاف الاختبار. عند الدخول مجدداً ستُخلط الأسئلة والإجابات عشوائياً.";
+                    document.getElementById('auth-status-msg').innerText = "";
                     showToast("تم إيقاف الجلسة والخروج بأمان.", "info");
                 },
                 "نعم، إيقاف وخروج",

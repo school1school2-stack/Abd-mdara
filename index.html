@@ -840,7 +840,12 @@
                 };
             }).catch(() => {});
 
-            const [finalSyncedCount] = await Promise.all([firestorePromise, rtdbPromise]);
+            // عدم تعليق واجهة المستخدم إذا تأخر السيرفر (حد أقصى 1.2 ثانية ثم إكمال الخروج)
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(optimisticNewCount), 1200));
+            const finalSyncedCount = await Promise.race([
+                Promise.all([firestorePromise, rtdbPromise]).then(([c]) => c),
+                timeoutPromise
+            ]);
             return finalSyncedCount || optimisticNewCount;
         }
 
@@ -1386,9 +1391,9 @@
             showCustomConfirm(
                 "⚠️ تحذير: إيقاف والخروج من الاختبار",
                 `تنبيه هام: في حال إيقاف الاختبار والخروج منه الآن، سيصل تنبيه فوري للمعلم بعدد مرات خروجك (المسجل حالياً: ${currentExits} مرة، وسيصبح ${currentExits + 1}).\n\nهل تريد فعلاً إيقاف الاختبار والخروج؟`,
-                async () => {
-                    showToast("جاري تسجيل المحاولة سحابياً تحت إيميلك...", "info");
-                    await recordStudentExitAttempt(examId, authenticatedStudentEmail, 'ضغط الطالب على زر (إيقاف وخروج)');
+                () => {
+                    // تسجيل المحاولة سحابياً وإيقاف الاختبار والخروج منه فوراً دون انتظار
+                    recordStudentExitAttempt(examId, authenticatedStudentEmail, 'ضغط الطالب على زر (إيقاف وخروج)');
                     exitStudentExamToLogin(true);
                 },
                 "نعم، إيقاف وخروج (مع إبلاغ المعلم)",
@@ -1398,21 +1403,32 @@
 
         function exitStudentExamToLogin(showNotice = true) {
             isExamActivelyRunning = false;
+            reloadExitAlreadyRecorded = true;
             if (integrityUnsubscribe) {
                 integrityUnsubscribe();
                 integrityUnsubscribe = null;
             }
-            if (examTimerInterval) clearInterval(examTimerInterval);
+            if (examTimerInterval) {
+                clearInterval(examTimerInterval);
+                examTimerInterval = null;
+            }
             const examId = new URLSearchParams(window.location.search).get('exam') || '';
             if (examId) {
                 sessionStorage.removeItem('active_exam_session_' + examId);
                 localStorage.removeItem(getActiveExamStorageKey(examId));
             }
 
-            document.getElementById('challengeHudBar').style.display = 'none';
-            document.querySelector('.container').style.display = 'none';
-            document.getElementById('student-nav-controls').style.display = 'none';
-            document.getElementById('quiz-content').innerHTML = '';
+            const hudBar = document.getElementById('challengeHudBar');
+            const quizContainer = document.querySelector('.container');
+            const navControls = document.getElementById('student-nav-controls');
+            const studentActions = document.getElementById('student-actions');
+            const quizContent = document.getElementById('quiz-content');
+
+            if (hudBar) hudBar.style.display = 'none';
+            if (quizContainer) quizContainer.style.display = 'none';
+            if (navControls) navControls.style.display = 'none';
+            if (studentActions) studentActions.style.display = 'none';
+            if (quizContent) quizContent.innerHTML = '';
 
             if (loadedExamQuestions && loadedExamQuestions.length > 0) {
                 loadedExamQuestions = shuffleArray(loadedExamQuestions).map(q => {
@@ -1428,8 +1444,13 @@
                 noticeEl.style.display = showNotice ? 'block' : 'none';
             }
 
-            document.getElementById('student-auth-container').style.display = 'block';
-            document.getElementById('auth-status-msg').innerText = "";
+            const authContainer = document.getElementById('student-auth-container');
+            if (authContainer) authContainer.style.display = 'block';
+            const authMsg = document.getElementById('auth-status-msg');
+            if (authMsg) authMsg.innerText = "";
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             if (showNotice) {
                 playSound('error');
                 showToast("⚠️ تم إيقاف الاختبار والخروج منه مباشرة، وتم احتساب المحاولة لإبلاغ المعلم.", "error");

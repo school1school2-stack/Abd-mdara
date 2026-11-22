@@ -547,6 +547,9 @@
                 <button class="btn" style="background: var(--royal-blue); padding: 12px 20px; font-size: 1rem;" onclick="openStudentHistory()"><i class="fas fa-history"></i> سجل اختباراتي 📊</button>
             </div>
             <p id="auth-status-msg" style="margin-top: 15px; font-weight: bold; font-size:0.95rem;"></p>
+            <div id="student-reload-notice" style="display:none; margin-top: 14px; color: #d97706; font-weight: bold; font-size: 0.95rem;">
+                ⏸️ تم إيقاف الاختبار والخروج منه.
+            </div>
         </div>
     </div>
 
@@ -1055,33 +1058,60 @@
             playSound('click');
             showCustomConfirm(
                 "إيقاف والخروج من الاختبار ⚠️",
-                "هل ترغب في إيقاف الاختبار والخروج الآن؟ .",
+                "هل تم إيقاف الاختبار والخروج منه؟",
                 () => {
-                    if (examTimerInterval) clearInterval(examTimerInterval);
-                    // تفريغ الواجهة والعودة لشاشة الدخول
-                    document.getElementById('challengeHudBar').style.display = 'none';
-                    document.querySelector('.container').style.display = 'none';
-                    document.getElementById('student-nav-controls').style.display = 'none';
-                    document.getElementById('quiz-content').innerHTML = '';
-                    
-                    // إعادة خلط الأسئلة والخيارات في الذاكرة استعداداً لعودته
-                    if (loadedExamQuestions && loadedExamQuestions.length > 0) {
-                        loadedExamQuestions = shuffleArray(loadedExamQuestions).map(q => {
-                            if (q.opts && Array.isArray(q.opts) && !q.qType?.includes('مزاوجة') && !q.qType?.includes('عددّد')) {
-                                return { ...q, opts: shuffleArray(q.opts) };
-                            }
-                            return q;
-                        });
-                    }
-
-                    document.getElementById('student-auth-container').style.display = 'block';
-                    document.getElementById('auth-status-msg').style.color = "#d97706";
-                    document.getElementById('auth-status-msg').innerText = "⏸️ تم إيقاف الاختبار. .";
-                    showToast("تم إيقاف الجلسة والخروج بأمان.", "info");
+                    exitStudentExamToLogin(true);
                 },
                 "نعم، إيقاف وخروج",
                 "#e11d48"
             );
+        }
+
+        function exitStudentExamToLogin(showNotice = true) {
+            if (examTimerInterval) clearInterval(examTimerInterval);
+            const examId = new URLSearchParams(window.location.search).get('exam') || '';
+            if (examId) {
+                sessionStorage.removeItem('active_exam_session_' + examId);
+            }
+
+            document.getElementById('challengeHudBar').style.display = 'none';
+            document.querySelector('.container').style.display = 'none';
+            document.getElementById('student-nav-controls').style.display = 'none';
+            document.getElementById('quiz-content').innerHTML = '';
+
+            // إعادة خلط الأسئلة والخيارات في الذاكرة استعداداً لعودته من الصفر
+            if (loadedExamQuestions && loadedExamQuestions.length > 0) {
+                loadedExamQuestions = shuffleArray(loadedExamQuestions).map(q => {
+                    if (q.opts && Array.isArray(q.opts) && !q.qType?.includes('مزاوجة') && !q.qType?.includes('عددّد')) {
+                        return { ...q, opts: shuffleArray(q.opts) };
+                    }
+                    return q;
+                });
+            }
+
+            const noticeEl = document.getElementById('student-reload-notice');
+            if (noticeEl) {
+                noticeEl.style.display = showNotice ? 'block' : 'none';
+            }
+
+            document.getElementById('student-auth-container').style.display = 'block';
+            document.getElementById('auth-status-msg').innerText = "";
+            if (showNotice) {
+                showToast("تم إيقاف الاختبار والخروج منه.", "info");
+            }
+        }
+
+        function isPageReloaded() {
+            try {
+                const navEntries = performance.getEntriesByType && performance.getEntriesByType('navigation');
+                if (navEntries && navEntries.length > 0 && navEntries[0].type === 'reload') {
+                    return true;
+                }
+                if (performance && performance.navigation && performance.navigation.type === 1) {
+                    return true;
+                }
+            } catch (e) {}
+            return false;
         }
 
         async function populateTeacherModelDropdown() {
@@ -1680,9 +1710,17 @@
                 }
 
                 localStorage.removeItem('submitted_' + examId);
+                sessionStorage.setItem('active_exam_session_' + examId, JSON.stringify({
+                    email: authenticatedStudentEmail,
+                    name: authenticatedStudentName
+                }));
+
+                const noticeEl = document.getElementById('student-reload-notice');
+                if (noticeEl) noticeEl.style.display = 'none';
+
                 document.getElementById('student-auth-container').style.display = 'none';
                 
-                // بناء وخلط الأسئلة والخيارات عشوائياً في كل مرة يفتح فيها الطالب الاختبار
+                // بناء وخلط الأسئلة والخيارات عشوائياً في كل مرة يفتح فيها الطالب الاختبار من الصفر
                 renderShuffledStudentExam();
 
                 document.querySelector('.container').style.display = 'block';
@@ -2021,6 +2059,10 @@
 
         async function executeFinalSubmission() {
             if (examTimerInterval) clearInterval(examTimerInterval);
+            const currentExamParam = new URLSearchParams(window.location.search).get('exam');
+            if (currentExamParam) {
+                sessionStorage.removeItem('active_exam_session_' + currentExamParam);
+            }
 
             const cards = document.querySelectorAll('.question-card');
             let totalScore = 0;
@@ -2512,6 +2554,13 @@
                 if (titleBadge) {
                     titleBadge.innerText = `📄 اختبار: ${id}`;
                     titleBadge.style.display = 'block';
+                }
+
+                const wasInActiveSession = !!sessionStorage.getItem('active_exam_session_' + id);
+                if (wasInActiveSession || isPageReloaded()) {
+                    sessionStorage.removeItem('active_exam_session_' + id);
+                    const noticeEl = document.getElementById('student-reload-notice');
+                    if (noticeEl) noticeEl.style.display = 'block';
                 }
 
                 let savedModels = JSON.parse(localStorage.getItem('fifi_all_saved_models') || '{}');

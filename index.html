@@ -562,7 +562,7 @@
             
             <!-- تنبيه نظام المراقبة الاستباقي للطالب -->
             <div style="background: #fffbeb; border: 1.5px solid #fcd34d; color: #92400e; padding: 12px 16px; border-radius: 12px; font-size: 0.92rem; font-weight: bold; margin-bottom: 18px; line-height: 1.6;">
-                <i class="fas fa-shield-alt" style="color: #d97706;"></i> تنبيه هام: نظام المراقبة الذكي مفعّل؛ أي محاولة للخروج من الاختبار أو إيقافه أو تحديث الصفحة أو مغادرة الشاشة سيتم رصدها وإرسال تنبيه فوري للمعلم بعدد المرات.
+                <i class="fas fa-shield-alt" style="color: #d97706;"></i> تنبيه هام: نظام المراقبة الذكي مفعّل؛ أي محاولة للخروج من الاختبار أو إيقافه أو تحديث الصفحة أو مغادرة الشاشة سيتم احتسابها كخروج وإيقاف الاختبار فوراً وإرسال تنبيه للمعلم بعدد المرات.
             </div>
 
             <p style="color: #64748b; margin-bottom: 20px; font-size:0.95rem;">الرجاء إدخال إيميل منصة مدرستي المعتمد لبدء الاختبار:</p>
@@ -573,8 +573,8 @@
                 <button class="btn" style="background: var(--royal-blue); padding: 12px 20px; font-size: 1rem;" onclick="openStudentHistory()"><i class="fas fa-history"></i> سجل اختباراتي 📊</button>
             </div>
             <p id="auth-status-msg" style="margin-top: 15px; font-weight: bold; font-size:0.95rem;"></p>
-            <div id="student-reload-notice" style="display:none; margin-top: 16px; background: #fef2f2; border: 1.5px solid #fecaca; color: #b91c1c; padding: 12px 16px; border-radius: 12px; font-weight: bold; font-size: 0.95rem;">
-                ⚠️ تنبيه: تم إيقاف الاختبار والخروج منه أو تحديث الصفحة! تم تسجيل هذه المحاولة وإرسال إشعار للمعلم.
+            <div id="student-reload-notice" style="display:none; margin-top: 16px; background: #fef2f2; border: 1.5px solid #fecaca; color: #b91c1c; padding: 14px 16px; border-radius: 12px; font-weight: bold; font-size: 0.98rem; line-height: 1.6;">
+                ⚠️ تنبيه: تم إيقاف الاختبار والخروج منه مباشرة بسبب تحديث الصفحة أو الخروج منها! تم احتساب هذه المحاولة وإرسال إشعار فوري للمعلم.
             </div>
         </div>
     </div>
@@ -876,6 +876,7 @@
         let currentStudentQuestionIndex = 0;
         let isExamActivelyRunning = false; // هل الطالب داخل الاختبار الآن؟
         let lastBlurTimestamp = 0; // لمنع تكرار احتساب الخروج في نفس اللحظة
+        let reloadExitAlreadyRecorded = false; // لمنع تكرار احتساب التحديث مرتين في نفس الدورة
 
         const firebaseConfig = {
             apiKey: "AIzaSyAVrIim7aXjg0hGrMk0qVrXT8geRIpHoBk",
@@ -901,6 +902,11 @@
             const safeExam = (examId || 'general').replace(/[^a-zA-Z0-9\u0600-\u06FF_-]/g, '_');
             const safeEmail = (email || 'unknown').toLowerCase().trim();
             return `exam_exit_tracker_${safeExam}_${safeEmail}`;
+        }
+
+        function getActiveExamStorageKey(examId) {
+            const safeExam = (examId || 'general').replace(/[^a-zA-Z0-9\u0600-\u06FF_-]/g, '_');
+            return `fifi_active_exam_lock_${safeExam}`;
         }
 
         function getStudentExitData(examId, email) {
@@ -949,24 +955,44 @@
             badge.innerText = `${data.count} ⚠️`;
         }
 
-        // 1. رصد تحديث الصفحة أو إغلاق التبويب أثناء أداء الطالب للاختبار
-        window.addEventListener('beforeunload', function (e) {
-            if (isExamActivelyRunning && authenticatedStudentEmail) {
-                const examId = new URLSearchParams(window.location.search).get('exam');
-                if (examId && localStorage.getItem('submitted_' + examId) !== 'true') {
-                    // تسجيل محاولة تحديث الصفحة أو إغلاقها فوراً
-                    recordStudentExitAttempt(examId, authenticatedStudentEmail, 'تحديث الصفحة أو إغلاق النافذة أثناء الاختبار');
-                    sessionStorage.setItem('reload_counted_' + examId, 'true');
+        // معالجة فورية عند تحديث الصفحة أو إغلاقها أو الضغط على F5 / Ctrl+R
+        function triggerImmediateReloadExit(reasonText) {
+            if (!isExamActivelyRunning || !authenticatedStudentEmail || reloadExitAlreadyRecorded) return;
+            const examId = new URLSearchParams(window.location.search).get('exam');
+            if (!examId || localStorage.getItem('submitted_' + examId) === 'true') return;
 
-                    const warningMsg = "⚠️ تحذير: تحديث الصفحة أو إغلاقها سيُحتسب كمحاولة خروج ويصل تنبيه فوري للمعلم!";
-                    e.preventDefault();
-                    e.returnValue = warningMsg;
-                    return warningMsg;
-                }
+            reloadExitAlreadyRecorded = true;
+            recordStudentExitAttempt(examId, authenticatedStudentEmail, reasonText);
+
+            // مسح جلسة الاختبار النشطة لإيقاف الاختبار وإجبار الطالب على العودة لشاشة البداية
+            localStorage.removeItem(getActiveExamStorageKey(examId));
+            sessionStorage.removeItem('active_exam_session_' + examId);
+            isExamActivelyRunning = false;
+            if (examTimerInterval) clearInterval(examTimerInterval);
+        }
+
+        // 1. اعتراض اختصارات تحديث الصفحة (F5 / Ctrl+R / Cmd+R) لإيقاف الاختبار والخروج فوراً
+        document.addEventListener('keydown', function (e) {
+            if (!isExamActivelyRunning || !authenticatedStudentEmail) return;
+            const isF5 = (e.key === 'F5' || e.keyCode === 116);
+            const isCtrlR = ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R' || e.keyCode === 82));
+            if (isF5 || isCtrlR) {
+                e.preventDefault();
+                triggerImmediateReloadExit('تحديث الصفحة (F5 / Ctrl+R) أثناء الاختبار');
+                exitStudentExamToLogin(true);
             }
         });
 
-        // 2. رصد تبديل التبويب أو تصغير المتصفح (مغادرة شاشة الاختبار للبحث أو الغش)
+        // 2. رصد تحديث الصفحة أو إغلاق التبويب (beforeunload + pagehide) لإيقاف الاختبار واحتساب الخروج مباشرة
+        window.addEventListener('beforeunload', function () {
+            triggerImmediateReloadExit('تحديث الصفحة أو إغلاق النافذة أثناء الاختبار');
+        });
+
+        window.addEventListener('pagehide', function () {
+            triggerImmediateReloadExit('تحديث الصفحة أو مغادرتها أثناء الاختبار');
+        });
+
+        // 3. رصد تبديل التبويب أو تصغير المتصفح (مغادرة شاشة الاختبار)
         document.addEventListener('visibilitychange', function () {
             if (document.hidden && isExamActivelyRunning && authenticatedStudentEmail) {
                 const now = Date.now();
@@ -1190,6 +1216,7 @@
             const examId = new URLSearchParams(window.location.search).get('exam') || '';
             if (examId) {
                 sessionStorage.removeItem('active_exam_session_' + examId);
+                localStorage.removeItem(getActiveExamStorageKey(examId));
             }
 
             document.getElementById('challengeHudBar').style.display = 'none';
@@ -1214,7 +1241,8 @@
             document.getElementById('student-auth-container').style.display = 'block';
             document.getElementById('auth-status-msg').innerText = "";
             if (showNotice) {
-                showToast("⚠️ تم إيقاف الاختبار والخروج منه، وتم تسجيل المحاولة لإبلاغ المعلم.", "error");
+                playSound('error');
+                showToast("⚠️ تم إيقاف الاختبار والخروج منه مباشرة، وتم احتساب المحاولة لإبلاغ المعلم.", "error");
             }
         }
 
@@ -1826,11 +1854,14 @@
                 }
 
                 localStorage.removeItem('submitted_' + examId);
-                sessionStorage.setItem('active_exam_session_' + examId, JSON.stringify({
+                const sessionPayload = JSON.stringify({
                     email: authenticatedStudentEmail,
-                    name: authenticatedStudentName
-                }));
-                sessionStorage.removeItem('reload_counted_' + examId);
+                    name: authenticatedStudentName,
+                    startedAt: Date.now()
+                });
+                sessionStorage.setItem('active_exam_session_' + examId, sessionPayload);
+                localStorage.setItem(getActiveExamStorageKey(examId), sessionPayload);
+                reloadExitAlreadyRecorded = false;
 
                 const noticeEl = document.getElementById('student-reload-notice');
                 if (noticeEl) noticeEl.style.display = 'none';
@@ -2256,6 +2287,7 @@
             const currentExamParam = new URLSearchParams(window.location.search).get('exam');
             if (currentExamParam) {
                 sessionStorage.removeItem('active_exam_session_' + currentExamParam);
+                localStorage.removeItem(getActiveExamStorageKey(currentExamParam));
             }
 
             const cards = document.querySelectorAll('.question-card');
@@ -2778,22 +2810,50 @@
                     titleBadge.style.display = 'block';
                 }
 
-                const activeSessionRaw = sessionStorage.getItem('active_exam_session_' + id);
-                if (activeSessionRaw || isPageReloaded()) {
+                // التحقق مما إذا كان الطالب في منتصف الاختبار وقام بتحديث الصفحة
+                const activeSessionRaw = sessionStorage.getItem('active_exam_session_' + id) || localStorage.getItem(getActiveExamStorageKey(id));
+                const pageWasReloaded = isPageReloaded();
+
+                if (activeSessionRaw || pageWasReloaded) {
+                    let recoveredEmail = "";
+                    let recoveredName = "";
                     if (activeSessionRaw) {
                         try {
                             const sessionObj = JSON.parse(activeSessionRaw);
-                            if (sessionObj.email && !sessionStorage.getItem('reload_counted_' + id)) {
-                                authenticatedStudentEmail = sessionObj.email;
-                                authenticatedStudentName = sessionObj.name || sessionObj.email;
-                                recordStudentExitAttempt(id, sessionObj.email, 'تحديث الصفحة أثناء أداء الاختبار');
-                            }
+                            recoveredEmail = sessionObj.email || "";
+                            recoveredName = sessionObj.name || recoveredEmail;
                         } catch (e) {}
                     }
+
+                    // إذا لم تكن محاولة الخروج قد سُجلت في beforeunload (مثلاً في الجوال أو بعض المتصفحات)، نسجلها الآن
+                    if (recoveredEmail) {
+                        authenticatedStudentEmail = recoveredEmail;
+                        authenticatedStudentName = recoveredName;
+                        const emailField = document.getElementById('studentEmailInput');
+                        if (emailField && !emailField.value) emailField.value = recoveredEmail;
+
+                        // التحقق من آخر سجل لتجنب التكرار المزدوج لنفس التحديث
+                        const tracker = getStudentExitData(id, recoveredEmail);
+                        const lastLog = tracker.logs && tracker.logs.length > 0 ? tracker.logs[tracker.logs.length - 1] : null;
+                        if (!lastLog || !lastLog.reason.includes('تحديث الصفحة')) {
+                            recordStudentExitAttempt(id, recoveredEmail, 'تحديث الصفحة أثناء أداء الاختبار (إيقاف وخروج مباشر)');
+                        }
+                    }
+
+                    // إيقاف الاختبار وإغلاق الجلسة النشطة فوراً
+                    isExamActivelyRunning = false;
                     sessionStorage.removeItem('active_exam_session_' + id);
-                    sessionStorage.removeItem('reload_counted_' + id);
+                    localStorage.removeItem(getActiveExamStorageKey(id));
+                    document.getElementById('challengeHudBar').style.display = 'none';
+                    document.querySelector('.container').style.display = 'none';
+                    document.getElementById('student-nav-controls').style.display = 'none';
+
                     const noticeEl = document.getElementById('student-reload-notice');
                     if (noticeEl) noticeEl.style.display = 'block';
+                    if (activeSessionRaw) {
+                        playSound('error');
+                        showToast("⚠️ تم إيقاف الاختبار والخروج منه مباشرة بسبب تحديث الصفحة! تم احتساب المحاولة وإبلاغ المعلم.", "error");
+                    }
                 }
 
                 let savedModels = JSON.parse(localStorage.getItem('fifi_all_saved_models') || '{}');

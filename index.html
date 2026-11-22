@@ -640,6 +640,9 @@
         <button type="button" id="btnNextQuestion" class="nav-step-btn next" onclick="navigateStudentQuestion(1)">
             السؤال التالي <i class="fas fa-arrow-left"></i>
         </button>
+        <button type="button" id="btnReturnToSubmit" class="nav-step-btn next" style="background:#0284c7; display:none;" onclick="returnToLastQuestionOrNextUnanswered()">
+            العودة للاعتماد (تخطي المُجاب) <i class="fas fa-bolt"></i>
+        </button>
         <button type="button" id="main-grade-btn" class="btn" style="background:#10b981; padding:14px 28px; font-size:1.05rem; display:none; border-radius:16px;" onclick="gradeExam()">
             <i class="fas fa-graduation-cap"></i> انتهيت.. اعتماد النتيجة
         </button>
@@ -874,6 +877,7 @@
         let examTimerInterval = null;
         let remainingSeconds = 0;
         let currentStudentQuestionIndex = 0;
+        let isReviewingUnansweredOnly = false; // وضع استكمال الأسئلة المنسية دون المرور على المُجابة
         let isExamActivelyRunning = false; // هل الطالب داخل الاختبار الآن؟
         let lastBlurTimestamp = 0; // لمنع تكرار احتساب الخروج في نفس اللحظة
         let reloadExitAlreadyRecorded = false; // لمنع تكرار احتساب التحديث مرتين في نفس الدورة
@@ -1040,6 +1044,7 @@
             const container = document.getElementById('quiz-content');
             container.innerHTML = '';
             currentStudentQuestionIndex = 0;
+            isReviewingUnansweredOnly = false;
 
             if (!loadedExamQuestions || loadedExamQuestions.length === 0) return;
 
@@ -1053,6 +1058,29 @@
             setTimeout(() => {
                 document.querySelectorAll('textarea').forEach(ta => autoResizeTextarea(ta));
             }, 80);
+        }
+
+        function isCardAnswered(c) {
+            const qType = c.querySelector('.type-select')?.value || "اختر الإجابة الصحيحة";
+            if (['اختر الإجابة الصحيحة', 'صح وخطأ'].includes(qType)) {
+                return Boolean(c.querySelector('.selected-opt'));
+            } else if (qType.includes('مزاوجة')) {
+                const inps = c.querySelectorAll('.matching-ans-input');
+                return inps.length > 0 && Array.from(inps).every(i => i.value.trim() !== '');
+            } else if (qType.includes('عددّد')) {
+                const inps = c.querySelectorAll('.enum-ans-input');
+                return inps.length > 0 && Array.from(inps).every(i => i.value.trim() !== '');
+            } else {
+                return Boolean(c.querySelector('.student-answer-textarea')?.value.trim());
+            }
+        }
+
+        function getFirstUnansweredIndex() {
+            const cards = document.querySelectorAll('#quiz-content .question-card');
+            for (let i = 0; i < cards.length; i++) {
+                if (!isCardAnswered(cards[i])) return i;
+            }
+            return -1;
         }
 
         function updateStudentSingleCardView() {
@@ -1078,16 +1106,25 @@
 
             const prevBtn = document.getElementById('btnPrevQuestion');
             const nextBtn = document.getElementById('btnNextQuestion');
+            const returnBtn = document.getElementById('btnReturnToSubmit');
             const submitBtn = document.getElementById('main-grade-btn');
 
             if (prevBtn) prevBtn.disabled = (currentStudentQuestionIndex === 0);
 
-            if (currentStudentQuestionIndex === total - 1) {
+            if (isReviewingUnansweredOnly) {
+                // في وضع إكمال السؤال المنسي: إخفاء زر "السؤال التالي" حتى لا يمر على الأسئلة المُجابة، وإظهار زر العودة للاعتماد مباشرة
                 if (nextBtn) nextBtn.style.display = 'none';
-                if (submitBtn) submitBtn.style.display = 'inline-flex';
-            } else {
-                if (nextBtn) nextBtn.style.display = 'inline-flex';
+                if (returnBtn) returnBtn.style.display = 'inline-flex';
                 if (submitBtn) submitBtn.style.display = 'none';
+            } else {
+                if (returnBtn) returnBtn.style.display = 'none';
+                if (currentStudentQuestionIndex === total - 1) {
+                    if (nextBtn) nextBtn.style.display = 'none';
+                    if (submitBtn) submitBtn.style.display = 'inline-flex';
+                } else {
+                    if (nextBtn) nextBtn.style.display = 'inline-flex';
+                    if (submitBtn) submitBtn.style.display = 'none';
+                }
             }
         }
 
@@ -1095,8 +1132,41 @@
             const cards = document.querySelectorAll('#quiz-content .question-card');
             if (cards.length === 0) return;
             playSound('select');
+            // إذا ضغط الطالب يدوياً على "السؤال السابق" للمراجعة، نخرج من وضع القفز ونعيد التصفح الطبيعي
+            if (step < 0) {
+                isReviewingUnansweredOnly = false;
+            }
             currentStudentQuestionIndex += step;
             updateStudentSingleCardView();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function returnToLastQuestionOrNextUnanswered() {
+            const cards = document.querySelectorAll('#quiz-content .question-card');
+            if (cards.length === 0) return;
+
+            const currentCard = cards[currentStudentQuestionIndex];
+            if (currentCard && !isCardAnswered(currentCard)) {
+                playSound('error');
+                currentCard.classList.add('unanswered-alert');
+                showToast(`⚠️ الرجاء إجابة السؤال رقم ${currentStudentQuestionIndex + 1} أولاً قبل المتابعة!`, "error");
+                return;
+            }
+
+            playSound('select');
+            // التحقق هل بقي سؤال آخر غير مُجاب
+            const nextUnanswered = getFirstUnansweredIndex();
+            if (nextUnanswered !== -1) {
+                currentStudentQuestionIndex = nextUnanswered;
+                updateStudentSingleCardView();
+                showToast(`⚠️ تبقى لديك السؤال رقم ${nextUnanswered + 1} غير مُجاب.`, "error");
+            } else {
+                // تمت إجابة جميع الأسئلة: العودة مباشرة لآخر سؤال وإظهار زر الاعتماد النهائي
+                isReviewingUnansweredOnly = false;
+                currentStudentQuestionIndex = cards.length - 1;
+                updateStudentSingleCardView();
+                showToast("✅ اكتملت جميع الإجابات! يمكنك الآن اعتماد النتيجة.", "success");
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -1104,18 +1174,7 @@
             const cards = document.querySelectorAll('#quiz-content .question-card');
             let answeredCount = 0;
             cards.forEach(c => {
-                const qType = c.querySelector('.type-select')?.value || "اختر الإجابة الصحيحة";
-                if (['اختر الإجابة الصحيحة', 'صح وخطأ'].includes(qType)) {
-                    if (c.querySelector('.selected-opt')) answeredCount++;
-                } else if (qType.includes('مزاوجة')) {
-                    const inps = c.querySelectorAll('.matching-ans-input');
-                    if (inps.length > 0 && Array.from(inps).every(i => i.value.trim() !== '')) answeredCount++;
-                } else if (qType.includes('عددّد')) {
-                    const inps = c.querySelectorAll('.enum-ans-input');
-                    if (inps.length > 0 && Array.from(inps).every(i => i.value.trim() !== '')) answeredCount++;
-                } else {
-                    if (c.querySelector('.student-answer-textarea')?.value.trim()) answeredCount++;
-                }
+                if (isCardAnswered(c)) answeredCount++;
             });
             const el = document.getElementById('hudAnsweredCount');
             if (el) el.innerText = `${answeredCount} 🔥`;
@@ -2262,6 +2321,7 @@
 
                 if (firstUnansweredIndex !== -1) {
                     playSound('error');
+                    isReviewingUnansweredOnly = true;
                     currentStudentQuestionIndex = firstUnansweredIndex;
                     updateStudentSingleCardView();
                     showToast(`⚠️ تنبيه: لم تقم بإجابة السؤال رقم ${firstUnansweredIndex + 1} بعد!`, "error");
@@ -2810,20 +2870,18 @@
                     titleBadge.style.display = 'block';
                 }
 
-                // التحقق مما إذا كان الطالب في منتصف الاختبار وقام بتحديث الصفحة
+                // التحقق مما إذا كان الطالب في منتصف الاختبار الفعلي وقام بتحديث الصفحة
+                // (لا يتم احتساب التحديث إذا كان الطالب لا يزال في شاشة تسجيل الدخول ولم يبدأ الاختبار بعد)
                 const activeSessionRaw = sessionStorage.getItem('active_exam_session_' + id) || localStorage.getItem(getActiveExamStorageKey(id));
-                const pageWasReloaded = isPageReloaded();
 
-                if (activeSessionRaw || pageWasReloaded) {
+                if (activeSessionRaw) {
                     let recoveredEmail = "";
                     let recoveredName = "";
-                    if (activeSessionRaw) {
-                        try {
-                            const sessionObj = JSON.parse(activeSessionRaw);
-                            recoveredEmail = sessionObj.email || "";
-                            recoveredName = sessionObj.name || recoveredEmail;
-                        } catch (e) {}
-                    }
+                    try {
+                        const sessionObj = JSON.parse(activeSessionRaw);
+                        recoveredEmail = sessionObj.email || "";
+                        recoveredName = sessionObj.name || recoveredEmail;
+                    } catch (e) {}
 
                     // إذا لم تكن محاولة الخروج قد سُجلت في beforeunload (مثلاً في الجوال أو بعض المتصفحات)، نسجلها الآن
                     if (recoveredEmail) {
@@ -2850,10 +2908,8 @@
 
                     const noticeEl = document.getElementById('student-reload-notice');
                     if (noticeEl) noticeEl.style.display = 'block';
-                    if (activeSessionRaw) {
-                        playSound('error');
-                        showToast("⚠️ تم إيقاف الاختبار والخروج منه مباشرة بسبب تحديث الصفحة! تم احتساب المحاولة وإبلاغ المعلم.", "error");
-                    }
+                    playSound('error');
+                    showToast("⚠️ تم إيقاف الاختبار والخروج منه مباشرة بسبب تحديث الصفحة! تم احتساب المحاولة وإبلاغ المعلم.", "error");
                 }
 
                 let savedModels = JSON.parse(localStorage.getItem('fifi_all_saved_models') || '{}');
